@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dev Debug"
+  short_description: "Debug from root cause evidence"
+  default_prompt: "Use $dev-debug to investigate this bug from root cause."

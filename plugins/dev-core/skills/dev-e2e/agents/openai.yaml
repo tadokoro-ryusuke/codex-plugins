@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dev E2E"
+  short_description: "Run Playwright E2E workflows"
+  default_prompt: "Use $dev-e2e to run or diagnose Playwright E2E tests."

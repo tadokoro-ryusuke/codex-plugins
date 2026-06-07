@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dev Review"
+  short_description: "Review with dev-core criteria"
+  default_prompt: "Use $dev-review to review the current change with dev-core criteria."

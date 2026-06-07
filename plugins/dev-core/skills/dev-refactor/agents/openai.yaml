@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dev Refactor"
+  short_description: "Refactor safely with tests"
+  default_prompt: "Use $dev-refactor to improve this code without changing behavior."

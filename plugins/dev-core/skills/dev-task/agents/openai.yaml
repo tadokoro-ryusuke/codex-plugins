@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dev Task"
+  short_description: "Plan tasks with BDD and TDD"
+  default_prompt: "Use $dev-task to turn this feature idea into a TDD plan."

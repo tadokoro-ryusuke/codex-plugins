@@ -1,7 +1,7 @@
 {
   "name": "dev-core",
-  "version": "3.2.0",
-  "description": "Codex-native development workflows for TDD, architecture patterns, systematic debugging, verification, review, and continuous learning.",
+  "version": "3.3.0+codex.20260607111022",
+  "description": "Codex-native development entrypoints and orchestration for task planning, execution, TDD, debugging, review, refactoring, E2E, verification, and continuous learning.",
   "author": {
     "name": "Ryusuke Tadokoro",
     "email": "tado56@poshiri.org"
@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "Dev Core",
     "shortDescription": "TDD, verification, review, and architecture workflows.",
-    "longDescription": "Dev Core packages Codex-native skills for test-driven implementation, systematic debugging, refactoring, verification loops, code review, frontend and backend architecture patterns, and continuous improvement. It converts the Claude command-oriented workflow into focused Codex skills with progressive disclosure.",
+    "longDescription": "Dev Core packages Codex-native entrypoint skills for task planning, plan execution, TDD, debugging, review, refactoring, Playwright E2E, checkpoints, verification loops, frontend and backend architecture patterns, and continuous improvement. Narrow skills trigger day-to-day workflows while dev-workflow keeps shared orchestration gates and references centralized.",
     "developerName": "Ryusuke Tadokoro",
     "category": "Development",
     "capabilities": [
@@ -29,9 +29,9 @@
       "Automation"
     ],
     "defaultPrompt": [
-      "Use dev-core to plan and verify this coding task.",
-      "Use dev-workflow to debug this issue from root cause.",
-      "Review this change with the verification loop."
+      "Use $dev-task to turn this feature idea into a TDD plan.",
+      "Use $dev-execute to implement this plan with gated TDD.",
+      "Use $dev-review to review this change with dev-core criteria."
     ]
   }
 }

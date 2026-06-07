@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dev Checkpoint"
+  short_description: "Capture resumable work state"
+  default_prompt: "Use $dev-checkpoint to capture the current task state for handoff."

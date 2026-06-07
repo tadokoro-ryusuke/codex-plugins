@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dev TDD"
+  short_description: "Run focused test-first cycles"
+  default_prompt: "Use $dev-tdd to implement this behavior with a focused TDD cycle."

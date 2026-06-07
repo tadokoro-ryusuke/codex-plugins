@@ -66,7 +66,7 @@ function checkPlugin(pluginDir) {
   if (manifest.name !== pluginName) {
     errors.push(`${relative(root, manifestPath)}: manifest name must match folder name`);
   }
-  if (!/^\d+\.\d+\.\d+$/.test(manifest.version ?? "")) {
+  if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(manifest.version ?? "")) {
     errors.push(`${relative(root, manifestPath)}: version must be strict semver`);
   }
   if (manifest.skills !== "./skills/") {
@@ -113,6 +113,28 @@ function checkSkill(skillFile) {
   }
   if (content.includes("[TODO:")) {
     errors.push(`${rel}: contains TODO placeholder`);
+  }
+
+  const skillDir = skillFile.slice(0, -"/SKILL.md".length);
+  const openaiYamlPath = join(skillDir, "agents/openai.yaml");
+  if (existsSync(openaiYamlPath)) {
+    checkOpenAiYaml(openaiYamlPath, name);
+  }
+}
+
+function checkOpenAiYaml(path, skillName) {
+  const content = readFileSync(path, "utf8");
+  const rel = relative(root, path);
+  for (const required of ["display_name", "short_description", "default_prompt"]) {
+    if (!new RegExp(`^\\s*${required}:`, "m").test(content)) {
+      errors.push(`${rel}: missing interface.${required}`);
+    }
+  }
+  if (skillName && !content.includes(`$${skillName}`)) {
+    errors.push(`${rel}: default_prompt must mention $${skillName}`);
+  }
+  if (/Use\s+-[A-Za-z0-9-]+/.test(content)) {
+    errors.push(`${rel}: default_prompt looks like shell-expanded skill name`);
   }
 }
 

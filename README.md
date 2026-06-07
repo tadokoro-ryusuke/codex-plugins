@@ -43,3 +43,19 @@ node scripts/validate-codex-plugins.mjs
 ```
 
 The `PYTHONPATH` lines are only needed when the local Python does not already include PyYAML.
+
+## Dev Core Entrypoints
+
+Use narrow skills for daily work and let `dev-workflow` provide shared orchestration:
+
+| Skill | Use for |
+| --- | --- |
+| `$dev-task` | Turn an idea into acceptance criteria, BDD scenarios, and a TDD plan. |
+| `$dev-execute` | Execute an existing plan with gated TDD, verification, and review. |
+| `$dev-debug` | Investigate errors from root cause before fixing. |
+| `$dev-tdd` | Run a focused test-first cycle for one behavior or regression. |
+| `$dev-review` | Review with dev-core criteria: behavior, security, tests, architecture, maintainability, conventions. |
+| `$dev-refactor` | Refactor safely without behavior changes. |
+| `$dev-e2e` | Run or diagnose Playwright E2E tests. |
+| `$dev-checkpoint` | Capture resumable state for handoff or continuation. |
+| `$dev-workflow` | Shared multi-phase orchestration when no narrower skill fits. |
