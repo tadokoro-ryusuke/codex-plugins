@@ -1,0 +1,37 @@
+{
+  "name": "dev-core",
+  "version": "3.2.0",
+  "description": "Codex-native development workflows for TDD, architecture patterns, systematic debugging, verification, review, and continuous learning.",
+  "author": {
+    "name": "Ryusuke Tadokoro",
+    "email": "tado56@poshiri.org"
+  },
+  "license": "MIT",
+  "keywords": [
+    "tdd",
+    "clean-architecture",
+    "ddd",
+    "verification",
+    "code-review",
+    "debugging",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Dev Core",
+    "shortDescription": "TDD, verification, review, and architecture workflows.",
+    "longDescription": "Dev Core packages Codex-native skills for test-driven implementation, systematic debugging, refactoring, verification loops, code review, frontend and backend architecture patterns, and continuous improvement. It converts the Claude command-oriented workflow into focused Codex skills with progressive disclosure.",
+    "developerName": "Ryusuke Tadokoro",
+    "category": "Development",
+    "capabilities": [
+      "Skills",
+      "Code Review",
+      "Automation"
+    ],
+    "defaultPrompt": [
+      "Use dev-core to plan and verify this coding task.",
+      "Use dev-workflow to debug this issue from root cause.",
+      "Review this change with the verification loop."
+    ]
+  }
+}

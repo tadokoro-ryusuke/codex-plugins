@@ -1,0 +1,35 @@
+{
+  "name": "ui-ux-pro-max",
+  "version": "1.2.0",
+  "description": "Codex UI/UX design intelligence with searchable style, color, typography, chart, landing page, UX, and stack guidance.",
+  "author": {
+    "name": "nextlevelbuilder",
+    "url": "https://github.com/nextlevelbuilder/ui-ux-pro-max-skill"
+  },
+  "license": "MIT",
+  "keywords": [
+    "ui",
+    "ux",
+    "design",
+    "frontend",
+    "tailwind",
+    "accessibility"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Ui Ux Pro Max",
+    "shortDescription": "Searchable UI/UX design intelligence.",
+    "longDescription": "UI/UX Pro Max helps Codex choose product patterns, visual styles, color palettes, typography, chart types, landing page structure, accessibility guidance, and stack-specific frontend implementation tactics.",
+    "developerName": "nextlevelbuilder",
+    "category": "Design",
+    "capabilities": [
+      "Skills",
+      "Design",
+      "Frontend"
+    ],
+    "defaultPrompt": [
+      "Use ui-ux-pro-max to design a polished dashboard.",
+      "Use ui-ux-pro-max to choose colors and typography."
+    ]
+  }
+}

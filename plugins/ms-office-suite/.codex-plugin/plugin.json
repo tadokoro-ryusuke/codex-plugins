@@ -1,0 +1,35 @@
+{
+  "name": "ms-office-suite",
+  "version": "1.2.0",
+  "description": "Codex skills for PDF and DOCX creation, extraction, editing, forms, tracked changes, and OOXML workflows.",
+  "author": {
+    "name": "Ryusuke Tadokoro",
+    "email": "tado56@poshiri.org"
+  },
+  "license": "MIT",
+  "keywords": [
+    "pdf",
+    "docx",
+    "word",
+    "office",
+    "forms",
+    "ooxml"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Ms Office Suite",
+    "shortDescription": "PDF and DOCX document workflows.",
+    "longDescription": "MS Office Suite packages Codex skills and helper scripts for working with PDFs and Word documents, including text and table extraction, PDF creation, splitting and merging, form filling, DOCX generation, OOXML editing, tracked changes, and comments.",
+    "developerName": "Ryusuke Tadokoro",
+    "category": "Productivity",
+    "capabilities": [
+      "Skills",
+      "Documents",
+      "Scripts"
+    ],
+    "defaultPrompt": [
+      "Use pdf to extract text and tables from this PDF.",
+      "Use docx to create a Word document with tracked changes."
+    ]
+  }
+}
