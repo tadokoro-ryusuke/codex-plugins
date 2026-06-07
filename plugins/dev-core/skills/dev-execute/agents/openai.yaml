@@ -1,4 +1,4 @@
 interface:
   display_name: "Dev Execute"
-  short_description: "Execute plans with gated TDD"
-  default_prompt: "Use $dev-execute to implement this plan with gated TDD."
+  short_description: "Execute plans through review gates"
+  default_prompt: "Use $dev-execute to implement this plan through TDD, review, and refactor gates."

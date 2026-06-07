@@ -31,9 +31,31 @@ Verification
 
 Review axes:
 
+- Behavior: correctness, edge cases, regression risk, and external contract changes.
 - Security: injection, authz/authn, secrets, SSRF, unsafe dependencies.
-- Quality: SOLID, DRY, complexity, error handling, type safety.
-- Project convention: structure, naming, test style, docs, commit shape.
+- Tests: meaningful assertions, regression coverage, missing integration or E2E coverage.
+- Architecture: FSD, Clean Architecture, DDD, API boundaries, and dependency direction.
+- Quality: SOLID, DRY, complexity, error handling, type safety, naming.
+- Project convention: structure, naming, test style, docs, commit shape, scripts.
+- Delivery: branch scope, PR risk, commit grouping, and whether remaining issues block merge.
+
+### Zero-Trust Review
+
+Do not accept implementation reports at face value:
+
+- If tests are claimed, inspect that tests exist and assert the relevant behavior.
+- If typecheck or lint is claimed, still inspect the changed code for unsafe casts, ignored errors, and convention drift.
+- If a change is described as "refactor only", inspect the diff for external behavior changes.
+- If verification was not run in the current turn, report it as missing evidence.
+
+### Approval Gate
+
+Approve only when:
+
+- no P0/P1 findings remain,
+- behavior and test coverage are adequate for the touched surface,
+- security-sensitive changes have explicit scrutiny,
+- residual risks are disclosed with practical next steps.
 
 ## Verification
 
@@ -45,4 +67,3 @@ Use `verification-loop` for the full check. Adapt commands to the project, but k
 - Test: focused first, then broad enough for risk.
 - Security: dependency audit and secret scan where relevant.
 - Diff: inspect changed files and unintended churn.
-

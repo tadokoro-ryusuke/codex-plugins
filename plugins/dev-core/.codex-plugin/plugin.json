@@ -1,7 +1,7 @@
 {
   "name": "dev-core",
-  "version": "3.3.0+codex.20260607111022",
-  "description": "Codex-native development entrypoints and orchestration for task planning, execution, TDD, debugging, review, refactoring, E2E, verification, and continuous learning.",
+  "version": "3.4.0+codex.20260607144445",
+  "description": "Codex-native development entrypoints and orchestration for design planning, branch/worktree execution, TDD, debugging, review, refactoring, E2E, verification, and continuous learning.",
   "author": {
     "name": "Ryusuke Tadokoro",
     "email": "tado56@poshiri.org"
@@ -20,7 +20,7 @@
   "interface": {
     "displayName": "Dev Core",
     "shortDescription": "TDD, verification, review, and architecture workflows.",
-    "longDescription": "Dev Core packages Codex-native entrypoint skills for task planning, plan execution, TDD, debugging, review, refactoring, Playwright E2E, checkpoints, verification loops, frontend and backend architecture patterns, and continuous improvement. Narrow skills trigger day-to-day workflows while dev-workflow keeps shared orchestration gates and references centralized.",
+    "longDescription": "Dev Core packages Codex-native entrypoint skills for design planning, plan execution, TDD, debugging, review, refactoring, Playwright E2E, checkpoints, verification loops, frontend and backend architecture patterns, and continuous improvement. Narrow skills trigger day-to-day workflows while dev-workflow keeps shared orchestration gates, branch/worktree preparation, review/refactor loops, and evidence rules centralized.",
     "developerName": "Ryusuke Tadokoro",
     "category": "Development",
     "capabilities": [
@@ -29,8 +29,8 @@
       "Automation"
     ],
     "defaultPrompt": [
-      "Use $dev-task to turn this feature idea into a TDD plan.",
-      "Use $dev-execute to implement this plan with gated TDD.",
+      "Use $dev-task to draft a design and TDD plan.",
+      "Use $dev-execute to implement this plan through review gates.",
       "Use $dev-review to review this change with dev-core criteria."
     ]
   }

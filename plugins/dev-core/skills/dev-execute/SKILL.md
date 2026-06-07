@@ -1,11 +1,11 @@
 ---
 name: dev-execute
-description: "Execute an existing development plan with gated TDD, verification, review, and final reporting. Use to implement, continue, resume, or complete docs/plans work."
+description: "Execute an existing development plan with branch/worktree preparation, gated TDD, verification, review, refactor/fix loops, and final reporting. Use to implement, continue, resume, or complete docs/plans work."
 ---
 
 # Dev Execute
 
-Use this skill to implement an existing plan with explicit phase gates.
+Use this skill to implement an existing plan as an end-to-end Codex workflow.
 
 ## Workflow
 
@@ -18,11 +18,13 @@ Use this skill to implement an existing plan with explicit phase gates.
 ## Execution Contract
 
 - Start by reading the plan and checking `git status --short`.
+- Choose the workspace path deliberately: stay on a Codex worktree when one is already active; otherwise create a local branch only when the repo is clean enough and the task is execution-scoped.
 - Convert the plan into small implementation steps with `update_plan`.
-- For each step: write or adjust tests, implement narrowly, run focused checks, then proceed.
-- Run a review gate before final response for non-trivial changes.
-- Commit only when explicitly requested.
+- For each step: Red, Green, Refactor, focused verification, and self-review before moving on.
+- After implementation: run broader verification, then a zero-trust review gate.
+- If review finds real issues, fix or refactor narrowly and re-run affected checks. Stop after three failed similar rounds.
+- Commit, push, or open a PR only when explicitly requested or the current user request includes that delivery.
 
 ## Stop Rules
 
-Stop and report when a gate fails, the plan is materially wrong, unrelated user changes block safe editing, or the same fix path fails three times.
+Stop and report when a gate fails, the plan is materially wrong, branch/worktree preparation is unsafe, unrelated user changes block safe editing, or the same fix path fails three times.

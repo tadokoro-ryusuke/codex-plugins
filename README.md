@@ -50,8 +50,8 @@ Use narrow skills for daily work and let `dev-workflow` provide shared orchestra
 
 | Skill | Use for |
 | --- | --- |
-| `$dev-task` | Turn an idea into acceptance criteria, BDD scenarios, and a TDD plan. |
-| `$dev-execute` | Execute an existing plan with gated TDD, verification, and review. |
+| `$dev-task` | Turn an idea into a design plan, acceptance criteria, BDD scenarios, and TDD iterations. |
+| `$dev-execute` | Execute an existing plan through branch/worktree prep, TDD, verification, review, and refactor gates. |
 | `$dev-debug` | Investigate errors from root cause before fixing. |
 | `$dev-tdd` | Run a focused test-first cycle for one behavior or regression. |
 | `$dev-review` | Review with dev-core criteria: behavior, security, tests, architecture, maintainability, conventions. |
@@ -59,3 +59,5 @@ Use narrow skills for daily work and let `dev-workflow` provide shared orchestra
 | `$dev-e2e` | Run or diagnose Playwright E2E tests. |
 | `$dev-checkpoint` | Capture resumable state for handoff or continuation. |
 | `$dev-workflow` | Shared multi-phase orchestration when no narrower skill fits. |
+
+`dev-task` writes durable plans under `docs/plans/task-<slug>.md` by default when work will continue later. `dev-execute` treats those plans as executable contracts: prepare the worktree or branch, implement with small TDD loops, verify with evidence, review independently, then fix or refactor before final delivery.

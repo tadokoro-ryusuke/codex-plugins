@@ -13,7 +13,8 @@ Use this skill when the user wants dev-core review criteria, not just a generic 
 2. Read the Code Review section in `../dev-workflow/references/review-refactor-verify.md`.
 3. Gather the target: working tree, branch, PR, file, plan, or diff.
 4. Review independently. Do not trust prior implementation claims.
-5. Lead with findings, ordered by severity, with file references.
+5. Inspect tests and verification evidence as part of the review, not as separate self-reported facts.
+6. Lead with findings, ordered by severity, with file references.
 
 ## Review Criteria
 
@@ -25,6 +26,7 @@ Check at least:
 - Architecture: FSD, Clean Architecture, DDD boundaries when relevant.
 - Maintainability: naming, complexity, duplication, type safety, error handling.
 - Project conventions from `AGENTS.md`, README, CI, package scripts, and surrounding code.
+- Delivery readiness: branch scope, commit grouping, PR risk, and whether remaining issues block merge.
 
 ## Built-In Review
 

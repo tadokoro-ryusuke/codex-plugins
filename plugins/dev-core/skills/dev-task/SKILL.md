@@ -1,11 +1,11 @@
 ---
 name: dev-task
-description: "Plan feature, bug, or vague development work into acceptance criteria, BDD scenarios, a TDD plan, and optional issue draft. Use for task creation, feature planning, breakdowns, or implementation prep."
+description: "Plan feature, bug, or vague development work into a design plan, acceptance criteria, BDD scenarios, TDD iterations, and optional issue draft. Use for task creation, feature planning, breakdowns, or implementation prep."
 ---
 
 # Dev Task
 
-Use this skill to turn an idea into a concrete, executable development task.
+Use this skill to turn an idea into a durable design-and-implementation plan.
 
 ## Workflow
 
@@ -13,9 +13,11 @@ Use this skill to turn an idea into a concrete, executable development task.
 2. Read `../dev-workflow/references/task-planning.md`.
 3. Use `best-practices` when architectural or TDD principles matter.
 4. Inspect the repo enough to make the plan concrete.
-5. Save a plan under `docs/plans/task-<slug>.md` when the user asks for a durable plan or implementation will continue later.
-6. Create or draft a GitHub issue only when the user asks or the repo workflow clearly expects it.
+5. Write a design plan by default for task creation, feature planning, or work that will continue later.
+6. Save it under `docs/plans/task-<slug>.md` unless the user only wants a lightweight inline plan.
+7. Create or draft a GitHub issue only when the user asks or the repo workflow clearly expects it.
+8. Do not start implementation unless the user asks to continue into execution.
 
 ## Output
 
-Produce acceptance criteria, BDD scenarios, a TDD plan, verification commands, and risks. Keep the plan specific enough that `dev-execute` can implement it.
+Produce a plan with scope, non-goals, design notes, acceptance criteria, BDD scenarios, TDD iterations, verification commands, branch/commit strategy, and risks. Keep it specific enough that `dev-execute` can implement it without re-discovering the task.
