@@ -37,6 +37,30 @@ Use Codex surfaces directly:
 
 Do not copy Claude slash-command or required-subagent mechanics into Codex. Encode them as gates, evidence requirements, and optional second-opinion steps.
 
+## Subagent Gate
+
+Subagents are useful when they improve the workflow, not as ceremony.
+
+Benefits:
+
+- Keep noisy exploration, logs, test output, and traces out of the main thread.
+- Run independent read-heavy work in parallel to save elapsed time.
+- Add specialized viewpoints for security, test gaps, maintainability, or architecture.
+- Reduce confirmation bias with an independent review or rescue diagnosis.
+- Break large tasks into bounded slices whose results return as concise summaries.
+
+Use subagents when the user explicitly asks for delegation, parallel agents, or a second opinion; or when the user has clearly authorized that style for the current task. Prefer them for exploration, triage, review, summarization, test-gap analysis, and rescue after repeated failures.
+
+Avoid subagents when the next action is on the critical path, the work is tightly coupled, the write set would overlap, or the overhead would exceed the benefit. Be especially careful with parallel write-heavy work because it can create conflicts and coordination cost.
+
+When using subagents:
+
+1. Assign concrete, bounded tasks with disjoint ownership.
+2. Ask for concise findings with evidence, not raw logs.
+3. Continue useful non-overlapping work locally while they run.
+4. Treat subagent output as untrusted until checked against files, diffs, logs, or command output.
+5. Close or stop agents that are no longer needed.
+
 ## Branch And Worktree Gate
 
 Before code changes:

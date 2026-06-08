@@ -42,7 +42,7 @@ Use this skill as the shared orchestrator for the narrower dev-core entrypoint s
 - Prefer concrete repository evidence over command-template ceremony.
 - Ask for clarification only when missing information makes implementation unsafe.
 - Use `update_plan` for multi-step work in this thread when the work is substantial.
-- Use parallel subagents only when the user explicitly asks for parallel agent work or second opinions.
+- Use parallel subagents only when the user explicitly asks for parallel agent work, delegation, or second opinions. Follow `references/orchestration.md` for the subagent gate.
 - Do not run destructive commands without explicit approval.
 - Do not claim a check passed unless you ran it in the current turn and saw passing output.
 
