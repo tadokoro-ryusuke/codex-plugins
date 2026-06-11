@@ -1,0 +1,46 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate marketplace, manifests, skills, and hooks
+        run: node scripts/validate-codex-plugins.mjs
+
+      - name: Smoke-test PreToolUse blocker hook
+        run: |
+          blocked=$(echo '{"tool_input":{"command":"git reset --hard"}}' | python3 plugins/dev-core/hooks/scripts/block_dangerous_commands.py)
+          test -n "$blocked" || { echo "expected deny decision"; exit 1; }
+          allowed=$(echo '{"tool_input":{"command":"git status"}}' | python3 plugins/dev-core/hooks/scripts/block_dangerous_commands.py)
+          test -z "$allowed" || { echo "expected pass-through"; exit 1; }
+
+      - name: Smoke-test SessionStart hook
+        run: bash plugins/dev-core/hooks/scripts/session_start.sh
+
+      - name: Smoke-test verify.sh
+        run: plugins/dev-core/skills/verification-loop/scripts/verify.sh --skip security
+
+      - name: Validate bundled agent TOML definitions
+        run: |
+          python3 - <<'EOF'
+          import glob, tomllib
+          files = glob.glob("plugins/**/assets/agents/*.toml", recursive=True)
+          assert files, "no agent TOML files found"
+          for path in files:
+              with open(path, "rb") as fh:
+                  data = tomllib.load(fh)
+              for field in ("name", "description", "developer_instructions"):
+                  assert data.get(field), f"{path}: missing {field}"
+              print(f"{path}: OK")
+          EOF
