@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Collab"
+  short_description: "Independent review, rescue, subagents"
+  default_prompt: "Use $codex-collab to get an independent second opinion on this change."

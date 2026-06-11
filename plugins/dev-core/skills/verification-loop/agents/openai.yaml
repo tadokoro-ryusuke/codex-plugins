@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verification Loop"
+  short_description: "Six-step evidence-based verification"
+  default_prompt: "Use $verification-loop to verify this change with evidence."

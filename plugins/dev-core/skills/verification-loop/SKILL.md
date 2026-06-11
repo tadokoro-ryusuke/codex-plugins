@@ -1,152 +1,57 @@
 ---
 name: verification-loop
-description: "Evidence-based 6-step verification workflow: build, typecheck, lint, test, security, and diff review. Use when asked to verify changes, finish a coding task, prepare a PR, or prove that checks pass."
+description: "Evidence-based 6-step verification: build, typecheck, lint, test, security audit, and diff review, with a bundled runner script. Use when asked to verify changes, finish a coding task, prepare a PR, prove that checks pass, or when claiming work is done."
 ---
 
 # Verification Loop
 
-## 6 段階検証フロー
+Run all six steps and report with evidence. Never declare a step passed without command output from this turn.
 
-### Step 1: Build Check 🏗️
-
-ビルドが成功することを確認。
+## Run the bundled script first
 
 ```bash
-pnpm build
-# または
-npm run build
+scripts/verify.sh [--skip step,step] [project-dir]
 ```
 
-**チェック項目:**
+(Resolve the path relative to this skill directory.)
 
-- コンパイルエラーなし
-- バンドルサイズが適切
-- 警告の確認
+The script detects the stack (npm/pnpm/yarn/bun scripts, Cargo, Go, Python), runs build → types → lint → test → security → diff, writes full logs to a temp directory, and prints a PASS/FAIL/SKIP summary. Exit code 0 means no applicable step failed.
 
-### Step 2: Type Check 📝
+After running:
 
-TypeScript の型エラーがないことを確認。
+1. Quote the summary block in your report.
+2. For every FAIL, read the step's log file, fix the cause, and re-run.
+3. For every SKIP, decide whether the step truly doesn't apply (e.g. no test runner configured). If it should apply, run the project's own command manually and report that output.
 
-```bash
-pnpm typecheck
-# または
-npx tsc --noEmit
-```
+The script only knows common stacks. When the project defines its own verification commands (Makefile, CI config, AGENTS.md), prefer those and report their output instead.
 
-**チェック項目:**
+## Iron Law: evidence-based completion
 
-- 型エラーなし
-- strict mode 準拠
-- any 使用なし
+A claim requires same-turn command output. Cached results, previous runs, and "should pass" reasoning are not evidence.
 
-### Step 3: Lint Check 🔍
+| Claim | Required evidence | Not evidence |
+|---|---|---|
+| Build succeeds | This turn's build output, exit 0 | "My change doesn't affect the build" |
+| No type errors | This turn's typecheck output | "I fixed the types" |
+| Lint passes | This turn's lint output | "It passed last time" |
+| All tests pass | This turn's test run, 0 failures | "Untouched code, should pass" |
+| No vulnerabilities | This turn's audit output | "I didn't change dependencies" |
 
-コーディング規約に準拠していることを確認。
+Red flags that violate the rule: "should pass", "probably fine", "passed previously", "no impact since nothing changed", or any checkmark without attached output.
 
-```bash
-pnpm lint
-# 自動修正
-pnpm lint --fix
-```
-
-**チェック項目:**
-
-- ESLint エラーなし
-- 警告の確認と対応
-- Prettier フォーマット
-
-### Step 4: Test Check ✅
-
-すべてのテストがパスすることを確認。
-
-```bash
-pnpm test
-# カバレッジ付き
-pnpm test --coverage
-```
-
-**チェック項目:**
-
-- 全テストグリーン
-- カバレッジ 80%以上
-- 新機能のテストあり
-
-### Step 5: Security Check 🔒
-
-セキュリティ脆弱性がないことを確認。
-
-```bash
-npm audit --audit-level=moderate
-```
-
-**チェック項目:**
-
-- 依存関係の脆弱性なし
-- 機密情報のハードコードなし
-- OWASP Top 10 準拠
-
-### Step 6: Diff Check 📊
-
-変更が適切にコミットされていることを確認。
-
-```bash
-git diff --stat HEAD~1
-git diff HEAD~1 --name-only
-```
-
-**チェック項目:**
-
-- 未コミットの変更なし
-- 適切なコミットメッセージ
-- 不要なファイルの除外
-
-## 証拠ベース完了判定（Iron Law）
-
-**検証コマンドを実行せずに「パス」を宣言することは許されない。**
-
-各ステップの判定には、**同一ターン内で**コマンドを実行した出力が必須。過去の実行結果、キャッシュされた結果、「通るはず」という推測は証拠として認めない。
-
-| 主張 | 必要な証拠 | 証拠にならないもの |
-|------|-----------|-------------------|
-| 「ビルド成功」 | 同一ターンの `pnpm build` 出力（exit code 0） | 「ビルドに影響する変更はしていない」 |
-| 「型エラーなし」 | 同一ターンの `pnpm typecheck` 出力 | 「型を修正したので大丈夫」 |
-| 「lintパス」 | 同一ターンの `pnpm lint` 出力 | 「前回通った」 |
-| 「テスト全パス」 | 同一ターンのテスト実行出力（0 failures） | 「変更していないから通る」「should pass」 |
-| 「脆弱性なし」 | 同一ターンの `npm audit` 出力 | 「依存は変更していない」 |
-
-**Red Flags**: レポート内に以下の表現があればルール違反:
-- 「〜のはず」「おそらく通る」「前回パスしている」「変更していないので影響なし」
-- 実行出力を伴わない ✅ 判定
-
-## 検証結果フォーマット
+## Report format
 
 ```
-【6 段階検証結果】
+[Verification]
+PASS  build    (pnpm run build)
+PASS  types    (pnpm run typecheck)
+WARN  lint     (3 warnings)
+PASS  test     (pnpm run test, coverage 85%)
+PASS  security (npm audit)
+WARN  diff     (uncommitted changes)
 
-✅ Step 1: Build    - パス
-✅ Step 2: Type     - パス
-⚠️  Step 3: Lint    - 警告 3 件
-✅ Step 4: Test     - パス（カバレッジ: 85%）
-✅ Step 5: Security - パス
-✅ Step 6: Diff     - 変更 5 ファイル
-
-【アクション必要】
-- lint 警告を修正: `pnpm lint --fix`
+[Action needed]
+- Fix lint warnings: pnpm lint --fix
 ```
 
-## CI/CD 統合
-
-```yaml
-# GitHub Actions 例
-jobs:
-  verify:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: pnpm install
-      - run: pnpm build
-      - run: pnpm typecheck
-      - run: pnpm lint
-      - run: pnpm test --coverage
-      - run: npm audit --audit-level=moderate
-```
+Coverage target when measurable: 80%+. New behavior must come with tests (see $dev-tdd).

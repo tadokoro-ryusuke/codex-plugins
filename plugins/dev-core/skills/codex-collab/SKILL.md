@@ -1,11 +1,11 @@
 ---
 name: codex-collab
-description: "Codex-native collaboration workflow for independent review, second opinions, rescue work, parallel subagents, and thread handoffs. Use when the user asks for Codex review, a second opinion, rescue after repeated failures, parallel agents, or a separate verification pass."
+description: "Codex-native collaboration: independent review, second opinions, rescue after repeated failures, parallel subagents, and thread handoffs. Use when the user asks for a second opinion, an independent review pass, rescue when fixes keep failing, or parallel agent work."
 ---
 
 # Codex Collab
 
-Use this skill to coordinate independent reasoning inside Codex without relying on Claude Code or `codex-plugin-cc`.
+Coordinate independent reasoning inside Codex: reviews that don't trust the implementer, rescue when an approach is looping, and explicit parallel subagent work.
 
 ## Principles
 
@@ -14,17 +14,15 @@ Use this skill to coordinate independent reasoning inside Codex without relying 
 3. Treat every agent result as untrusted until verified against files, diffs, logs, or command output.
 4. Stop after three failed attempts at the same fix path. Report the attempts and switch to a fresh diagnosis or ask for user direction.
 
-## Choosing The Codex Surface
+## Choosing the Codex surface
 
-- Use `/review` or a review-style response when the user wants a review of the current working tree.
-- Use explicit subagents only when the user asks for parallel agents, second opinions, or delegation.
-- Use a new thread or fork when the user wants an isolated exploration without polluting the main thread.
-- Use Browser or Computer Use only when the task requires local UI inspection, browser testing, or desktop interaction.
-- Use MCP/connectors when the needed context lives outside the repo, such as GitHub, Slack, docs, or issue trackers.
+- `/review` or a review-style response: review of the current working tree.
+- Subagents: only when the user asks for parallel agents, second opinions, or delegation. Codex never spawns them implicitly.
+- New thread or fork: isolated exploration without polluting the main thread.
+- Browser / computer use: only when the task needs UI inspection or browser testing.
+- MCP/connectors: when the needed context lives outside the repo (GitHub, Slack, docs, issue trackers).
 
-## Independent Review
-
-When asked for a second opinion or review:
+## Independent review
 
 1. Identify the review target: working tree, branch, PR, file, plan, or failure log.
 2. Gather the smallest useful artifact set: `git status`, relevant diffs, changed files, failing outputs.
@@ -32,9 +30,9 @@ When asked for a second opinion or review:
 4. Verify each finding against concrete files or command output before reporting it.
 5. Present findings first, ordered by severity, with file references.
 
-## Rescue Workflow
+## Rescue workflow
 
-Use this when the same issue has failed three times, the current approach is looping, or the user asks for rescue:
+Use when the same issue has failed three times, the current approach is looping, or the user asks for rescue:
 
 1. Freeze implementation. Do not attempt the fourth similar fix.
 2. Summarize the failed attempts with evidence and why each failed.
@@ -42,19 +40,29 @@ Use this when the same issue has failed three times, the current approach is loo
 4. Produce three independent root-cause hypotheses.
 5. Validate or eliminate each hypothesis before editing.
 6. Make the smallest fix that addresses the confirmed root cause.
-7. Run the relevant verification loop and report evidence.
+7. Run $verification-loop and report evidence.
 
-## Parallel Subagents
+## Parallel subagents
 
-Only use subagents when explicitly requested or clearly authorized by the user. Good splits:
+Subagents are explicit in Codex: spawn them only when the user requests parallel work or delegation. Requirements and behavior:
 
-- Security review, test-gap review, maintainability review.
-- Backend analysis, frontend analysis, infrastructure analysis.
-- Reproduction/log triage, code-path trace, fix strategy.
+- `features.multi_agent = true` in `config.toml` enables the collaboration tools (`spawn_agent`, `send_input`, `wait_agent`, `close_agent`); `[agents] max_threads` caps concurrency (default 6).
+- Subagents inherit the current sandbox policy — be deliberate when running with elevated permissions.
+- Prefer parallel subagents for read-heavy work: exploration, test runs, triage, review. Avoid parallel write-heavy work (edit conflicts).
+- Ask each subagent for a concise summary with evidence, not raw logs. Synthesize and independently verify claims before acting.
 
-Ask each subagent to return a concise summary with evidence, not raw logs. After all agents finish, synthesize and independently verify their claims before acting.
+Good splits: security / test-gap / maintainability review; backend / frontend / infrastructure analysis; reproduction triage / code-path trace / fix strategy.
 
-## Output Shape
+### Bundled role definitions
+
+This skill ships ready-made custom agent roles:
+
+- `assets/agents/code-reviewer.toml` — zero-trust reviewer, read-only sandbox.
+- `assets/agents/security-auditor.toml` — OWASP Top 10 auditor, read-only sandbox.
+
+To use them, copy the files into `<repo>/.codex/agents/` (project-wide) or `~/.codex/agents/` (personal), then reference the role when spawning (e.g. "spawn the code-reviewer agent on this diff").
+
+## Output shape
 
 For reviews:
 
@@ -78,4 +86,3 @@ Rescue Summary
 - Fix applied
 - Verification evidence
 ```
-

@@ -1,0 +1,30 @@
+{
+  "description": "Dev Core automation hooks: block destructive commands and load project state at session start.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${PLUGIN_ROOT}/hooks/scripts/session_start.sh",
+            "statusMessage": "Loading dev-core project state",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "^(Bash|shell|local_shell)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ${PLUGIN_ROOT}/hooks/scripts/block_dangerous_commands.py",
+            "statusMessage": "Checking command safety",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
