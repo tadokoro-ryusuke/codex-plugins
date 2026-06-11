@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub Workflows"
+  short_description: "PR preparation and docs sync via gh"
+  default_prompt: "Use $github-workflows to prepare a pull request for the current branch."

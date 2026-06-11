@@ -1,0 +1,4 @@
+interface:
+  display_name: "Continuous Learning"
+  short_description: "Encode mistakes into durable prevention"
+  default_prompt: "Use $continuous-learning to turn this failure into a permanent prevention mechanism."

@@ -11,7 +11,7 @@ Use this skill when work needs a durable handoff or resumable state.
 
 1. Read `../dev-workflow/references/orchestration.md`.
 2. Read the Checkpoints section in `../dev-workflow/references/e2e-checkpoint.md`.
-3. Capture goal, completed steps, files changed, commands run, results, blockers, decisions, and next actions.
+3. Capture goal, completed steps, files changed, commands run, results, blockers, decisions, and next actions. Start from `assets/checkpoint-template.md` in this skill directory.
 4. Save under `docs/checkpoints/checkpoint-<timestamp>.md` only when the user wants a file.
 
 ## Output

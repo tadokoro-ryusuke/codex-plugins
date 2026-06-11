@@ -1,179 +1,129 @@
 ---
 name: best-practices
-description: "Development best practices for TDD, Feature-Sliced Design, Clean Architecture, DDD, SOLID, coding conventions, refactoring, TypeScript, and security. Use when planning, implementing, reviewing, or refactoring code."
+description: "Dev-core coding standards: TDD cycle, SOLID, naming, hardcoding bans, Feature-Sliced Design, Clean Architecture, DDD, OWASP security checklist, and refactoring rules. Reference skill loaded by dev-core workflow skills; invoke explicitly with $best-practices when planning, implementing, reviewing, or refactoring code against these standards."
 ---
 
 # Dev Core Best Practices
 
-全エージェントの共通基盤。コーディング規約・原則・パターンの **Single Source of Truth**。
+Single source of truth for the coding standards that all dev-core workflow skills assume. These are the project conventions to enforce, not general explanations.
 
-## 1. TDD サイクル（t-wada 式）
+## 1. TDD Cycle (t-wada style)
 
-### Red→Green→Refactor→Commit
+Red → Green → Refactor → Commit:
 
-1. **Red 🔴**: 単一機能の失敗するテストを1つ作成。実装は存在しないため必ず失敗する
-2. **Green 🟢**: テストをパスさせる**最小限のコード**を記述。余分な機能は追加しない
-3. **Refactor 🔨**: テストをグリーンに保ちながら品質向上。重複排除、命名改善、複雑さの解消
-4. **Commit ✅**: 意味のあるまとまりとしてコミット
+1. **Red**: Write one failing test for a single behavior. It must fail because the implementation does not exist yet.
+2. **Green**: Write the minimum code that makes the test pass. Add nothing speculative.
+3. **Refactor**: Improve quality while keeping tests green — remove duplication, improve names, reduce complexity.
+4. **Commit**: Commit each meaningful unit of work.
 
-## 2. SOLID 原則
+## 2. SOLID
 
-- **SRP**: 1モジュール/クラス/関数 = 1つの責任。変更理由は1つだけ
-- **OCP**: 拡張に開き、修正に閉じる。新機能は既存コード変更なしで追加
-- **LSP**: 派生型は基底型と置換可能
-- **ISP**: 使わないメソッドへの依存を強制しない
-- **DIP**: 高レベルモジュールは低レベルに依存しない。抽象に依存する
+Enforce all five; the two most often violated in review:
 
-## 3. コーディング規約
+- **SRP**: One module/class/function = one reason to change.
+- **DIP**: High-level modules depend on abstractions, never on concrete infrastructure.
 
-### ハードコーディング禁止
+OCP, LSP, and ISP apply as usual; flag violations in review rather than re-deriving theory.
 
-- **マジックナンバー**: `const MAX_RETRY = 3;` — 数値リテラル直接記述禁止
-- **設定値**: 環境変数または設定ファイル（API Key, URL, パス）
-- **UI文字列**: 定数や言語ファイルで管理
+## 3. Coding Conventions
 
-### 命名規約
+### Hardcoding bans
 
-- **camelCase**: 変数、関数、メソッド（`getUserById`, `isActive`）
-- **PascalCase**: クラス、型、インターフェース、コンポーネント（`UserService`, `ButtonProps`）
-- **UPPER_SNAKE_CASE**: 定数（`MAX_RETRY_COUNT`, `API_BASE_URL`）
-- **kebab-case**: ファイル名、ディレクトリ名（`user-service.ts`）
+- Magic numbers: extract to named constants (`const MAX_RETRY = 3`).
+- Config values (API keys, URLs, paths): environment variables or config files.
+- UI strings: constants or locale files.
 
-### コードスタイル
+### Naming
 
-- **DRY**: コード重複は即座に排除
-- **早期リターン/ガード節**: 深いネストを避ける
-- **イミュータビリティ**: `[...array, item]`, `{ ...obj, key: val }` — 直接変更しない
-- **ファイルサイズ**: 200-400行推奨、500行超で分割検討。関数は50行以下
-- **三項演算子**: 単純な場合のみ。ネストした三項演算子は使用禁止
+- `camelCase`: variables, functions, methods (`getUserById`, `isActive`)
+- `PascalCase`: classes, types, interfaces, components (`UserService`, `ButtonProps`)
+- `UPPER_SNAKE_CASE`: constants (`MAX_RETRY_COUNT`, `API_BASE_URL`)
+- `kebab-case`: file and directory names (`user-service.ts`)
+
+### Style
+
+- DRY: remove duplication as soon as it appears.
+- Early returns / guard clauses over deep nesting.
+- Immutability: `[...array, item]`, `{ ...obj, key: val }`; never mutate in place.
+- File size: aim for 200–400 lines, split above 500. Functions ≤ 50 lines.
+- Ternaries only for simple cases; nested ternaries are banned.
 
 ### TypeScript
 
-- **strict mode** 有効
-- **any 禁止**: `unknown` + 型ガードを使用
-- **明示的な戻り値の型**: 公開関数には必ず型を指定
-- **インポート順序**: 外部ライブラリ → 内部モジュール（絶対パス）→ 相対パス
+- `strict` mode on; `any` is banned — use `unknown` plus type guards.
+- Explicit return types on exported functions.
+- Import order: external libraries → internal absolute imports → relative imports.
 
 ## 4. Feature-Sliced Design (FSD)
 
-### レイヤー構造（上から下へ依存）
+Layers depend strictly downward; no cross-dependencies within a layer; `shared` is usable from anywhere.
 
 ```
 src/
-├── app/       # アプリケーション層（ページ、グローバル設定）
-├── widgets/   # ウィジェット層（ページ構成要素）
-├── features/  # フィーチャー層（ユーザー向け機能）
-├── entities/  # エンティティ層（ビジネスエンティティ）
-└── shared/    # 共有層（UI、ユーティリティ、設定）
+├── app/       # pages, global config
+├── widgets/   # page-level building blocks
+├── features/  # user-facing features
+├── entities/  # business entities
+└── shared/    # UI kit, utils, config
 ```
 
-### 依存関係ルール
-
-- 上位層は下位層のみに依存可能
-- 同一層内での相互依存は禁止
-- shared 層はどこからでも使用可能
-
-### スライス構成
-
-```
-features/[feature-name]/
-├── api/      # APIクライアント、サーバーアクション
-├── model/    # ストア、型、ビジネスロジック
-├── ui/       # UIコンポーネント
-└── index.ts  # パブリックAPI
-```
+Slice layout: `features/<name>/{api,model,ui,index.ts}` — `index.ts` is the only public API.
 
 ## 5. Clean Architecture
 
-### 依存性の逆転
-
-- ビジネスロジックは外部依存を持たない
-- インターフェースを通じた疎結合
-- 詳細（UI、DB）はビジネスルールに依存
+Business logic owns the interfaces; infrastructure implements them:
 
 ```typescript
-// Domain層（entities）— インターフェース定義
+// Domain (entities) — interface definition
 interface ClientRepository {
   findById(id: string): Promise<Client>;
 }
 
-// Application層（features）— ユースケース
+// Application (features) — use case depends on the abstraction
 class GetClientUseCase {
   constructor(private repo: ClientRepository) {}
   async execute(id: string) { return this.repo.findById(id); }
 }
 
-// Infrastructure層（features/api）— 具象実装
+// Infrastructure (features/api) — concrete implementation
 class DBClientRepository implements ClientRepository {
-  async findById(id: string) { /* DB操作 */ }
+  async findById(id: string) { /* DB access */ }
 }
 ```
 
-## 6. DDD（ドメイン駆動設計）
+## 6. DDD
 
-### エンティティとバリューオブジェクト
+- Entities carry identity; value objects are immutable and self-validating:
 
 ```typescript
-// エンティティ（識別子を持つ）
-class Client {
-  constructor(
-    private readonly id: ClientId,
-    private name: ClientName,
-    private tags: Tag[],
-  ) {}
-}
-
-// バリューオブジェクト（不変、自己検証）
 class ClientName {
   constructor(private readonly value: string) {
-    if (value.length < 2) throw new Error("クライアント名は2文字以上必要です");
+    if (value.length < 2) throw new Error("Client name must be at least 2 characters");
   }
 }
 ```
 
-### 集約とリポジトリ
+- Access aggregates only through their root; keep transaction boundaries aligned with aggregates; persist via repositories.
 
-- 集約ルートを通じたアクセス
-- トランザクション境界の明確化
-- リポジトリパターンの実装
+## 7. Security (OWASP Top 10 checklist)
 
-## 7. セキュリティ（OWASP Top 10）
+- **A01 Access control**: authorization on every endpoint, no horizontal privilege escalation, correct CORS.
+- **A02 Cryptography**: encrypt sensitive data, force HTTPS, modern algorithms only.
+- **A03 Injection**: ORM/parameterized queries, auto-escaping output, no shell string interpolation.
+- **A04 Insecure design**: threat-model new surfaces; defense in depth.
+- **A05 Misconfiguration**: no default credentials, disable unused features.
+- **A06 Vulnerable components**: dependencies current; `npm audit` (or ecosystem equivalent) clean.
+- **A07 Authentication**: strong password policy, MFA where available, secure session management.
+- **A08 Integrity**: CI/CD pipeline safety, dependency integrity checks.
+- **A09 Logging**: log security events, protect logs from tampering.
+- **A10 SSRF**: validate URLs, restrict internal network access.
 
-### チェックリスト
+Always:
 
-- **A01 Access Control**: 認可チェックが全エンドポイントに実装、水平権限昇格防止、CORS設定
-- **A02 Cryptographic**: 機密データ暗号化、HTTPS強制、安全な暗号アルゴリズム
-- **A03 Injection**: SQL/XSS/コマンドインジェクション対策（ORM使用、自動エスケープ）
-- **A04 Insecure Design**: 脅威モデリング、防御の深さ
-- **A05 Misconfiguration**: デフォルト資格情報変更、不要機能無効化
-- **A06 Vulnerable Components**: 依存関係最新、`npm audit` クリーン
-- **A07 Authentication**: 強力なパスワードポリシー、MFA、安全なセッション管理
-- **A08 Integrity**: CI/CD安全性、依存関係整合性チェック
-- **A09 Logging**: セキュリティイベントのログ記録、改ざん防止
-- **A10 SSRF**: URL検証、内部ネットワークアクセス制限
+- Schema-based input validation (zod, Laravel Validation, etc.) on the server side — client-side validation is UX only.
+- Secrets live in environment files excluded from git; commit `.env.example` as the template; scan diffs for secrets before committing.
+- Financial systems additionally require: ACID transaction atomicity, double-spend prevention, audit logs, rate limiting; Web3 requires wallet signature verification and MEV protection.
 
-### 入力検証
+## 8. Refactoring Moves
 
-- スキーマベースのバリデーション（zod, Laravel Validation等）
-- サーバーサイドバリデーション必須（クライアントのみに頼らない）
-
-### 機密情報保護
-
-- 環境変数の使用（.env.local / .env、.gitignore に追加）
-- コミット前の機密情報チェック
-- .env.example をコミット可能なテンプレートとして管理
-
-### 金融システム追加チェック
-
-- トランザクション原子性（ACID）、二重支払い防止
-- 監査ログ、レート制限
-- Web3: ウォレット署名検証、MEV保護
-
-## 8. リファクタリング技法
-
-- メソッドの抽出: 複雑な関数を分割
-- 変数/関数の名前変更: 明確性の向上
-- マジックナンバーを定数に置き換え
-- 条件式の簡略化
-- クラス/モジュールの抽出
-- デッドコードの排除
+Prefer these named, behavior-preserving moves: extract method, rename for clarity, replace magic number with constant, simplify conditional, extract class/module, delete dead code.

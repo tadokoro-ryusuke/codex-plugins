@@ -19,6 +19,10 @@ Use this skill for GitHub-facing development tasks. Prefer `gh` when it is insta
 - Check branch and working tree state before creating a PR.
 - Do not create a PR from `main` or `master`.
 - Do not hide uncommitted changes; report them and ask whether to commit, stash, or draft only.
-- Run relevant project checks before PR creation when feasible.
+- Run relevant project checks before PR creation when feasible; when the dev-core plugin is installed, `$verification-loop` provides the evidence run.
 - Keep issue linking optional and evidence-based. Infer issue numbers from branch names or commits, but verify before using `Closes #...`.
+
+## Out of Scope
+
+Fixing CI failures and addressing review comments are covered by the curated `gh-fix-ci` and `gh-address-comments` skills from openai/skills (install with `$skill-installer`). This skill stays focused on PR preparation and docs sync.
 

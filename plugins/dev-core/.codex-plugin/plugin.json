@@ -1,11 +1,12 @@
 {
   "name": "dev-core",
-  "version": "3.4.0+codex.20260608035656",
+  "version": "4.0.0",
   "description": "Codex-native development entrypoints and orchestration for design planning, branch/worktree execution, TDD, debugging, review, refactoring, E2E, verification, and continuous learning.",
   "author": {
     "name": "Ryusuke Tadokoro",
     "email": "tado56@poshiri.org"
   },
+  "repository": "https://github.com/tadokoro-ryusuke/codex-plugins",
   "license": "MIT",
   "keywords": [
     "tdd",
@@ -20,7 +21,7 @@
   "interface": {
     "displayName": "Dev Core",
     "shortDescription": "TDD, verification, review, and architecture workflows.",
-    "longDescription": "Dev Core packages Codex-native entrypoint skills for design planning, plan execution, TDD, debugging, review, refactoring, Playwright E2E, checkpoints, verification loops, frontend and backend architecture patterns, and continuous improvement. Narrow skills trigger day-to-day workflows while dev-workflow keeps shared orchestration gates, branch/worktree preparation, subagent delegation policy, review/refactor loops, and evidence rules centralized.",
+    "longDescription": "Dev Core packages Codex-native entrypoint skills for design planning, plan execution, TDD, debugging, review, refactoring, Playwright E2E, checkpoints, verification loops, frontend and backend architecture patterns, and continuous improvement. Narrow skills trigger day-to-day workflows while dev-workflow keeps shared orchestration gates centralized. Bundled hooks block destructive commands and load project state at session start, and ready-made custom agent roles (code reviewer, security auditor) ship as assets.",
     "developerName": "Ryusuke Tadokoro",
     "category": "Development",
     "capabilities": [

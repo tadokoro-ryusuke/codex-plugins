@@ -1,6 +1,6 @@
 {
   "name": "github-tools",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Codex-native GitHub workflows for pull requests, issue-linked branch analysis, and documentation updates.",
   "author": {
     "name": "Ryusuke Tadokoro",
@@ -16,7 +16,7 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Github Tools",
+    "displayName": "GitHub Tools",
     "shortDescription": "Pull request and docs workflows for GitHub.",
     "longDescription": "GitHub Tools gives Codex reusable workflows for preparing pull requests, linking changes to issues, running quality checks before PR creation, and keeping README and docs content aligned with code changes.",
     "developerName": "Ryusuke Tadokoro",
@@ -27,8 +27,9 @@
       "Documentation"
     ],
     "defaultPrompt": [
-      "Use github-workflows to prepare a draft PR.",
-      "Use github-workflows to update docs for this change."
+      "Use $github-workflows to prepare a draft PR.",
+      "Use $github-workflows to update docs for this change."
     ]
-  }
+  },
+  "repository": "https://github.com/tadokoro-ryusuke/codex-plugins"
 }

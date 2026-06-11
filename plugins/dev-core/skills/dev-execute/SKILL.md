@@ -12,8 +12,8 @@ Use this skill to implement an existing plan as an end-to-end Codex workflow.
 1. Read `../dev-workflow/references/orchestration.md`.
 2. Read `../dev-workflow/references/tdd-implementation.md`.
 3. Read `../dev-workflow/references/review-refactor-verify.md` before review/finalization.
-4. Use `verification-loop` for final evidence.
-5. Use `codex-collab` when the user asks for second opinion, rescue, or parallel review.
+4. Use `$verification-loop` for final evidence (its bundled `verify.sh` runs all six steps).
+5. Use `$codex-collab` when the user asks for second opinion, rescue, or parallel review.
 
 ## Execution Contract
 

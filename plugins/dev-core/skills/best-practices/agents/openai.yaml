@@ -1,0 +1,7 @@
+interface:
+  display_name: "Best Practices"
+  short_description: "Dev-core coding standards reference"
+  default_prompt: "Use $best-practices to check this change against dev-core coding standards."
+
+policy:
+  allow_implicit_invocation: false

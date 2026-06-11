@@ -1,0 +1,7 @@
+interface:
+  display_name: "Backend Patterns"
+  short_description: "API, Repository, and domain patterns"
+  default_prompt: "Use $backend-patterns to design this API and data access layer."
+
+policy:
+  allow_implicit_invocation: false

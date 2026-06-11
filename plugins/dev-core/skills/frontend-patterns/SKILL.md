@@ -1,59 +1,42 @@
 ---
 name: frontend-patterns
-description: "Frontend architecture patterns for component design, state management, forms, API boundaries, accessibility, and framework-agnostic UI implementation. Use when building or reviewing frontend code."
+description: "Framework-agnostic frontend patterns: component composition, props design, state management scope, schema-based forms, data fetching, performance. Reference skill loaded by dev-core workflow skills; invoke explicitly with $frontend-patterns when building or reviewing UI code."
 ---
 
 # Frontend Patterns
 
-フレームワーク非依存のフロントエンド設計パターン。フレームワーク固有の API（React hooks, Vue Composition API など）は、プロジェクトの `AGENTS.md`、公式ドキュメント、または利用可能な MCP/connector から確認してください。
+Framework-agnostic frontend conventions. For framework-specific APIs (React hooks, Vue Composition API, …), consult the project's `AGENTS.md`, official docs, or available MCP connectors instead of guessing.
 
-## コンポーネント設計
+## Component design
 
-### コンポジションパターン
-
-小さく再利用可能なコンポーネントを組み合わせて構築する。1コンポーネント = 1責任。
+Compose small single-responsibility components:
 
 ```
 Card
-├── CardHeader  # タイトル表示
-├── CardBody    # コンテンツ
-└── CardFooter  # アクション
+├── CardHeader  # title
+├── CardBody    # content
+└── CardFooter  # actions
 ```
 
-### Props 設計
+Props:
 
-- 型安全な Props 定義（TypeScript / PropType）
-- `variant`, `size` 等はユニオン型で制限
-- オプショナルな Props にはデフォルト値
-- children / slots で合成可能に
+- Type-safe definitions (TypeScript / prop types); constrain `variant`, `size`, etc. with union types.
+- Defaults for optional props; use children/slots for composition.
 
-### コンポーネントサイズ
+Size: aim ≤ 200 lines per component, split above 300; extract logic into custom hooks / composables.
 
-- 200行以下を推奨
-- 300行超で分割を検討
-- ロジックはカスタムフック/Composableに抽出
+## State management
 
-## 状態管理
+- **Local state first**: keep state inside the component when it doesn't need to be shared.
+- **Lift minimally**: move to the parent only when sharing requires it.
+- **Global stores sparingly**: only truly global concerns (auth, theme).
+- Library choice (Pinia, Zustand, Jotai, …) follows the project — check `AGENTS.md`, README, and package metadata before introducing anything.
 
-### 原則
+## Forms
 
-- **ローカルステート優先**: コンポーネント内で完結する状態はローカルで管理
-- **リフトアップは最小限**: 共有が必要な場合のみ親に移動
-- **グローバルストアは慎重に**: 認証状態、テーマ等の本当にグローバルなもののみ
-
-### 推奨ライブラリ
-
-- **Vue 3**: Pinia（公式推奨）
-- **React**: Zustand（軽量）、Jotai（アトミック）
-- 選定はプロジェクトの `AGENTS.md`、README、package metadata を確認
-
-## フォーム実装
-
-### バリデーション戦略
-
-- **スキーマベース**: zod / yup でバリデーションスキーマを定義
-- **サーバーサイドバリデーション**: 必ず実施（クライアントのみに頼らない）
-- **エラー表示**: フィールドごとにインラインエラー表示
+- Schema-based validation (zod / yup); define the schema once and reuse it.
+- Server-side validation is mandatory — client-side validation is UX only.
+- Show inline errors per field.
 
 ```typescript
 import { z } from "zod";
@@ -65,28 +48,18 @@ const UserSchema = z.object({
 });
 ```
 
-### フォームライブラリ
+Form library follows the project (VeeValidate, react-hook-form, …) — check before adding.
 
-- **Vue 3**: VeeValidate + zod
-- **React**: react-hook-form + zod
-- 選定はプロジェクトの `AGENTS.md`、README、package metadata を確認
+## Data fetching
 
-## データフェッチ
+- Always model the three states: loading / error / data.
+- Cache + revalidate with the project's query library (TanStack Query, SWR, Vue Query).
+- Optimistic updates where UX benefits; reconcile on server response.
+- SSR: fetch on the server for SEO and first paint; let the cache library own client refetching.
 
-### 原則
+## Performance
 
-- **ローディング/エラー/データ** の3状態を常に管理
-- **キャッシュ**: SWR / TanStack Query / Vue Query でキャッシュ + 再検証
-- **楽観的更新**: UX向上のため、サーバー応答前にUIを更新
-
-### サーバーサイドレンダリング（SSR）
-
-- データフェッチはサーバーサイドで実行（SEO、初期表示速度）
-- クライアントサイドでの再フェッチはキャッシュライブラリに委任
-
-## パフォーマンス最適化
-
-- **メモ化**: 計算コストの高い処理のみ（過剰なメモ化は避ける）
-- **遅延読み込み**: ルート単位、重いコンポーネント単位
-- **仮想スクロール**: 大量リスト表示時
-- **画像最適化**: 遅延読み込み、適切なサイズ、next/image 等のフレームワーク機能活用
+- Memoize only expensive computations — avoid reflexive memoization.
+- Lazy-load by route and for heavy components.
+- Virtualize long lists.
+- Optimize images: lazy loading, correct sizes, framework facilities (e.g. next/image).

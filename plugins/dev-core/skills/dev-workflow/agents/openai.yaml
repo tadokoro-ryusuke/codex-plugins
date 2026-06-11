@@ -1,0 +1,4 @@
+interface:
+  display_name: "Dev Workflow"
+  short_description: "Shared multi-phase orchestration hub"
+  default_prompt: "Use $dev-workflow to run this multi-phase development task end to end."

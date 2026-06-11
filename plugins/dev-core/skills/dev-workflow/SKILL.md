@@ -12,8 +12,7 @@ Use this skill as the shared orchestrator for the narrower dev-core entrypoint s
 1. Classify the user request.
 2. Read `references/orchestration.md` for any multi-phase task.
 3. Read only the matching workflow reference below.
-4. Combine it with `best-practices`, `verification-loop`, `frontend-patterns`, `backend-patterns`, or `codex-collab` when the task needs that expertise.
-5. Use Codex tools directly; do not refer to Claude slash commands or Claude agent metadata.
+4. Combine it with `$verification-loop` or `$codex-collab` when the task needs that workflow. Load the reference skills `$best-practices`, `$frontend-patterns`, or `$backend-patterns` explicitly when their standards matter — they are not injected implicitly.
 
 ## Workflow Map
 

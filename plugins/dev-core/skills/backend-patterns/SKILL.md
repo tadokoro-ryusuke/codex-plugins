@@ -1,25 +1,25 @@
 ---
 name: backend-patterns
-description: "Backend architecture patterns for API design, Repository, service layer, caching, error handling, Clean Architecture, and DDD. Use when implementing or reviewing backend code, API boundaries, data access, or domain logic."
+description: "Framework-agnostic backend patterns: REST API design, response/Result shapes, Repository, use-case service layer, caching, transactions. Reference skill loaded by dev-core workflow skills; invoke explicitly with $backend-patterns when implementing or reviewing APIs, data access, or domain logic."
 ---
 
 # Backend Patterns
 
-フレームワーク非依存のバックエンド設計パターン。ORM 固有の API（Eloquent, Prisma など）は、プロジェクトの `AGENTS.md`、公式ドキュメント、または利用可能な MCP/connector から確認してください。
+Framework-agnostic backend conventions. For ORM- or framework-specific APIs (Eloquent, Prisma, etc.), consult the project's `AGENTS.md`, official docs, or available MCP connectors instead of guessing.
 
-## API 設計
+## API design
 
-### RESTful エンドポイント
+RESTful endpoints:
 
 ```
-GET    /api/users          # 一覧取得
-GET    /api/users/:id      # 詳細取得
-POST   /api/users          # 作成
-PUT    /api/users/:id      # 更新
-DELETE /api/users/:id      # 削除
+GET    /api/users          # list
+GET    /api/users/:id      # detail
+POST   /api/users          # create
+PUT    /api/users/:id      # update
+DELETE /api/users/:id      # delete
 ```
 
-### レスポンス形式
+Response shape — discriminated union, no mixed success/error payloads:
 
 ```typescript
 type ApiResponse<T> =
@@ -27,11 +27,9 @@ type ApiResponse<T> =
   | { success: false; error: { code: string; message: string } };
 ```
 
-### HTTP ステータスコード
+Status codes: 200 OK | 201 created | 400 validation | 401 authentication | 403 authorization | 404 not found | 500 server error.
 
-200: 成功 | 201: 作成 | 400: バリデーションエラー | 401: 認証 | 403: 認可 | 404: 未発見 | 500: サーバーエラー
-
-## Repository パターン
+## Repository pattern
 
 ```typescript
 interface Repository<T, ID> {
@@ -42,9 +40,11 @@ interface Repository<T, ID> {
 }
 ```
 
-具象実装はORM/フレームワークに依存（Eloquent, Prisma, TypeORM等）。インターフェースで抽象化し、依存性逆転を実現。
+Concrete implementations depend on the ORM (Eloquent, Prisma, TypeORM, …). Domain code depends only on the interface (dependency inversion).
 
-## サービス層（ユースケース）
+## Service layer (use cases)
+
+One use case = one class with a single `execute`. Dependencies injected as abstractions:
 
 ```typescript
 class CreateUserUseCase {
@@ -63,33 +63,26 @@ class CreateUserUseCase {
 }
 ```
 
-## Result パターン
+## Result pattern
+
+Return expected failures as values; reserve exceptions for the unexpected:
 
 ```typescript
 type Result<T, E = Error> =
   | { success: true; value: T }
   | { success: false; error: E };
 
-function ok<T>(value: T): Result<T, never> {
-  return { success: true, value };
-}
-
-function err<E>(error: E): Result<never, E> {
-  return { success: false, error };
-}
+const ok = <T>(value: T): Result<T, never> => ({ success: true, value });
+const err = <E>(error: E): Result<never, E> => ({ success: false, error });
 ```
 
-## キャッシュ戦略
+## Caching (cache-aside)
 
-### Cache-Aside パターン
+1. Check cache → 2. on miss, read DB → 3. populate cache.
+Invalidate on writes; set TTLs per use case rather than one global value.
 
-1. キャッシュ確認 → 2. ヒットしなければDB取得 → 3. キャッシュに保存
-- 更新時はキャッシュを無効化
-- TTL を適切に設定（ユースケースに応じて）
+## Transactions
 
-## トランザクション
-
-- 複数の書き込み操作は必ずトランザクションで囲む
-- 原子性（ACID）の保証
-- デッドロック防止（一貫したロック順序）
-- 具体的なAPI はORM/フレームワークに依存（`DB::transaction()`, `prisma.$transaction()`等）
+- Wrap every multi-write operation in a transaction (ACID).
+- Prevent deadlocks with a consistent lock ordering.
+- The concrete API is framework-specific (`DB::transaction()`, `prisma.$transaction()`, …) — check the project.

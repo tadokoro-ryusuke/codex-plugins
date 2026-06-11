@@ -1,6 +1,6 @@
 {
   "name": "ui-ux-pro-max",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Codex UI/UX design intelligence with searchable style, color, typography, chart, landing page, UX, and stack guidance.",
   "author": {
     "name": "nextlevelbuilder",
@@ -17,7 +17,7 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Ui Ux Pro Max",
+    "displayName": "UI/UX Pro Max",
     "shortDescription": "Searchable UI/UX design intelligence.",
     "longDescription": "UI/UX Pro Max helps Codex choose product patterns, visual styles, color palettes, typography, chart types, landing page structure, accessibility guidance, and stack-specific frontend implementation tactics.",
     "developerName": "nextlevelbuilder",
@@ -28,8 +28,9 @@
       "Frontend"
     ],
     "defaultPrompt": [
-      "Use ui-ux-pro-max to design a polished dashboard.",
-      "Use ui-ux-pro-max to choose colors and typography."
+      "Use $ui-ux-pro-max to design a polished dashboard.",
+      "Use $ui-ux-pro-max to choose colors and typography."
     ]
-  }
+  },
+  "repository": "https://github.com/tadokoro-ryusuke/codex-plugins"
 }
