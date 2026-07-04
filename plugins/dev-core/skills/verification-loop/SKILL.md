@@ -54,4 +54,6 @@ WARN  diff     (uncommitted changes)
 - Fix lint warnings: pnpm lint --fix
 ```
 
+The block above is a format sample, not content. Report only values taken from this turn's actual output — never copy the sample commands, counts, or coverage numbers. Report metrics (coverage, warning counts) only when you ran the measuring command this turn; omit them otherwise. Mark steps you did not run as SKIP with the reason, never as PASS.
+
 Coverage target when measurable: 80%+. New behavior must come with tests (see $dev-tdd).

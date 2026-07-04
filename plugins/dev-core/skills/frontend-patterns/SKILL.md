@@ -57,6 +57,31 @@ Form library follows the project (VeeValidate, react-hook-form, …) — check b
 - Optimistic updates where UX benefits; reconcile on server response.
 - SSR: fetch on the server for SEO and first paint; let the cache library own client refetching.
 
+### Avoid `useEffect` for data fetching (React)
+
+Fetching in `useEffect` breeds race conditions, double fetches, and missing cleanup. Prefer, in order:
+
+```typescript
+// Bad: fetching in useEffect
+useEffect(() => {
+  fetchData().then(setData);
+}, []);
+
+// Good 1: Server Component (fetch on the server)
+async function Component() {
+  const data = await fetchData();
+  return <div>{data}</div>;
+}
+
+// Good 2: event handler when the fetch is user-initiated
+function handleClick() {
+  fetchData().then(setData);
+}
+
+// Good 3: data-fetching library (cache + revalidation included)
+const { data } = useSWR("/api/data", fetcher);
+```
+
 ## Performance
 
 - Memoize only expensive computations — avoid reflexive memoization.
