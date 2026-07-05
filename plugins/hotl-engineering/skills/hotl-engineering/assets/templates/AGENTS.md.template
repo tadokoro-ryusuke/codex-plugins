@@ -1,0 +1,40 @@
+# AGENTS.md — <Project Name> constitution (repository norms for the coding agent)
+
+This file is the runtime context for the coding agent (Codex / Claude Code / claude-code-action).
+Write it as **a norm the machine follows, not an explanation for humans**. Keep it short (split into a Skill if it grows too large).
+
+## Project Overview
+- Next.js (App Router) / TypeScript strict / PostgreSQL (Prisma) / Azure Container Apps
+- (example) Internal CRM. Handles confidential data such as insider information. **Do not write code that sends data to external services**
+
+## Absolute Rules (non-negotiables)
+1. Permission checks must always go through the existing functions in `src/lib/permissions/`. Custom implementations are forbidden
+2. DB access is via Prisma only. When using `$queryRaw`, parameter binding is mandatory
+3. Do not hardcode secrets or connection strings. Add environment variables to the zod schema in `src/env.ts` before using them
+4. Do not delete existing columns or change their types in a migration (if needed, file an Issue and defer to human judgment)
+5. Do not add new dependency packages on your own initiative (propose at the planning stage and get approval)
+6. (example) UI text, comments, and commit messages are in Japanese
+
+## Coding Conventions
+- Prefer named exports (default export only for Next.js convention files)
+- Server-side input validation uses zod. Do not rely on client-side validation alone
+- Do not swallow errors. Emit structured logs via `src/lib/logger.ts`
+- Tests: Vitest. At least one test per acceptance criterion. Mock external I/O with MSW
+
+## Development Commands
+```bash
+pnpm dev          # dev server
+pnpm lint         # Biome
+pnpm exec tsc --noEmit
+pnpm test         # Vitest
+pnpm build
+```
+
+## Review Norms (referenced by ai-review.yml)
+- Findings use 4 levels: CRITICAL / HIGH / MEDIUM / LOW
+- Do not flag style issues (that's lint's job). Do not write vague "consider..." comments
+- Always give diffs touching permissions, auth, migrations, or confidential-data boundaries one pass from an attacker's perspective
+
+## Common Mistakes (append from past incidents)
+- (example) Forgetting to pass user_id to the search API results in an unfiltered full search → `searchDocs()` requires user_id as a mandatory argument
+- (operating rule: if the agent makes the same mistake twice, append one line here)

@@ -1,0 +1,149 @@
+# =============================================================================
+# eval-gate.yml — evaluation gate for agent systems (RAG / retrieval QA, etc.) — generates evidence for CP4
+#
+# Trigger conditions:
+#   - PR: when prompts / retrieval logic / model config / tool definitions change
+#         → smoke suite (~20 cases, including must-pass cases)
+#   - nightly: full suite (the entire golden set) + baseline update decision
+#
+# Philosophy:
+#   - "A prompt change is a change-management subject exactly as heavy as a code change"
+#   - The deployment unit is the agent version (a bundle of model + prompt + tool definitions)
+#   - The gate requires (a) 100% pass on must-pass cases (permission boundaries, injection)
+#             (b) average score >= baseline minus tolerance
+#   - The report goes to a PR comment + artifact (90 days) + S3 archive (J-SOX audit trail)
+#
+# Confidential-data note:
+#   If the golden set includes real data, do not put it in the repo.
+#   Fetch it from S3 (ap-northeast-1, access-controlled) at CI run time.
+#   Commit only sanitized samples to the repo.
+#
+# Security note (PR trigger and secrets):
+#   This workflow fires on evals/** changes in a PR, and runs the PR-side code
+#   (run_evals.py) with secrets (TARGET_STAGING_API_KEY, etc.) attached.
+#   Be sure to put evals/** and .github/workflows/ under Tier 2 in CODEOWNERS,
+#   guaranteeing that the eval runner cannot be swapped without review (per
+#   GitHub's design, fork PRs never receive secrets, but branch PRs and
+#   agent-generated PRs within the same repo do).
+#   In addition, PR runs check out the runner code from the base side (see
+#   "trusted runner" below). If a PR modifies the runner itself, that runner
+#   only starts running with secrets attached after the merge.
+# =============================================================================
+name: Eval Gate
+
+on:
+  pull_request:
+    paths:
+      - "prompts/**"
+      - "src/retrieval/**"
+      - "src/agent/**"
+      - "evals/**"
+      - "agent.config.*"
+  schedule:
+    - cron: "30 18 * * *" # 03:30 JST nightly full run
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: "smoke | full"
+        default: "full"
+
+concurrency:
+  group: eval-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      AWS_REGION: ap-northeast-1
+      # Evaluation target (the agent's query API). Points at staging
+      TARGET_ENDPOINT: ${{ vars.TARGET_STAGING_ENDPOINT }}
+      TARGET_API_KEY: ${{ secrets.TARGET_STAGING_API_KEY }}
+      # Model used as judge (Bedrock Tokyo). Ideally kept separate from the generation model
+      JUDGE_MODEL: apac.anthropic.claude-sonnet-4-5-20250929-v1:0
+    steps:
+      - uses: actions/checkout@v4
+
+      # On PR runs, take the runner code from the base side (trusted). Changes to
+      # evals/** in the PR do take effect same-day as data (golden set, thresholds),
+      # but a swap of the runner code itself never runs with secrets attached
+      # until after merge (this blocks API-key exfiltration via a malicious PR)
+      - name: Checkout trusted runner (base)
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .trusted
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GITHUB_OIDC_ROLE }}
+          aws-region: ap-northeast-1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install "anthropic[bedrock]" boto3
+
+      # Fetch the real-data golden set from S3 (only samples live in the repo)
+      - name: Fetch golden dataset
+        run: |
+          aws s3 cp s3://${{ vars.EVAL_BUCKET }}/golden/golden.jsonl \
+            evals/golden/golden.jsonl
+          aws s3 cp s3://${{ vars.EVAL_BUCKET }}/baseline/baseline.json \
+            evals/baseline.json || echo "no baseline yet"
+
+      - name: Run evals
+        id: run
+        run: |
+          SUITE="${{ github.event_name == 'pull_request' && 'smoke' || (inputs.suite || 'full') }}"
+          RUNNER="evals/run_evals.py"
+          # On PR, use the base-side runner (see the trusted checkout above)
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            RUNNER=".trusted/evals/run_evals.py"
+          fi
+          python "$RUNNER" \
+            --dataset evals/golden/golden.jsonl \
+            --suite "$SUITE" \
+            --thresholds evals/thresholds.json \
+            --baseline evals/baseline.json \
+            --out evals/out
+
+      # --- CP4 evidence: post the report as a PR comment ---
+      - name: Post report to PR
+        if: always() && github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: eval-report
+          path: evals/out/report.md
+
+      # --- J-SOX audit trail: archive to artifact + S3 (immutable storage) ---
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report-${{ github.run_id }}
+          path: evals/out/
+          retention-days: 90
+
+      - name: Archive to S3 (audit trail)
+        if: always()
+        run: |
+          aws s3 cp evals/out/ \
+            s3://${{ vars.EVAL_BUCKET }}/reports/${{ github.repository_id }}/${{ github.run_id }}/ \
+            --recursive
+
+      # --- Update the baseline once nightly clears every gate (CP4 is guaranteed on the PR side) ---
+      - name: Update baseline (nightly only)
+        if: success() && github.event_name == 'schedule'
+        run: |
+          aws s3 cp evals/out/results.json \
+            s3://${{ vars.EVAL_BUCKET }}/baseline/baseline.json

@@ -12,6 +12,7 @@ A Codex-native plugin marketplace: reusable agent skills, hooks, and custom agen
 | --- | --- |
 | `dev-core` | TDD, planning, execution, debugging, verification, review, refactoring, hooks, and continuous-learning workflows. |
 | `github-tools` | Pull request preparation and documentation sync using the GitHub CLI. |
+| `hotl-engineering` | Human-on-the-Loop delivery workflow design/application and CTO decision support (staged quality gates, AI review, eval gates, audit readiness). |
 | `ui-ux-pro-max` | Searchable UI/UX design intelligence (styles, palettes, typography, charts, stacks). |
 
 ## Install
@@ -56,6 +57,12 @@ Use narrow skills for daily work; `dev-workflow` provides shared orchestration.
 Reference skills `$best-practices`, `$backend-patterns`, and `$frontend-patterns` are loaded on demand (not injected implicitly) to keep the always-on skill list small.
 
 `dev-task` writes durable plans under `docs/plans/task-<slug>.md`. `dev-execute` treats those plans as executable contracts. `codex-collab` ships ready-made custom agent roles (`code-reviewer`, `security-auditor`) you can copy into `.codex/agents/`.
+
+## HOTL Engineering
+
+`$hotl-engineering` has two modes. Apply mode assesses a repository (stack, deploy target, risk paths, team, audit requirements), classifies its nature (experimental / internal / production / agent-based), proposes a proportional gate subset, and applies bundled GitHub Actions templates (5-layer CI, two-tier AI review, staged deploy with approval and auto-rollback, eval gate, read-only incident triage, issue-to-agent implementation) — always starting in observation-only Phase 1 and pushing back on "install everything" requests for experimental repos. Consult mode answers engineering-management questions (buy-vs-build, agent autonomy promotion, auto-merge, contractor permissions, audit explanations) grounded in `references/principles.md` and `references/decision-frameworks.md`, and always takes a position.
+
+For assessment only, ask it to stop after the plan: "Use $hotl-engineering to assess this repo and stop before applying templates."
 
 ## Validation
 

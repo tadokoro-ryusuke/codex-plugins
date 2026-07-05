@@ -1,0 +1,42 @@
+{
+  "name": "hotl-engineering",
+  "version": "1.0.0",
+  "description": "Human-on-the-Loop (HOTL) delivery workflow design and application, plus CTO-level decision support for AI-native engineering operations: repository takeover, staged quality gates, CI/CD and eval gates, autonomy promotion, and J-SOX/audit readiness.",
+  "author": {
+    "name": "Ryusuke Tadokoro",
+    "email": "tado56@poshiri.org"
+  },
+  "repository": "https://github.com/tadokoro-ryusuke/codex-plugins",
+  "license": "MIT",
+  "keywords": [
+    "hotl",
+    "human-on-the-loop",
+    "ci-cd",
+    "quality-gates",
+    "ai-review",
+    "eval-gate",
+    "deployment",
+    "incident-response",
+    "governance",
+    "jsox",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "HOTL Engineering",
+    "shortDescription": "HOTL workflow design, staged quality gates, and CTO decision support.",
+    "longDescription": "HOTL Engineering packages a single skill with two modes. Apply mode assesses a repository (stack, deploy target, risk paths, team, audit requirements), classifies its nature (experimental / internal / production / agent-based), proposes a proportional gate subset, and applies bundled GitHub Actions templates (5-layer CI, two-tier AI review, staged deploy with approval and auto-rollback, eval gate, read-only incident triage, issue-to-agent implementation) always starting in observation-only Phase 1. Consult mode answers engineering-management questions — buy-vs-build, agent autonomy promotion, auto-merge, contractor permissions, audit explanations — grounded in 12 principles and decision frameworks, and always takes a position.",
+    "developerName": "Ryusuke Tadokoro",
+    "category": "Development",
+    "capabilities": [
+      "Skills",
+      "Automation",
+      "Code Review"
+    ],
+    "defaultPrompt": [
+      "Use $hotl-engineering to assess this repository and propose proportional quality gates.",
+      "Use $hotl-engineering to decide whether to buy or build this AI ops tool.",
+      "Use $hotl-engineering to prepare an audit explanation for AI-written code."
+    ]
+  }
+}

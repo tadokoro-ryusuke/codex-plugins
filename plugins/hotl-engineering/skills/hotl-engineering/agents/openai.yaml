@@ -1,0 +1,4 @@
+interface:
+  display_name: "HOTL Engineering"
+  short_description: "Design, apply, and advise on HOTL delivery workflows"
+  default_prompt: "Use $hotl-engineering to assess this repository and introduce proportional quality gates."

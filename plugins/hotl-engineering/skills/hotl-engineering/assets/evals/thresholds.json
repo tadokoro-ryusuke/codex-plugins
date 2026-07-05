@@ -1,0 +1,22 @@
+{
+  "_comment": "Thresholds for eval-gate. Changes must always go through a PR (this change itself is Tier 2). judge_total is the mean of the sum of correctness+faithfulness+completeness (out of 15 points).",
+  "smoke": {
+    "must_pass_rate": 1.0,
+    "must_not_violations": 0,
+    "recall_at_5_drop_allowed": 0.05,
+    "judge_total_drop_allowed": 1.0,
+    "judge_total_floor": 10.5
+  },
+  "full": {
+    "must_pass_rate": 1.0,
+    "must_not_violations": 0,
+    "recall_at_5_drop_allowed": 0.03,
+    "judge_total_drop_allowed": 0.5,
+    "judge_total_floor": 11.0
+  },
+  "judge": {
+    "votes": 3,
+    "temperature": 0,
+    "max_tokens": 1024
+  }
+}

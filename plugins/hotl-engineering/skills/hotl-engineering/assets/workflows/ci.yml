@@ -1,0 +1,179 @@
+# =============================================================================
+# ci.yml — 5-layer quality gate
+# Target: a web app assuming Next.js / TypeScript / pnpm (swap for npm as needed)
+#
+# Design policy:
+#   - Assumes AI-generated code; the setup must defend even in cases where
+#     "the author can't explain the diff"
+#   - All 5 layers run in parallel. Humans only look at the result summary
+#     (evidence for CP2)
+#   - Phase 1 runs the security layer with continue-on-error: true (observe
+#     only) → Phase 2 enforces it
+# =============================================================================
+name: CI Quality Gates
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # L1: Lint — mechanical style issues and obvious bug patterns
+  # ---------------------------------------------------------------------------
+  lint:
+    name: "L1 / lint"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint # e.g. `biome check .` or `eslint . --max-warnings 0`
+
+  # ---------------------------------------------------------------------------
+  # L2: Typecheck — catches type drift introduced by AI refactors (strict mode required)
+  #   tsconfig: recommend "strict": true, "noUncheckedIndexedAccess": true
+  # ---------------------------------------------------------------------------
+  typecheck:
+    name: "L2 / typecheck"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec tsc --noEmit
+
+  # ---------------------------------------------------------------------------
+  # L3: Security — catches patterns AI produces frequently (hardcoded secrets, injection)
+  #   Phase 1: continue-on-error: true (observe) → Phase 2: remove it to enforce
+  # ---------------------------------------------------------------------------
+  security:
+    name: "L3 / security"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Phase 1 (the calibration period) defaults to observation only. Once
+    # false positives have been fully weeded out, delete this line in Phase 2
+    # to enforce it (day-one enforcement is the most common failure pattern — principle 6)
+    continue-on-error: true # ← remove in Phase 2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Gitleaks needs the full history to scan it
+
+      # --- Secret detection (the most common incident in AI-generated code) ---
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- SAST (SQLi / XSS / missing authorization / unsafe deserialization, etc.) ---
+      - name: Semgrep
+        run: |
+          pip install semgrep
+          # p/default + typescript + owasp-top-ten. Calibrate false positives
+          # via .semgrepignore and `# nosemgrep: <rule-id>` (the main work of Phase 1)
+          semgrep scan \
+            --config p/default \
+            --config p/typescript \
+            --config p/owasp-top-ten \
+            --error --severity ERROR \
+            --sarif --output semgrep.sarif || exit_code=$?
+          exit ${exit_code:-0}
+
+      # --- Dependency vulnerabilities ---
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Dependency audit (fail on high or above)
+        run: pnpm audit --audit-level high
+
+  # ---------------------------------------------------------------------------
+  # L4: Test + Coverage — require coverage only on new code (don't let legacy
+  #   debt block the gate). Assumes vitest
+  # ---------------------------------------------------------------------------
+  test:
+    name: "L4 / test"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Unit / integration tests
+        run: pnpm test -- --coverage
+      # Coverage threshold for changed files. Use this when you want to judge
+      # by diff rather than vitest.config's coverage.thresholds:
+      - name: Coverage on changed files (>= 70%)
+        if: github.event_name == 'pull_request'
+        uses: ArtiomTr/jest-coverage-report-action@v2 # compatible with vitest's json-summary
+        with:
+          coverage-file: ./coverage/coverage-final.json
+          threshold: 70
+          annotations: failed-tests
+
+  # ---------------------------------------------------------------------------
+  # L5: Build — the last line of defense
+  # ---------------------------------------------------------------------------
+  build:
+    name: "L5 / build"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+  # ---------------------------------------------------------------------------
+  # Gate summary — the single status a human looks at for CP2.
+  # Branch protection's required check only needs to point at this one
+  # "quality-gate", so adding/removing layers never requires touching the ruleset
+  # ---------------------------------------------------------------------------
+  quality-gate:
+    name: "quality-gate"
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck, security, test, build]
+    if: always()
+    steps:
+      - name: Verify all gates
+        run: |
+          results='${{ toJSON(needs) }}'
+          echo "$results" | jq .
+          failed=$(echo "$results" | jq -r 'to_entries[] | select(.value.result != "success") | .key')
+          if [ -n "$failed" ]; then
+            echo "::error::Failed gates: $failed"
+            exit 1
+          fi
+          echo "✅ All 5 quality gates passed"

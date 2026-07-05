@@ -1,0 +1,147 @@
+# =============================================================================
+# deploy.yml — automatic staging → CP3 (one-tap human approval) → production → automatic rollback
+#
+# The example uses Azure Container Apps. The structure is the same for
+# App Service / ECS: "push approval out to the environment; everything
+# after approval is fully automated and reversible."
+#
+# GitHub-side prerequisites:
+#   Settings > Environments > production
+#     - Required reviewers: 1 lead (add a second if available)
+#     - (Optional) Wait timer: 0 min / Deployment branches: main only
+#   → Can be approved from the GitHub mobile app. This is CP3.
+#
+# Azure-side prerequisites:
+#   - GitHub OIDC federated credential on the Entra ID app
+#   - Role: Contributor scoped to the target resource group only (least privilege)
+# =============================================================================
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false # serialize deployments
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  ACR_NAME: myappacr
+  RESOURCE_GROUP: rg-myapp-prod
+  APP_NAME: myapp
+  IMAGE: myapp
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # build & staging (fully automated)
+  # ---------------------------------------------------------------------------
+  staging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: staging
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - id: meta
+        run: echo "tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Build & push image
+        run: |
+          az acr build \
+            --registry $ACR_NAME \
+            --image $IMAGE:${{ steps.meta.outputs.tag }} .
+
+      - name: Deploy to staging
+        run: |
+          az containerapp update \
+            --name ${APP_NAME}-staging \
+            --resource-group $RESOURCE_GROUP \
+            --image $ACR_NAME.azurecr.io/$IMAGE:${{ steps.meta.outputs.tag }}
+
+      # --- Staging smoke test (evidence a human looks at for CP3) ---
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 10); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" \
+              "${{ vars.STAGING_URL }}/api/health")
+            [ "$code" = "200" ] && break
+            sleep 15
+          done
+          [ "$code" = "200" ] || { echo "::error::staging smoke failed"; exit 1; }
+          # Add E2E for the main flows here (playwright smoke tag)
+          echo "✅ staging smoke passed: $code"
+
+  # ---------------------------------------------------------------------------
+  # production (CP3: only runs once a required reviewer approves the environment)
+  # ---------------------------------------------------------------------------
+  production:
+    runs-on: ubuntu-latest
+    needs: staging
+    timeout-minutes: 30
+    environment:
+      name: production # ← the required reviewer is tied to this
+      url: ${{ vars.PRODUCTION_URL }}
+    steps:
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_PROD }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Record the current revision before deploying (rollback target)
+      - name: Record current revision
+        id: current
+        run: |
+          rev=$(az containerapp revision list \
+            --name $APP_NAME --resource-group $RESOURCE_GROUP \
+            --query "[?properties.active].name | [0]" -o tsv)
+          echo "revision=$rev" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to production
+        run: |
+          az containerapp update \
+            --name $APP_NAME \
+            --resource-group $RESOURCE_GROUP \
+            --image $ACR_NAME.azurecr.io/$IMAGE:${{ needs.staging.outputs.image_tag }}
+
+      # --- After approval, health is watched automatically. If the threshold is exceeded, roll back without waiting for a human ---
+      - name: Health watch (5 min)
+        id: health
+        run: |
+          fails=0
+          for i in $(seq 1 20); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" \
+              "${{ vars.PRODUCTION_URL }}/api/health") || code=000
+            [ "$code" = "200" ] || fails=$((fails+1))
+            # Also use az monitor metrics here if you want to watch app metrics such as the 5xx rate
+            sleep 15
+          done
+          echo "fails=$fails"
+          [ "$fails" -le 2 ] || { echo "unhealthy=true" >> "$GITHUB_OUTPUT"; exit 1; }
+
+      - name: Auto rollback
+        if: failure() && steps.current.outputs.revision != ''
+        run: |
+          echo "::warning::Health check failed — rolling back to ${{ steps.current.outputs.revision }}"
+          az containerapp revision activate \
+            --name $APP_NAME --resource-group $RESOURCE_GROUP \
+            --revision ${{ steps.current.outputs.revision }}
+          # Always notify a human when a rollback happens (same Teams webhook as incident-triage)
+          curl -s -H "Content-Type: application/json" \
+            -d "{\"text\":\"🔴 production auto-rollback executed: ${{ github.sha }} → ${{ steps.current.outputs.revision }} (run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\"}" \
+            "${{ secrets.TEAMS_WEBHOOK_URL }}"

@@ -1,0 +1,94 @@
+# =============================================================================
+# agent-implement.yml — CP1 (spec approval) → implementation → Draft PR
+#
+# The starting point of HOTL. The human's job is only to approve the Issue's
+# spec and add the `agent:approved` label. Everything through Draft PR
+# creation is automatic from there.
+#
+# Make the following required fields in the Issue template
+# (.github/ISSUE_TEMPLATE/feature.yml):
+#   - Purpose (why) / acceptance criteria (Given-When-Then format) / out of
+#     scope / affected paths
+# → This becomes the SDD "spec" as-is. Never labeling an ambiguous Issue is
+#   what determines CP1's quality.
+#
+# Guardrails:
+#   - Restrict who can apply the label to collaborators (if condition)
+#   - Stops at Draft PR (a human marks it Ready for review)
+#   - Branch protection rejects direct pushes to main
+#   - Treat the Issue body as untrusted prompt input (a path through which
+#     prompt injection can reach the agent). In environments where outsiders
+#     can file Issues, always combine this with adding environment approval,
+#     judging the filer as trusted, and having a human finalize the body
+#     before applying the label at CP1
+# =============================================================================
+name: Agent Implement
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: agent-implement-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  implement:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Setting Required reviewers on Settings > Environments > agent-implement
+    # inserts one more layer of human approval after the label is applied
+    # (recommended in environments with external filers).
+    # If the environment is left unset, it runs immediately as before, with no protection
+    environment: agent-implement
+    # Fires only when the label is agent:approved and the person who applied it holds admin-level permission
+    if: >
+      github.event.label.name == 'agent:approved' &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'),
+               github.event.sender.author_association)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GITHUB_OIDC_ROLE }}
+          aws-region: ap-northeast-1
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          use_bedrock: "true"
+          prompt: |
+            Implement Issue #${{ github.event.issue.number }}.
+
+            ## Steps (SDD: plan → implement → verify)
+            1. Read the acceptance criteria in the Issue body and post an
+               implementation plan as an Issue comment (affected files,
+               approach, risks). If the acceptance criteria are ambiguous or
+               contradictory, do not implement — post a clarifying comment and stop
+            2. Create the branch `agent/issue-${{ github.event.issue.number }}`
+            3. Implement according to the conventions in AGENTS.md. Write the
+               corresponding test for each acceptance criterion first (TDD).
+               Implementation without tests is not allowed
+            4. Run lint / typecheck / test locally, and fix issues until everything passes
+            5. Create a Draft PR. The PR body must always include:
+               - `Closes #${{ github.event.issue.number }}`
+               - A table mapping acceptance criteria to verification results
+               - Self-reported risk points (what the human reviewer should look at)
+
+            ## Prohibited
+            - Changes outside the scope written in the Issue (file a separate
+              Issue for improvements you notice)
+            - Adding dependency packages (if needed, ask for approval via a plan comment)
+            - Dropping existing columns in a change that includes a migration
+          claude_args: |
+            --max-turns 30
+            --model apac.anthropic.claude-sonnet-4-5-20250929-v1:0

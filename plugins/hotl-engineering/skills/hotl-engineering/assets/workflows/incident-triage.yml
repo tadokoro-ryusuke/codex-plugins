@@ -1,0 +1,139 @@
+# =============================================================================
+# incident-triage.yml — alert → read-only initial investigation → post to Teams
+#
+# Implements the Read-Only / Advised stage of staged autonomy.
+# The slowest part of incident response is "assembling context." Offload only
+# that part to the agent; leave judgment and execution to humans.
+#
+# Path:
+#   Azure Monitor alert → Action Group (Webhook)
+#     → Azure Function (formats the payload and hits GitHub repository_dispatch)
+#     → this workflow
+#
+# Guardrails (important):
+#   - The Azure-side OIDC role is Reader + Log Analytics Reader only.
+#     This workflow structurally cannot change anything
+#   - --allowedTools never grants any write-capable tool
+#   - "Executing" a proposed remediation is split into a separate workflow
+#     (workflow_dispatch with human approval) starting in Phase 3. Investigation
+#     authority and execution authority are never combined
+# =============================================================================
+name: Incident Triage
+
+on:
+  repository_dispatch:
+    types: [azure-alert]
+  workflow_dispatch:
+    inputs:
+      alert_name:
+        description: "Alert name (for manual investigation)"
+        required: true
+      resource:
+        description: "Target resource"
+        required: false
+
+permissions:
+  contents: read
+  issues: write
+  id-token: write
+
+concurrency:
+  group: incident-${{ github.event.client_payload.alert_id || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4 # so it can read AGENTS.md / runbooks/
+
+      # --- AWS OIDC for Bedrock (inference) ---
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GITHUB_OIDC_ROLE }}
+          aws-region: ap-northeast-1
+
+      # --- Read-only OIDC for the investigation target (Azure) ---
+      - name: Azure login (Reader only)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_READER }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - uses: anthropics/claude-code-action@v1
+        id: triage
+        with:
+          use_bedrock: "true"
+          prompt: |
+            Perform an initial investigation of the production alert. Your
+            permissions are read-only. Do not perform any change operations
+            (you don't have permission to anyway).
+
+            ## Alert information
+            ```json
+            ${{ toJSON(github.event.client_payload || inputs) }}
+            ```
+
+            ## Investigation steps
+            1. First check runbooks/ for a runbook matching this alert, and read it if present
+            2. Check the target resource's status and recent activity log via
+               the az CLI (az monitor activity-log list, az containerapp
+               revision list, etc.)
+            3. Query Log Analytics (az monitor log-analytics query) to get the
+               error timeline, count, and representative stack traces
+            4. Check merged PRs and deployment runs from the last 24 hours via
+               the gh CLI, and look for correlation between the changes and
+               when the errors started
+            5. Form up to 3 hypotheses, ranked by confidence
+
+            ## Output (structure the final message as follows)
+            - Incident summary (2 lines)
+            - Scope of impact (whether users are affected, which features)
+            - Timeline (detection time, related changes)
+            - Root-cause hypotheses (confidence: high/medium/low, quoting the
+              supporting log/query evidence)
+            - Recommended action (proposed commands — do not execute them)
+            - Urgency: P1 (respond immediately) / P2 (within business hours) /
+              P3 (next sprint)
+          claude_args: |
+            --max-turns 15
+            --model apac.anthropic.claude-sonnet-4-5-20250929-v1:0
+            --allowedTools "Read,Grep,Glob,Bash(az monitor:*),Bash(az containerapp revision list:*),Bash(az containerapp show:*),Bash(az webapp log:*),Bash(gh pr list:*),Bash(gh run list:*),Bash(gh api:*)"
+
+      # --- File as a GitHub Issue (audit trail + tracking) ---
+      # alert_name comes from an external, untrusted source (repository_dispatch
+      # payload / manual input). Don't expand it directly in the shell — pass it
+      # through env: and use it quoted (prevents command injection)
+      - name: Create incident issue
+        id: issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ALERT_NAME: ${{ github.event.client_payload.alert_name || inputs.alert_name }}
+          BODY_FILE: ${{ steps.triage.outputs.execution_file || '/dev/null' }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          url=$(gh issue create \
+            --title "🚨 [triage] ${ALERT_NAME}" \
+            --label incident \
+            --body-file "$BODY_FILE" \
+            2>/dev/null || gh issue create \
+            --title "🚨 [triage] ${ALERT_NAME}" \
+            --label incident \
+            --body "See the Actions run for investigation results: ${RUN_URL}")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # --- Notify a human (Teams). From here on, judgment and execution are the human's job ---
+      # Build the JSON with jq --arg (prevents broken/injected JSON from embedding untrusted input directly)
+      - name: Notify Teams
+        if: always()
+        env:
+          ALERT_NAME: ${{ github.event.client_payload.alert_name || inputs.alert_name }}
+          ISSUE_URL: ${{ steps.issue.outputs.url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          jq -n --arg text "🚨 Initial investigation complete: ${ALERT_NAME} / Issue: ${ISSUE_URL} / Run: ${RUN_URL}" \
+            '{text: $text}' \
+            | curl -s -H "Content-Type: application/json" -d @- "${{ secrets.TEAMS_WEBHOOK_URL }}"

@@ -1,0 +1,20 @@
+# CODEOWNERS — Structurally enforce human review on Tier 2 paths
+# Only takes effect when combined with branch protection's "Require review from Code Owners"
+#
+# Usage: Rename this file to .github/CODEOWNERS and replace the username with the real one
+
+# Default owner (all files)
+* @your-github-username
+
+# === Tier 2: Critical paths (keep in sync with ai-review.yml's paths-filter) ===
+# When a third member or an outsourced contributor joins, add a second reviewer here to strengthen separation of duties
+/src/lib/auth/           @your-github-username
+/src/lib/permissions/    @your-github-username
+/src/middleware.ts       @your-github-username
+/prisma/migrations/      @your-github-username
+/infra/                  @your-github-username
+/.github/                @your-github-username
+# evals/ is Tier 2 including the runner itself (because eval-gate.yml executes PR code with secrets,
+# this structurally prevents an unreviewed swap of the runner or thresholds)
+/evals/                  @your-github-username
+/AGENTS.md               @your-github-username

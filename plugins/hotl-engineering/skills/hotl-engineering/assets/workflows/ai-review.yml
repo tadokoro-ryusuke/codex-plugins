@@ -1,0 +1,221 @@
+# =============================================================================
+# ai-review.yml — AI code review (two-tier setup)
+#
+#   Job 1: every PR      → lightweight Sonnet review (--max-turns 5)
+#   Job 2: Tier 2 paths  → deep-dive Opus security review (--max-turns 8)
+#
+# Auth: AWS Bedrock Tokyo + OIDC (no static keys). Set up so code never goes
+#       out to the direct Anthropic API, matching confidentiality requirements.
+#
+# Operation: Phase 1 is comment-only (default; the gate runs in observe mode).
+#       Each review job outputs a verdict (JSON artifact), and the aggregate
+#       job "ai-review-gate" mechanically checks the CRITICAL count. In
+#       Phase 2, enforce it in two steps:
+#         1. Set the repository variable AI_REVIEW_ENFORCE=true (enforce the gate)
+#         2. Add "ai-review-gate" as a required check in branch protection
+#       (an auditable gate that doesn't depend on the `exit 1` inside the prompt).
+#
+# Prerequisites:
+#   - The IAM role (GITHUB_OIDC_ROLE) has bedrock:InvokeModel* granted, and
+#     the GitHub OIDC federated credential is already configured
+#   - The inference profile for the target model is already enabled on
+#     Bedrock ap-northeast-1
+#     (replace --model with the inference profile ID enabled in your account)
+# =============================================================================
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write # required for OIDC
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Tier classification — decide whether a deep-dive review is needed, based
+  # on whether critical paths are touched
+  # ---------------------------------------------------------------------------
+  classify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: "!github.event.pull_request.draft"
+    outputs:
+      tier2: ${{ steps.filter.outputs.critical }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            critical:
+              # === Tier 2: paths where a change requires an Opus deep-dive plus mandatory human review ===
+              - 'src/lib/auth/**'
+              - 'src/lib/permissions/**'      # tenant/user cross-access control
+              - 'src/middleware.ts'
+              - 'prisma/migrations/**'
+              - 'infra/**'
+              - '.github/workflows/**'         # changes to the CI config itself
+              - '**/*.env*'
+
+  # ---------------------------------------------------------------------------
+  # All PRs: lightweight Sonnet review
+  # ---------------------------------------------------------------------------
+  review:
+    name: "ai-review"
+    runs-on: ubuntu-latest
+    needs: classify
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GITHUB_OIDC_ROLE }}
+          aws-region: ap-northeast-1
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          use_bedrock: "true"
+          prompt: |
+            Review this PR. Follow the review conventions in AGENTS.md.
+
+            ## Classify findings (always use these 4 levels)
+            - CRITICAL: security vulnerabilities, data loss, privilege bypass, breach of confidentiality boundaries
+            - HIGH: bugs that affect correctness, contract (API/type) violations
+            - MEDIUM: maintainability/performance issues
+            - LOW: suggestions (comment, but keep the count small)
+
+            ## Noise-suppression rules (important)
+            - Do not flag style issues (that's L1 lint's job)
+            - Do not write vague "you might consider..." suggestions
+            - Tag low-confidence findings with [needs verification] and cite the supporting file:line
+            - If there are zero findings, write only "No significant issues." Do not manufacture findings
+
+            ## Output
+            1. A result summary as a PR comment (short enough for a human to read in 3 minutes at CP2)
+            2. Individual findings as inline comments on the relevant lines
+            3. Always finish by creating `ai-review-verdict.json` at the repo root, containing only
+               `{"critical": <CRITICAL count>, "high": <HIGH count>}`
+               (use {"critical": 0, "high": 0} when there are zero findings; the gate decision is made from this file)
+          claude_args: |
+            --max-turns 5
+            --model apac.anthropic.claude-sonnet-4-5-20250929-v1:0
+
+      # Structured output for the gate decision (read by the aggregate job)
+      - name: Upload verdict
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-review-verdict-light
+          path: ai-review-verdict.json
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # Tier 2 only: deep-dive Opus security review
+  # ---------------------------------------------------------------------------
+  deep-review:
+    name: "ai-review-deep (Tier 2)"
+    runs-on: ubuntu-latest
+    needs: classify
+    if: needs.classify.outputs.tier2 == 'true'
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GITHUB_OIDC_ROLE }}
+          aws-region: ap-northeast-1
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          use_bedrock: "true"
+          prompt: |
+            This PR touches critical paths — authentication, permissions, DB
+            schema, infrastructure, etc. (Tier 2). Review it in depth, from an
+            attacker's perspective.
+
+            ## Required review angles
+            1. Authorization bypass: missing added permission checks, reordering, or loosened conditions
+            2. Tenant/user cross-access control: does every search filter always
+               route through the calling user's permission scope? Has a new code
+               path been introduced where a query hits the index with no filter?
+            3. SQL injection / unbound parameters / ORM raw queries
+            4. Hardcoded secrets, connection strings, tokens, or leakage into logs
+            5. Breaking migration changes (column drops, type changes) and whether a rollback procedure exists
+            6. For GitHub Actions changes: permission escalation, unsafe use of
+               pull_request_target, unpinned third-party actions
+            7. Prompt-injection surface: newly introduced paths where external
+               input (documents, email bodies) could be interpreted as instructions to the agent
+
+            ## Output
+            Post an audit-style report to the PR comment stating, for each angle,
+            "no issues" or "issue found (with evidence)". For findings where an
+            attack scenario is viable, include an outline of the PoC steps.
+            Always finish by creating `ai-review-verdict.json` at the repo root,
+            containing only `{"critical": <CRITICAL count>, "high": <HIGH count>}`.
+          claude_args: |
+            --max-turns 8
+            --model apac.anthropic.claude-opus-4-6-v1:0
+
+      # Structured output for the gate decision (read by the aggregate job)
+      - name: Upload verdict
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-review-verdict-deep
+          path: ai-review-verdict.json
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # Aggregate gate — Phase 2's required check should point at this one job only.
+  # It judges mechanically from the CRITICAL total in the verdict JSON, so it
+  # never depends on the prompt's behavior.
+  # Phase 1 (vars.AI_REVIEW_ENFORCE unset): observe only, never fails.
+  # ---------------------------------------------------------------------------
+  ai-review-gate:
+    name: "ai-review-gate"
+    runs-on: ubuntu-latest
+    needs: [review, deep-review]
+    if: always() && !cancelled()
+    timeout-minutes: 5
+    steps:
+      - name: Download verdicts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ai-review-verdict-*
+          path: verdicts
+
+      - name: Enforce gate
+        env:
+          REVIEW_RESULT: ${{ needs.review.result }}
+          DEEP_RESULT: ${{ needs.deep-review.result }}
+          ENFORCE: ${{ vars.AI_REVIEW_ENFORCE }}
+        run: |
+          total=$(cat verdicts/*/ai-review-verdict.json 2>/dev/null \
+            | jq -s '[.[].critical // 0] | add // 0' 2>/dev/null || echo 0)
+          echo "CRITICAL total: ${total:-0} / review=${REVIEW_RESULT} / deep=${DEEP_RESULT}"
+          if [ "$ENFORCE" != "true" ]; then
+            echo "Phase 1 (observe mode): does not fail. Enforce via vars.AI_REVIEW_ENFORCE=true"
+            exit 0
+          fi
+          # Enforce mode: block on any CRITICAL findings, or on the review job itself failing (prevents fail-open)
+          fail=0
+          [ "${total:-0}" -gt 0 ] && { echo "::error::${total} CRITICAL finding(s)"; fail=1; }
+          [ "$REVIEW_RESULT" != "success" ] && { echo "::error::ai-review job: $REVIEW_RESULT"; fail=1; }
+          [ "$DEEP_RESULT" = "failure" ] && { echo "::error::ai-review-deep job: failure"; fail=1; }
+          exit $fail
