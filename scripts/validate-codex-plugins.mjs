@@ -238,6 +238,7 @@ function checkNoClaudeOnlyTokens() {
   const allowed = new Set([
     "README.md",
     "AGENTS.md",
+    "CLAUDE.md", // Claude Code 向けラッパ（@AGENTS.md import）。Claude 構文への言及が本文の目的
     "docs/research/codex-plugin-research.md",
     "scripts/validate-codex-plugins.mjs",
   ]);

@@ -21,6 +21,11 @@ This repository is a Codex plugin marketplace source. Keep it Codex-native.
 - Keep marketplace `source.path` as `./plugins/<plugin-name>` and include `policy` and `category` on every entry.
 - Run `node scripts/validate-codex-plugins.mjs` before handing back changes.
 
+## Sibling Repository (cc-plugins)
+
+- [`tadokoro-ryusuke/cc-plugins`](https://github.com/tadokoro-ryusuke/cc-plugins) (local: `~/work/cc-plugins`) is the Claude Code counterpart. dev-core knowledge skills and hotl-engineering here are English adaptations of its Japanese originals — mirror improvements by adaptation, not mechanical copy.
+- Codex snapshots plugins into its cache at install time. After changing a plugin, bump its version, reinstall (`codex plugin add <plugin>@codex-plugins`), and start a new thread to pick up the change.
+
 ## Codex Feature Notes
 
 - Hooks are GA: events include `SessionStart`, `PreToolUse`, `PostToolUse`, `PreCompact`, `Stop`. Plugin hooks receive `PLUGIN_ROOT`/`PLUGIN_DATA` and require user trust review before running. PreToolUse blocks via `permissionDecision: "deny"` JSON on stdout; SessionStart stdout becomes developer context.
