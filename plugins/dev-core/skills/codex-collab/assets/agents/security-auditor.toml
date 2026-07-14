@@ -1,6 +1,6 @@
 # Codex custom agent definition.
 # Install: copy into <repo>/.codex/agents/ (project) or ~/.codex/agents/ (personal).
-# Requires features.multi_agent = true in config.toml to be spawnable as a subagent.
+# Current Codex releases enable subagent workflows by default; local policy may still limit roles.
 
 name = "security-auditor"
 description = "OWASP Top 10 security auditor. Use for security passes over code changes: hardcoded secrets, injection, authentication and authorization gaps, dependency vulnerabilities, and finance-grade checks."

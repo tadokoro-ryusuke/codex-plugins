@@ -4,6 +4,12 @@
 
 What the overall task is trying to achieve, and the plan file if one exists.
 
+## Completion Contract Status
+
+| ID | Criterion | Evidence observed | Status |
+| --- | --- | --- | --- |
+| AC-1 | <criterion> | <command/artifact or "missing"> | pending |
+
 ## Completed
 
 - <step> — evidence: <command run and result, or commit hash>
@@ -26,5 +32,10 @@ What the overall task is trying to achieve, and the plan file if one exists.
 
 ## Resume Instructions
 
-Exact commands and file paths a fresh thread needs to continue without
-re-discovering context.
+### Current Next Action
+
+One exact command, file edit, or decision a fresh thread should take next.
+
+### Context
+
+Only the commands and file paths needed to continue without re-discovering state.

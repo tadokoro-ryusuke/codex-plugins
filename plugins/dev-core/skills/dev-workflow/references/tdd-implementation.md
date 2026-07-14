@@ -45,10 +45,12 @@ After each iteration, classify the result:
 | Status | Meaning | Next Action |
 | --- | --- | --- |
 | `COMPLETED` | Tests and focused checks pass with no material concerns. | Continue to the next iteration. |
-| `COMPLETED_WITH_CONCERNS` | Checks pass but risk remains, such as weak coverage or ambiguous requirements. | Report the concern and either address it or ask before continuing. |
+| `COMPLETED_WITH_CONCERNS` | Checks pass but risk remains, such as weak coverage or ambiguous requirements. | Fix safe in-scope concerns autonomously; record non-blocking residual risk; ask only for material judgment or unsafe/external action. |
 | `BLOCKED` | The plan conflicts with the codebase, tests cannot be written safely, or the same fix path failed three times. | Stop and report the blocker, attempts, and needed decision. |
 
-Never ignore a blocked or concerning status just to keep the loop moving.
+Never ignore a blocked or concerning status. Triage the concern by risk instead of treating every concern as a mandatory user interruption.
+
+After each iteration, update the durable plan: progress, decisions, evidence, completion contract status, and one current next action.
 
 ## Review And Refactor Gate
 

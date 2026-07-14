@@ -11,9 +11,10 @@ Use this skill when work needs a durable handoff or resumable state.
 
 1. Read `../dev-workflow/references/orchestration.md`.
 2. Read the Checkpoints section in `../dev-workflow/references/e2e-checkpoint.md`.
-3. Capture goal, completed steps, files changed, commands run, results, blockers, decisions, and next actions. Start from `assets/checkpoint-template.md` in this skill directory.
-4. Save under `docs/checkpoints/checkpoint-<timestamp>.md` only when the user wants a file.
+3. If work has a `docs/plans/task-*.md` plan, update that plan's status, completion contract, progress log, decision log, blockers, evidence, and current next action. Keep one durable source of execution state.
+4. If no plan exists or the user explicitly asks for a standalone handoff, capture goal, completed steps, files changed, commands run, results, blockers, decisions, and next actions from `assets/checkpoint-template.md`.
+5. Save a standalone checkpoint under `docs/checkpoints/checkpoint-<timestamp>.md` only when step 4 applies.
 
 ## Output
 
-Make the checkpoint useful to a fresh Codex thread. Include exact paths and commands, but avoid noisy logs unless they are essential.
+Make the durable state useful to a fresh Codex thread. Include exact paths, current evidence, and the single next action, but avoid noisy logs unless they are essential.

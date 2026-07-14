@@ -1,10 +1,10 @@
 # Codex Plugin Research Notes
 
-Research dates: 2026-06-07 (initial migration), 2026-06-11 (refresh).
+Research dates: 2026-06-07 (initial migration), 2026-06-11 (refresh), 2026-07-14 (autonomous workflow review).
 
-Primary sources: `developers.openai.com/codex` (plugins, plugins/build, skills, hooks, subagents, custom-prompts, config-reference, changelog), the Agent Skills standard at `agentskills.io`, the bundled system skills (`plugin-creator`, `skill-creator` under `$CODEX_HOME/skills/.system/`), and `openai/skills`.
+Primary sources: `developers.openai.com/codex` (plugins, skills, hooks, subagents, AGENTS.md), the Agent Skills standard at `agentskills.io`, the bundled system skills (`plugin-creator`, `skill-creator`), OpenAI's Harness Engineering report, Anthropic's long-running-agent and eval guidance, Matt Pocock's `grilling`, and obra's `superpowers`.
 
-## Current Findings (2026-06-11)
+## Current Findings (2026-07-14)
 
 ### Plugins and marketplaces
 
@@ -31,20 +31,38 @@ Primary sources: `developers.openai.com/codex` (plugins, plugins/build, skills, 
 
 ### Subagents and custom agents
 
-- Subagents are explicit-only; enable collaboration tools with `features.multi_agent = true` (`spawn_agent`, `send_input`, `wait_agent`, `close_agent`); `[agents] max_threads` defaults to 6; subagents inherit the current sandbox policy.
+- Current Codex releases enable subagent workflows by default. Delegate after a direct user request or an explicit applicable `AGENTS.md`/skill instruction; use bounded read-heavy tasks and avoid overlapping writes. Subagents inherit the current sandbox policy.
 - Custom agent roles are standalone TOML files in `.codex/agents/` or `~/.codex/agents/` with `name`, `description`, `developer_instructions` and optional `model`, `model_reasoning_effort`, `sandbox_mode`, `nickname_candidates`. Plugins cannot install them, so dev-core ships them as `codex-collab` assets with copy instructions.
+
+### External workflow practices reviewed
+
+- Matt Pocock's [`grilling`](https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md) demonstrates a compact decision interview: inspect facts first, ask one question at a time, recommend an answer, and wait. Adopt it as explicit `$dev-grill`, not an always-on planning tax.
+- [`obra/superpowers`](https://github.com/obra/superpowers) reinforces small implementation steps, TDD, independent review, and evidence over claims. Adopt the gates, but do not force a large skill chain for routine edits.
+- Anthropic's [long-running agent harness](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) and [`cwc-long-running-agents`](https://github.com/anthropics/cwc-long-running-agents) use persistent progress, default-fail completion criteria, and a fresh evaluator. Adopt durable plan state and independent review with bounded stop conditions.
+- Anthropic's [eval guidance](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents) recommends testing both trigger and no-trigger behavior on realistic tasks and grading outcomes instead of a rigid path. Add versioned behavior cases and deterministic schema validation first; keep live model grading out of required CI until calibrated.
+- OpenAI's [Harness Engineering](https://openai.com/index/harness-engineering/) treats repository documentation, execution plans, validation, and feedback mechanisms as the system of record. Keep `AGENTS.md` short and make plans carry progress, decisions, evidence, and the next action.
+
+### Autonomy boundary adopted
+
+- Verify facts from the environment instead of asking.
+- Continue with documented reversible defaults when the requested outcome does not change.
+- Escalate material product judgment, security boundaries, destructive or irreversible actions, and external side effects.
+- Require current evidence before marking completion criteria satisfied.
+- Stop after three similar failures or one complete no-progress cycle.
 
 ## Layout Decisions (current)
 
-- Three plugins: `dev-core`, `github-tools`, `ui-ux-pro-max` (`ms-office-suite` removed 2026-06-11).
+- Four plugins: `dev-core`, `github-tools`, `hotl-engineering`, `ui-ux-pro-max` (`ms-office-suite` removed 2026-06-11).
 - All skill content in English; descriptions carry trigger phrases.
-- Reference skills (`best-practices`, `backend-patterns`, `frontend-patterns`) set `allow_implicit_invocation: false`; workflow entrypoints stay implicit.
+- Reference skills (`best-practices`, `backend-patterns`, `frontend-patterns`) and the interview-style `dev-grill` entrypoint set `allow_implicit_invocation: false`; other workflow entrypoints stay implicit.
 - `verification-loop` bundles `scripts/verify.sh` (stack-detecting six-step runner); `dev-task`/`dev-checkpoint` bundle output templates as assets.
-- dev-core bundles hooks: PreToolUse destructive-command blocker (Python, permissionDecision deny) and SessionStart project-state injector (bash, stdout context).
+- dev-core bundles hooks: a PreToolUse destructive-command blocker (Python, `permissionDecision: deny`) and a SessionStart project-state injector (bash). Because SessionStart stdout becomes developer context, the injector emits only allowlisted branch/hash metadata and active plan path/status; it never copies plan bodies or next-action text into that privileged context.
 - `scripts/validate-codex-plugins.mjs` mirrors the bundled validator plus repo conventions (hooks schema, openai.yaml presence, bundled-path existence, description length, body line cap).
+- `plugins/dev-core/evals/skill-behavior-cases.json` covers trigger/no-trigger, evidence, reversible defaults, material escalation, and delivery side effects; `scripts/validate-skill-evals.mjs` keeps the suite structurally executable.
 
 ## Known gaps / future candidates
 
 - `ui-ux-pro-max` SKILL.md is ~240 lines; splitting usage examples into `references/` would tighten it further.
 - The hub-and-spoke `../dev-workflow/references/` coupling means dev-core skills are not individually copyable; acceptable while they ship as one plugin.
 - codex-plugin-scanner (community SARIF scanner) could be added to CI once its action is vetted.
+- Behavior cases are currently an eval-ready dataset plus structural gate. Add calibrated clean-thread model runs only after collecting representative failures and acceptable variance.

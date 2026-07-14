@@ -18,6 +18,9 @@ jobs:
       - name: Validate marketplace, manifests, skills, and hooks
         run: node scripts/validate-codex-plugins.mjs
 
+      - name: Validate skill behavior eval cases
+        run: node scripts/validate-skill-evals.mjs
+
       - name: Smoke-test PreToolUse blocker hook
         run: |
           blocked=$(echo '{"tool_input":{"command":"git reset --hard"}}' | python3 plugins/dev-core/hooks/scripts/block_dangerous_commands.py)
@@ -26,7 +29,7 @@ jobs:
           test -z "$allowed" || { echo "expected pass-through"; exit 1; }
 
       - name: Smoke-test SessionStart hook
-        run: bash plugins/dev-core/hooks/scripts/session_start.sh
+        run: bash plugins/dev-core/hooks/scripts/test_session_start.sh
 
       - name: Smoke-test verify.sh
         run: plugins/dev-core/skills/verification-loop/scripts/verify.sh --skip security

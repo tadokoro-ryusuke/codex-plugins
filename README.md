@@ -41,6 +41,7 @@ Use narrow skills for daily work; `dev-workflow` provides shared orchestration.
 
 | Skill | Use for |
 | --- | --- |
+| `$dev-grill` | Pressure-test a plan or decision one material question at a time; explicit invocation only. |
 | `$dev-task` | Turn an idea into a design plan, acceptance criteria, BDD scenarios, and TDD iterations (template bundled). |
 | `$dev-execute` | Execute an existing plan through branch/worktree prep, TDD, verification, review, and refactor gates. |
 | `$dev-debug` | Investigate errors from root cause before fixing. |
@@ -56,7 +57,7 @@ Use narrow skills for daily work; `dev-workflow` provides shared orchestration.
 
 Reference skills `$best-practices`, `$backend-patterns`, and `$frontend-patterns` are loaded on demand (not injected implicitly) to keep the always-on skill list small.
 
-`dev-task` writes durable plans under `docs/plans/task-<slug>.md`. `dev-execute` treats those plans as executable contracts. `codex-collab` ships ready-made custom agent roles (`code-reviewer`, `security-auditor`) you can copy into `.codex/agents/`.
+`dev-task` writes durable, default-fail completion contracts under `docs/plans/task-<slug>.md`. `dev-execute` keeps progress, decisions, evidence, and the next action in that same plan so fresh threads can resume without reconstructing state. `codex-collab` ships ready-made custom agent roles (`code-reviewer`, `security-auditor`) you can copy into `.codex/agents/`.
 
 ## HOTL Engineering
 
@@ -68,9 +69,10 @@ For assessment only, ask it to stop after the plan: "Use $hotl-engineering to as
 
 ```bash
 node scripts/validate-codex-plugins.mjs
+node scripts/validate-skill-evals.mjs
 ```
 
-This checks the marketplace catalog, plugin manifests, SKILL.md frontmatter, `agents/openai.yaml` files, bundled file references, and hooks configuration. CI runs the same script plus hook and script smoke tests on every push.
+These commands check the marketplace catalog, plugin manifests, SKILL.md frontmatter, `agents/openai.yaml` files, bundled file references, hooks configuration, and the behavior-eval suite schema and skill references. CI runs both validators plus hook and script smoke tests on every push.
 
 Optionally cross-check with the official validator bundled with Codex:
 

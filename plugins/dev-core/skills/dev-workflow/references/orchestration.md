@@ -49,7 +49,7 @@ Benefits:
 - Reduce confirmation bias with an independent review or rescue diagnosis.
 - Break large tasks into bounded slices whose results return as concise summaries.
 
-Use subagents when the user explicitly asks for delegation, parallel agents, or a second opinion; or when the user has clearly authorized that style for the current task. Prefer them for exploration, triage, review, summarization, test-gap analysis, and rescue after repeated failures.
+Use subagents when the user directly requests delegation or when an applicable `AGENTS.md` or skill explicitly authorizes a bounded delegation. Prefer them for exploration, triage, review, summarization, test-gap analysis, and rescue after repeated failures.
 
 Avoid subagents when the next action is on the critical path, the work is tightly coupled, the write set would overlap, or the overhead would exceed the benefit. Be especially careful with parallel write-heavy work because it can create conflicts and coordination cost.
 
@@ -68,9 +68,10 @@ Before code changes:
 1. Run `git status --short`.
 2. If the thread is already on a Codex worktree, continue there unless the user asks for local handoff.
 3. If working locally and the tree is clean, create a branch for execution when the user asked for end-to-end implementation. Prefer repo conventions; otherwise use `codex/<slug>`.
-4. If there are unrelated local changes, do not switch branches or overwrite files. Work around them when safe; otherwise stop and ask.
-5. If branch creation is blocked by another worktree or policy, continue on the current safe worktree or report the blocker.
-6. Commit, push, or open a PR only when the user explicitly requests that delivery.
+4. If the only dirty files are the target plan and in-scope planning artifacts created for this task, preserve them while creating or switching to the execution branch. This is the normal `dev-task` to `dev-execute` path.
+5. If there are unrelated local changes, do not switch branches or overwrite files. Work around them when safe; otherwise stop and ask.
+6. If branch creation is blocked by another worktree or policy, continue on the current safe worktree or report the blocker.
+7. Commit, push, or open a PR only when the user explicitly requests that delivery.
 
 ## Execution Loop
 
@@ -83,6 +84,24 @@ read plan -> prepare workspace -> Tidy First -> Red -> Green -> Refactor
 ```
 
 The review gate is not a formality. Treat implementation claims as untrusted until the diff, tests, and verification evidence support them.
+
+## Durable Execution State
+
+For work backed by `docs/plans/task-*.md`, keep that plan executable across context resets:
+
+1. When an older plan lacks the durable sections below, migrate it once from its acceptance criteria before implementation and record the migration in its progress log.
+2. Start every acceptance criterion `pending` and name the evidence required to satisfy it.
+3. After each iteration, update status, progress, decisions, blockers, evidence, and the current next action.
+4. Mark a criterion `satisfied` only after inspecting current evidence.
+5. Before a pause, handoff, or compaction, leave one exact next action.
+6. Stop if a full cycle produces no meaningful change or if evidence contradicts the plan.
+
+## Autonomy And Escalation
+
+- Verify facts from the environment instead of asking the user.
+- State and use safe reversible defaults when they do not change the requested outcome.
+- Resolve safe, in-scope, mechanically verifiable concerns without interrupting the user.
+- Escalate product judgment, material scope changes, security-boundary choices, destructive or irreversible actions, and external side effects.
 
 ## Operating Rules
 

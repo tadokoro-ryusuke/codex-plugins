@@ -1,6 +1,6 @@
 # Codex custom agent definition.
 # Install: copy into <repo>/.codex/agents/ (project) or ~/.codex/agents/ (personal).
-# Requires features.multi_agent = true in config.toml to be spawnable as a subagent.
+# Current Codex releases enable subagent workflows by default; local policy may still limit roles.
 
 name = "code-reviewer"
 description = "Independent zero-trust code reviewer. Use for review passes over diffs, branches, or working trees when findings must be verified against actual files and command output."

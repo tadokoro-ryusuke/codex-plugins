@@ -1,6 +1,6 @@
 ---
 name: codex-collab
-description: "Codex-native collaboration: independent review, second opinions, rescue after repeated failures, parallel subagents, and thread handoffs. Use when the user asks for a second opinion, an independent review pass, rescue when fixes keep failing, or parallel agent work."
+description: "Codex-native collaboration for independent review, second opinions, rescue after repeated failures, bounded subagent delegation, and thread handoffs. Use when the user asks for collaboration or when an applicable AGENTS.md or skill explicitly authorizes an independent review, read-heavy delegation, or rescue pass."
 ---
 
 # Codex Collab
@@ -17,7 +17,7 @@ Coordinate independent reasoning inside Codex: reviews that don't trust the impl
 ## Choosing the Codex surface
 
 - `/review` or a review-style response: review of the current working tree.
-- Subagents: only when the user asks for parallel agents, second opinions, or delegation. Codex never spawns them implicitly.
+- Subagents: when the user directly asks or an applicable `AGENTS.md` or skill explicitly authorizes a bounded task. Do not infer authorization from task size alone.
 - New thread or fork: isolated exploration without polluting the main thread.
 - Browser / computer use: only when the task needs UI inspection or browser testing.
 - MCP/connectors: when the needed context lives outside the repo (GitHub, Slack, docs, issue trackers).
@@ -44,9 +44,9 @@ Use when the same issue has failed three times, the current approach is looping,
 
 ## Parallel subagents
 
-Subagents are explicit in Codex: spawn them only when the user requests parallel work or delegation. Requirements and behavior:
+Subagents require a direct user request or explicit authorization in an applicable project instruction or skill. Requirements and behavior:
 
-- `features.multi_agent = true` in `config.toml` enables the collaboration tools (`spawn_agent`, `send_input`, `wait_agent`, `close_agent`); `[agents] max_threads` caps concurrency (default 6).
+- Current Codex releases enable subagent workflows by default. Local configuration can still limit roles, concurrency, models, and sandbox behavior.
 - Subagents inherit the current sandbox policy — be deliberate when running with elevated permissions.
 - Prefer parallel subagents for read-heavy work: exploration, test runs, triage, review. Avoid parallel write-heavy work (edit conflicts).
 - Ask each subagent for a concise summary with evidence, not raw logs. Synthesize and independently verify claims before acting.

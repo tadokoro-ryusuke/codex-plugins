@@ -9,12 +9,12 @@ Single source of truth for the coding standards that all dev-core workflow skill
 
 ## 1. TDD Cycle (t-wada style)
 
-Red → Green → Refactor → Commit:
+Red → Green → Refactor → Evidence:
 
 1. **Red**: Write one failing test for a single behavior. It must fail because the implementation does not exist yet.
 2. **Green**: Write the minimum code that makes the test pass. Add nothing speculative.
 3. **Refactor**: Improve quality while keeping tests green — remove duplication, improve names, reduce complexity.
-4. **Commit**: Commit each meaningful unit of work.
+4. **Evidence**: Run focused verification and record the result. Commit a meaningful unit only when the user or delivery workflow explicitly authorizes commits.
 
 ## 2. SOLID
 

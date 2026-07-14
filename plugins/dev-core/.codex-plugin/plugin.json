@@ -1,7 +1,7 @@
 {
   "name": "dev-core",
-  "version": "4.0.1",
-  "description": "Codex-native development entrypoints and orchestration for design planning, branch/worktree execution, TDD, debugging, review, refactoring, E2E, verification, and continuous learning.",
+  "version": "4.1.0",
+  "description": "Codex-native development entrypoints and orchestration for decision grilling, evidence-backed planning, resumable execution, TDD, review, verification, and continuous learning.",
   "author": {
     "name": "Ryusuke Tadokoro",
     "email": "tado56@poshiri.org"
@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "Dev Core",
     "shortDescription": "TDD, verification, review, and architecture workflows.",
-    "longDescription": "Dev Core packages Codex-native entrypoint skills for design planning, plan execution, TDD, debugging, review, refactoring, Playwright E2E, checkpoints, verification loops, frontend and backend architecture patterns, and continuous improvement. Narrow skills trigger day-to-day workflows while dev-workflow keeps shared orchestration gates centralized. Bundled hooks block destructive commands and load project state at session start, and ready-made custom agent roles (code reviewer, security auditor) ship as assets.",
+    "longDescription": "Dev Core packages Codex-native entrypoint skills for decision grilling, evidence-backed design planning, resumable plan execution, TDD, debugging, review, refactoring, Playwright E2E, checkpoints, verification loops, frontend and backend architecture patterns, and continuous improvement. Narrow skills trigger day-to-day workflows while dev-workflow keeps shared autonomy and escalation gates centralized. Bundled hooks block destructive commands and safely surface active plan paths at session start, versioned eval-ready cases receive deterministic schema and skill-reference validation, and ready-made custom agent roles ship as assets.",
     "developerName": "Ryusuke Tadokoro",
     "category": "Development",
     "capabilities": [
@@ -31,6 +31,7 @@
     ],
     "defaultPrompt": [
       "Use $dev-task to draft a design and TDD plan.",
+      "Use $dev-grill to pressure-test a material decision before planning.",
       "Use $dev-execute to implement this plan through review gates.",
       "Use $dev-review to review this change with dev-core criteria."
     ]

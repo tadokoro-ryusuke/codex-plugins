@@ -30,5 +30,5 @@ This repository is a Codex plugin marketplace source. Keep it Codex-native.
 
 - Hooks are GA: events include `SessionStart`, `PreToolUse`, `PostToolUse`, `PreCompact`, `Stop`. Plugin hooks receive `PLUGIN_ROOT`/`PLUGIN_DATA` and require user trust review before running. PreToolUse blocks via `permissionDecision: "deny"` JSON on stdout; SessionStart stdout becomes developer context.
 - Custom agent roles are standalone TOML files in `.codex/agents/` (project) or `~/.codex/agents/` (personal); plugins cannot install them directly, so ship them as skill `assets/` with copy instructions.
-- Subagents are explicit-only (`features.multi_agent = true`); never imply Codex spawns them automatically.
+- Current Codex releases enable subagent workflows by default. Delegate only after a direct user request or an explicit applicable `AGENTS.md`/skill instruction; prefer bounded read-heavy work and avoid overlapping writes.
 - Custom prompts are deprecated; skills are the reusable workflow format.
