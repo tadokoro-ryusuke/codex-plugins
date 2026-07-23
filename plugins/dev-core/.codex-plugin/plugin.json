@@ -1,6 +1,6 @@
 {
   "name": "dev-core",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "Codex-native development entrypoints and orchestration for decision grilling, evidence-backed planning, resumable execution, TDD, review, verification, and continuous learning.",
   "author": {
     "name": "Ryusuke Tadokoro",
