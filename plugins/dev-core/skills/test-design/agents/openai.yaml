@@ -1,0 +1,7 @@
+interface:
+  display_name: "Test Design"
+  short_description: "Test strategy, techniques, acceptance criteria"
+  default_prompt: "Use $test-design to plan the test strategy and draft the acceptance criteria for this work."
+
+policy:
+  allow_implicit_invocation: false

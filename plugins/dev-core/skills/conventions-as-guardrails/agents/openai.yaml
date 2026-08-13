@@ -1,0 +1,7 @@
+interface:
+  display_name: "Conventions as Guardrails"
+  short_description: "Turn conventions into enforceable tooling"
+  default_prompt: "Use $conventions-as-guardrails to translate this project's conventions into enforced tooling and a minimal AGENTS.md."
+
+policy:
+  allow_implicit_invocation: false
