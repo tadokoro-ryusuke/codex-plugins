@@ -1,0 +1,4 @@
+interface:
+  display_name: "Indie Product Marketing"
+  short_description: "Research, launch, and grow indie products."
+  default_prompt: "Use $indie-product-marketing to build an evidence-backed launch and growth plan for my product."

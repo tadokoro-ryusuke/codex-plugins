@@ -1,0 +1,4 @@
+interface:
+  display_name: "Indie Idea Discovery"
+  short_description: "Discover evidence-backed indie product opportunities."
+  default_prompt: "Use $indie-idea-discovery to research problems and rank product opportunities I can validate."
