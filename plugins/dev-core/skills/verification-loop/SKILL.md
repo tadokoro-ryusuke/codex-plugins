@@ -15,7 +15,7 @@ scripts/verify.sh [--skip step,step] [project-dir]
 
 (Resolve the path relative to this skill directory.)
 
-The script detects the stack (npm/pnpm/yarn/bun scripts, Cargo, Go, Python), runs build → types → lint → test → security → diff, writes full logs to a temp directory, and prints a PASS/FAIL/SKIP summary. Exit code 0 means no applicable step failed.
+The script detects the stack (npm/pnpm/yarn/bun scripts, Cargo, Go, Python), runs build → types → lint → test → security → diff, writes full logs to a temp directory, and prints a PASS/FAIL/SKIP summary. Exit code 0 means no applicable step failed. **When several manifests coexist (Tauri = `Cargo.toml` + `package.json`, Python + JS monorepos), every detected stack runs and is reported per stack (`build:js`, `build:cargo`, …)** — never treat one language passing as the whole project passing. For Cloudflare Workers projects, also confirm the Workers-specific checks (`wrangler deploy --dry-run` builds, `@cloudflare/vitest-pool-workers` tests) via the project's own scripts.
 
 After running:
 

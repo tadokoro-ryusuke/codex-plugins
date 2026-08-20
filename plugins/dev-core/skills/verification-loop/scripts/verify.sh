@@ -28,9 +28,11 @@ SUMMARY=""
 note() { SUMMARY="${SUMMARY}$1\n"; }
 
 # run_step <name> <command...>
+# name may carry a stack suffix ("build:cargo"); --skip matches the base name.
 run_step() {
   local name="$1"; shift
-  if [ -n "$SKIP" ] && [ "${SKIP#*,"$name",}" != "$SKIP" ]; then
+  local base="${name%%:*}"
+  if [ -n "$SKIP" ] && [ "${SKIP#*,"$base",}" != "$SKIP" ]; then
     note "SKIP  $name (skipped by --skip)"
     return 0
   fi
@@ -71,47 +73,55 @@ js_cmd() { # js_cmd <script-name> — echoes "<pm> run <script>" if defined
 echo "== verification-loop: $(pwd) =="
 echo "logs: $LOG_DIR"
 
+# Each step runs for EVERY detected stack, not just the first match.
+# A multi-manifest repo (Tauri = package.json + Cargo.toml, Python + JS
+# monorepos) must verify all of its languages; first-match-only would
+# silently drop one side and report a false PASS.
+
 # --- Step 1: build ---
-if [ -n "$PM" ] && has_npm_script build; then run_step build $PM run build
-elif [ -f Cargo.toml ]; then run_step build cargo build --all-targets
-elif [ -f go.mod ]; then run_step build go build ./...
-else run_step build
-fi
+ran=0
+if [ -n "$PM" ] && has_npm_script build; then run_step build:js $PM run build; ran=1; fi
+if [ -f Cargo.toml ]; then run_step build:cargo cargo build --all-targets; ran=1; fi
+if [ -f go.mod ]; then run_step build:go go build ./...; ran=1; fi
+[ "$ran" -eq 1 ] || run_step build
 
 # --- Step 2: types ---
-if [ -n "$PM" ] && has_npm_script typecheck; then run_step types $PM run typecheck
-elif [ -f tsconfig.json ]; then run_step types npx tsc --noEmit
-elif [ -f pyproject.toml ] && command -v mypy >/dev/null 2>&1; then run_step types mypy .
-else run_step types
+ran=0
+if [ -n "$PM" ] && has_npm_script typecheck; then run_step types:js $PM run typecheck; ran=1
+elif [ -f tsconfig.json ]; then run_step types:js npx tsc --noEmit; ran=1
 fi
+if [ -f pyproject.toml ] && command -v mypy >/dev/null 2>&1; then run_step types:py mypy .; ran=1; fi
+[ "$ran" -eq 1 ] || run_step types
 
 # --- Step 3: lint ---
-if [ -n "$PM" ] && has_npm_script lint; then run_step lint $PM run lint
-elif [ -f Cargo.toml ]; then run_step lint cargo clippy --all-targets -- -D warnings
-elif [ -f go.mod ]; then run_step lint go vet ./...
-elif [ -f pyproject.toml ] && command -v ruff >/dev/null 2>&1; then run_step lint ruff check .
-else run_step lint
-fi
+ran=0
+if [ -n "$PM" ] && has_npm_script lint; then run_step lint:js $PM run lint; ran=1; fi
+if [ -f Cargo.toml ]; then run_step lint:cargo cargo clippy --all-targets -- -D warnings; ran=1; fi
+if [ -f go.mod ]; then run_step lint:go go vet ./...; ran=1; fi
+if [ -f pyproject.toml ] && command -v ruff >/dev/null 2>&1; then run_step lint:py ruff check .; ran=1; fi
+[ "$ran" -eq 1 ] || run_step lint
 
 # --- Step 4: test ---
-if [ -n "$PM" ] && has_npm_script test; then run_step test $PM run test
-elif [ -f Cargo.toml ]; then run_step test cargo test
-elif [ -f go.mod ]; then run_step test go test ./...
-elif [ -f pyproject.toml ] && command -v pytest >/dev/null 2>&1; then run_step test pytest -q
-else run_step test
-fi
+ran=0
+if [ -n "$PM" ] && has_npm_script test; then run_step test:js $PM run test; ran=1; fi
+if [ -f Cargo.toml ]; then run_step test:cargo cargo test; ran=1; fi
+if [ -f go.mod ]; then run_step test:go go test ./...; ran=1; fi
+if [ -f pyproject.toml ] && command -v pytest >/dev/null 2>&1; then run_step test:py pytest -q; ran=1; fi
+[ "$ran" -eq 1 ] || run_step test
 
 # --- Step 5: security (dependency audit) ---
+ran=0
 if [ -n "$PM" ]; then
   case "$PM" in
-    pnpm) run_step security pnpm audit --audit-level moderate ;;
-    yarn) run_step security yarn npm audit --severity moderate ;;
-    *) run_step security npm audit --audit-level=moderate ;;
+    pnpm) run_step security:js pnpm audit --audit-level moderate ;;
+    yarn) run_step security:js yarn npm audit --severity moderate ;;
+    *) run_step security:js npm audit --audit-level=moderate ;;
   esac
-elif [ -f Cargo.toml ] && command -v cargo-audit >/dev/null 2>&1; then run_step security cargo audit
-elif [ -f pyproject.toml ] && command -v pip-audit >/dev/null 2>&1; then run_step security pip-audit
-else run_step security
+  ran=1
 fi
+if [ -f Cargo.toml ] && command -v cargo-audit >/dev/null 2>&1; then run_step security:cargo cargo audit; ran=1; fi
+if [ -f pyproject.toml ] && command -v pip-audit >/dev/null 2>&1; then run_step security:py pip-audit; ran=1; fi
+[ "$ran" -eq 1 ] || run_step security
 
 # --- Step 6: diff (working tree state) ---
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then

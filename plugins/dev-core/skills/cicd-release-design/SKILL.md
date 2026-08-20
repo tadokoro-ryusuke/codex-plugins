@@ -65,7 +65,7 @@ Do not write a pipeline from scratch per project.
 Why: for a solo contractor, cloning a template is the single biggest efficiency win. CI plumbing is not a differentiator — do not sink time into it.
 
 - [ ] Go all-in on managed CI (GitHub Actions / GitLab CI). Do not self-host Jenkins.
-- [ ] **Consolidate verification commands into package.json / Makefile / justfile** so local and CI run the exact same commands.
+- [ ] **Consolidate verification commands into one place** (package.json scripts / Makefile / justfile / cargo aliases / uv + pyproject — follow the stack's standard) so local and CI run the exact same commands. In multi-language repos (Tauri, etc.), bundle every stack behind a Makefile / justfile.
   Why: a CI failure that cannot be reproduced locally doubles debugging cost.
 - [ ] Include the flaky-quarantine procedure (label, skip method, reinstatement criteria) in the template.
 - [ ] Keep improving the template with feedback from each project and feed it into the next one.
@@ -78,7 +78,13 @@ Why: for a solo contractor, cloning a template is the single biggest efficiency 
 | Blue/Green | Two production-grade environments; deploy to the idle one → verify → switch | Rollback is just switching back — instant | 2x environment cost | Larger changes; instant rollback required |
 | Canary | Route a few % of traffic to the new version, expand while watching metrics | Smallest blast radius | Design tolerant of old/new coexistence; monitoring maturity | Daily small releases |
 | Rolling | Replace instances one by one (Kubernetes default) | Cost-efficient | Long old/new coexistence window | Standard k8s setups |
-| Managed PaaS built-ins | Cloud Run traffic splitting, Vercel skew protection, etc. | Almost no extra gear needed | Limited to platform features | The majority of small projects |
+| Managed PaaS built-ins | Cloud Run traffic splitting, Vercel skew protection, Cloudflare Workers gradual deployments (`wrangler versions upload` -> preview check -> `versions deploy` with % split -> `rollback`), etc. | Almost no extra gear needed | Limited to platform features | The majority of small projects |
+
+**This table assumes server-side deployment.** Desktop/mobile distribution (Tauri, Electron, store apps) follows a different shape:
+
+- Staged rollout is done per **update channel** (stable / beta) and staged updater delivery, not traffic %.
+- **Code signing joins the quality gates** (Windows certificate / macOS Developer ID + notarization / store review on mobile). Keep signing and updater keys in CI secrets, and decide the key-backup procedure first — **losing the updater signing key means existing users can never receive another update**.
+- **Rollback is a re-release**: prepare a procedure to ship the previous version under a new version number (binaries already on user machines cannot be reverted instantly).
 
 - For most small projects, "**managed-PaaS built-in traffic control + feature flags + an instant-rollback runbook**" is enough. Kubernetes + Argo-grade gear is over-investment.
   Why: safety trades against cost and complexity — decide by the project's SLA and traffic volume.

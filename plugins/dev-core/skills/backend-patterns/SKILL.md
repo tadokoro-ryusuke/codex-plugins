@@ -65,7 +65,9 @@ class CreateUserUseCase {
 
 ## Result pattern
 
-Return expected failures as values; reserve exceptions for the unexpected:
+Return expected failures as values; reserve exceptions (or panics) for the unexpected.
+
+**If the language has a native Result mechanism, use it — do not define your own**: Rust has `std::result::Result` + `thiserror` (at a Tauri command boundary, convert to a `Serialize`-able error type); Go has `(T, error)`. Python's ecosystem is exception-first: model expected business failures as dedicated exception classes or structured return values, and adopt a Result library only with team agreement. The definition below is for TS/JS-style languages with no standard Result:
 
 ```typescript
 type Result<T, E = Error> =
