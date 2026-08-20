@@ -35,26 +35,37 @@ OCP, LSP, and ISP apply as usual; flag violations in review rather than re-deriv
 
 ### Naming
 
-- `camelCase`: variables, functions, methods (`getUserById`, `isActive`)
-- `PascalCase`: classes, types, interfaces, components (`UserService`, `ButtonProps`)
-- `UPPER_SNAKE_CASE`: constants (`MAX_RETRY_COUNT`, `API_BASE_URL`)
-- `kebab-case`: file and directory names (`user-service.ts`)
+**Follow the language's standard case conventions** — never invent project-specific ones. The language's formatter/linter (rustfmt, Ruff, gofmt, ESLint, …) is the authority.
+
+| Language | Variables/functions | Classes/types | Constants | Files |
+|---|---|---|---|---|
+| TypeScript/JS | camelCase | PascalCase | UPPER_SNAKE_CASE | kebab-case (`user-service.ts`) |
+| Rust | snake_case | PascalCase | SCREAMING_SNAKE_CASE | snake_case (`user_service.rs`) |
+| Python (PEP 8) | snake_case | PascalCase | UPPER_SNAKE_CASE | snake_case (`user_service.py`) |
+| Go | camelCase (exported: leading capital) | same | MixedCaps | lowercase (`userservice.go`) |
+
+Universal across languages: intention-revealing names, no cryptic abbreviations, `is`/`has`/`can` prefixes for booleans.
 
 ### Style
 
 - DRY: remove duplication as soon as it appears.
 - Early returns / guard clauses over deep nesting.
-- Immutability: `[...array, item]`, `{ ...obj, key: val }`; never mutate in place.
+- Immutability: don't mutate shared data in place — produce updated values (JS: `[...array, item]`; Python: new comprehensions / `dataclasses.replace`; Rust: ownership and `&mut` already enforce this — follow the borrow rules).
 - File size: aim for 200–400 lines, split above 500. Functions ≤ 50 lines.
 - Ternaries only for simple cases; nested ternaries are banned.
 
-### TypeScript
+### Type strictness (per language)
 
-- `strict` mode on; `any` is banned — use `unknown` plus type guards.
-- Explicit return types on exported functions.
-- Import order: external libraries → internal absolute imports → relative imports.
+Principle: **ban the type system's escape hatches by default**; using one requires a reason comment and human approval.
 
-## 4. Feature-Sliced Design (FSD)
+- **TypeScript**: `strict` on; `any` banned — use `unknown` plus type guards. Explicit return types on exported functions. Import order: external → internal absolute → relative.
+- **Rust**: `cargo clippy -- -D warnings` must pass. `unwrap()`/`expect()` only in main, tests, or documented invariants. Every `unsafe` block needs a reason comment.
+- **Python**: mypy or pyright as a CI gate. `Any` / `type: ignore` only with a reason. Type annotations required on new code; strict-mode existing code module by module.
+- **Go**: `go vet` + golangci-lint must pass. No gratuitous `interface{}`/`any`.
+
+## 4. Feature-Sliced Design (FSD) — frontend only
+
+**Scope**: FSD is a **SPA/web-frontend methodology** (`widgets` = page building blocks). Do not apply it to backends, CLIs, batch jobs, Cloudflare Workers, or a Tauri Rust core — use the Clean Architecture layering below there. The universal rule is "dependencies point inward (toward the domain)"; directory naming follows the target platform.
 
 Layers depend strictly downward; no cross-dependencies within a layer; `shared` is usable from anywhere.
 
@@ -71,7 +82,21 @@ Slice layout: `features/<name>/{api,model,ui,index.ts}` — `index.ts` is the on
 
 ## 5. Clean Architecture
 
-Business logic owns the interfaces; infrastructure implements them:
+Business logic owns the interfaces; infrastructure implements them. The abstraction mechanism is per language: TS `interface` / Rust trait / Python `typing.Protocol` or ABC / Go interface.
+
+Typical non-frontend layout (directory names follow language conventions):
+
+```
+src/
+├── domain/          # entities, value objects, repository interfaces (zero external deps)
+├── application/     # use cases (depend on domain only)
+├── infrastructure/  # concrete DB / external API implementations
+└── presentation/    # HTTP handlers / CLI / Tauri commands (keep as thin adapters)
+```
+
+In Tauri, `#[tauri::command]` functions are thin presentation-layer adapters; domain logic lives in a Tauri-independent crate testable with plain `cargo test`. In Cloudflare Workers, keep Hono handlers equally thin and inject Env bindings at the infrastructure layer.
+
+TypeScript example of the dependency inversion:
 
 ```typescript
 // Domain (entities) — interface definition
@@ -112,7 +137,7 @@ class ClientName {
 - **A03 Injection**: ORM/parameterized queries, auto-escaping output, no shell string interpolation.
 - **A04 Insecure design**: threat-model new surfaces; defense in depth.
 - **A05 Misconfiguration**: no default credentials, disable unused features.
-- **A06 Vulnerable components**: dependencies current; `npm audit` (or ecosystem equivalent) clean.
+- **A06 Vulnerable components**: dependencies current; audit clean per ecosystem (`npm audit` / `cargo audit` / `pip-audit` / `govulncheck`).
 - **A07 Authentication**: strong password policy, MFA where available, secure session management.
 - **A08 Integrity**: CI/CD pipeline safety, dependency integrity checks.
 - **A09 Logging**: log security events, protect logs from tampering.

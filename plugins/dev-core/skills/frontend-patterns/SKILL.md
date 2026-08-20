@@ -1,11 +1,11 @@
 ---
 name: frontend-patterns
-description: "Framework-agnostic frontend patterns: component composition, props design, state management scope, schema-based forms, data fetching, performance. Reference skill loaded by dev-core workflow skills; invoke explicitly with $frontend-patterns when building or reviewing UI code."
+description: "Web frontend patterns: component composition, props design, state management scope, schema-based forms, data fetching, performance. Principles are framework-agnostic; library examples are React/Vue-centric (also applies to a Tauri WebView frontend). Reference skill loaded by dev-core workflow skills; invoke explicitly with $frontend-patterns when building or reviewing UI code."
 ---
 
 # Frontend Patterns
 
-Framework-agnostic frontend conventions. For framework-specific APIs (React hooks, Vue Composition API, …), consult the project's `AGENTS.md`, official docs, or available MCP connectors instead of guessing.
+Web frontend conventions. Principles (composition, state scope, validation strategy) are framework-agnostic; library examples lean React/Vue and apply equally to a Tauri WebView frontend. For framework-specific APIs (React hooks, Vue Composition API, …), consult the project's `AGENTS.md`, official docs, or available MCP connectors instead of guessing.
 
 ## Component design
 
