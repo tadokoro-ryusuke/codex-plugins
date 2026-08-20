@@ -1,0 +1,7 @@
+interface:
+  display_name: "External Design Deliverables"
+  short_description: "Screen and batch design deliverables"
+  default_prompt: "Use $external-design-deliverables to produce the external (basic) design deliverables for this feature."
+
+policy:
+  allow_implicit_invocation: false

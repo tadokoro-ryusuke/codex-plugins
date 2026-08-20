@@ -1,0 +1,7 @@
+interface:
+  display_name: "Issue-Driven Development"
+  short_description: "Issue-first workflow for human+agent teams"
+  default_prompt: "Use $issue-driven-dev to structure this work as issues, branches, and reviewable PRs."
+
+policy:
+  allow_implicit_invocation: false

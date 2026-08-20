@@ -1,0 +1,7 @@
+interface:
+  display_name: "CI/CD & Release Design"
+  short_description: "Quality gates, secrets, deploy strategies"
+  default_prompt: "Use $cicd-release-design to design the CI/CD pipeline, deploy strategy, and release flow."
+
+policy:
+  allow_implicit_invocation: false
