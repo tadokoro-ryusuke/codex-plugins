@@ -1,6 +1,6 @@
 {
   "name": "dev-core",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "description": "Codex-native development entrypoints and orchestration for decision grilling, evidence-backed planning, resumable execution, TDD, review, verification, continuous learning, issue-driven development, test design, CI/CD and release design, conventions-as-guardrails, and external design deliverables.",
   "author": {
     "name": "Ryusuke Tadokoro",
@@ -21,7 +21,7 @@
   "interface": {
     "displayName": "Dev Core",
     "shortDescription": "TDD, verification, review, and architecture workflows.",
-    "longDescription": "Dev Core packages Codex-native entrypoint skills for decision grilling, evidence-backed design planning, resumable plan execution, TDD, debugging, review, refactoring, Playwright E2E, checkpoints, verification loops, frontend and backend architecture patterns, and continuous improvement. Narrow skills trigger day-to-day workflows while dev-workflow keeps shared autonomy and escalation gates centralized. Bundled hooks block destructive commands and safely surface active plan paths at session start, versioned eval-ready cases receive deterministic schema and skill-reference validation, and ready-made custom agent roles ship as assets.",
+    "longDescription": "Dev Core packages Codex-native skills for planning, TDD, debugging, review, and evidence-backed completion. Substantial approved-plan execution uses a coordinating parent, a configured implementation model, and a separate reviewer. A centralized role profile and capability-checked resolver make model requests explicit; bounded handoffs and a delegation ledger preserve ownership and distinguish requested settings from runtime evidence. Hooks surface project state and block selected destructive commands. Offline regression tests and a reusable native-agent smoke fixture support validation; custom review roles remain optional assets.",
     "developerName": "Ryusuke Tadokoro",
     "category": "Development",
     "capabilities": [

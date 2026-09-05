@@ -43,7 +43,7 @@ Use narrow skills for daily work; `dev-workflow` provides shared orchestration.
 | --- | --- |
 | `$dev-grill` | Pressure-test a plan or decision one material question at a time; explicit invocation only. |
 | `$dev-task` | Turn an idea into a design plan, acceptance criteria, BDD scenarios, and TDD iterations (template bundled). |
-| `$dev-execute` | Execute an existing plan through branch/worktree prep, TDD, verification, review, and refactor gates. |
+| `$dev-execute` | Coordinate an approved plan with role-specific implementation and independent review, TDD, and evidence gates. |
 | `$dev-debug` | Investigate errors from root cause before fixing. |
 | `$dev-tdd` | Run a focused test-first cycle for one behavior or regression. |
 | `$dev-review` | Review with dev-core criteria: behavior, security, tests, architecture, maintainability, conventions. |
@@ -58,6 +58,20 @@ Use narrow skills for daily work; `dev-workflow` provides shared orchestration.
 Reference skills `$best-practices`, `$backend-patterns`, and `$frontend-patterns` are loaded on demand (not injected implicitly) to keep the always-on skill list small.
 
 `dev-task` writes durable, default-fail completion contracts under `docs/plans/task-<slug>.md`. `dev-execute` keeps progress, decisions, evidence, and the next action in that same plan so fresh threads can resume without reconstructing state. `codex-collab` ships ready-made custom agent roles (`code-reviewer`, `security-auditor`) you can copy into `.codex/agents/`.
+
+For substantial planned work, `dev-execute` keeps the parent coordinating and
+delegates implementation and a separate review. Default model/effort assignments
+live in one [execution profile](plugins/dev-core/skills/codex-collab/assets/execution-profile.json).
+The profile recommends the parent setting; choose that model in the task's host.
+The plugin resolves explicit child requests against the host's exposed models
+and effort settings, without silently falling back to another model.
+
+The [execution contract](plugins/dev-core/skills/codex-collab/references/planned-execution.md)
+defines bounded writes, parent decisions, fresh handoffs, review independence,
+and evidence. Native tools accepting model/effort arguments do not require
+installing custom role files. Read-only task instructions and role names alone
+do not establish an enforced sandbox. Small steps can stay with the parent when
+delegation would add unnecessary overhead; explicit user preferences take priority.
 
 ## HOTL Engineering
 
@@ -85,7 +99,20 @@ behavior with fake toolchains and target responses. CI runs both layers plus
 hook tests. None of these checks executes the skill scenarios with a model or
 establishes hosted workflow/cloud behavior.
 
+To exercise role-based execution with actual agents, follow the
+[native evaluation procedure](plugins/dev-core/skills/codex-collab/references/execution-evaluation.md).
+Its helper prepares a disposable repository and grades behavior independently of
+candidate-written tests. The helper itself does not call a model; native dispatch,
+effective model metadata, and observed outcomes are recorded separately.
+
 ### Source update migration (2026-09-05)
+
+- `dev-core` 5.1.0: substantial approved-plan execution delegates implementation
+  and independent review using the centralized execution profile. Explicit task
+  overrides take priority. Supply capability observations from the current host;
+  an unavailable requested model is reported without silent substitution. Parent
+  recommendations do not change the host's selected model. Existing custom agent
+  TOML files do not automatically import this profile.
 
 - `dev-core` 5.0.0: the fallback runner returns `2` for incomplete verification
   (including no workload checks), `1` for failed checks, and `0` only for selected

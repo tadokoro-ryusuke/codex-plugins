@@ -69,6 +69,12 @@ When using subagents:
 
 Use the tools and concurrency limits actually exposed by the host. Inherit the
 configured model unless the user or an applicable instruction selects an override.
+For substantial `dev-execute` work, apply the role profile and handoff contract in
+`../../codex-collab/references/planned-execution.md`: keep the parent coordinating,
+assign bounded implementation to the configured implementation model, and use a
+separate reviewer. This is an explicit workflow-specific model selection; it does
+not change defaults for every other skill. Respect delegated-role boundaries and
+do not recursively restart the parent workflow inside a child assignment.
 Separate worktrees isolate files, not shared databases, ports, deployments, or
 credentials. Coordinate those resources explicitly before parallel execution.
 Create or fork a user-owned task only when the user requests that task operation;
@@ -91,9 +97,10 @@ Before code changes:
 For plan execution, iterate:
 
 ```text
-read plan -> prepare workspace -> Tidy First -> Red -> Green -> Refactor
-  -> focused verify -> review gate -> fix/refactor if needed -> next iteration
-  -> broad verify -> final review -> final report
+parent reads plan -> prepares workspace and bounded handoff
+  -> implementation owner: Tidy First -> Red -> Green -> Refactor -> focused verify
+  -> parent inspects evidence -> independent review -> owner fixes if needed
+  -> parent verifies integration and acceptance -> next iteration or final report
 ```
 
 The review gate is not a formality. Treat implementation claims as untrusted until the diff, tests, and verification evidence support them.
