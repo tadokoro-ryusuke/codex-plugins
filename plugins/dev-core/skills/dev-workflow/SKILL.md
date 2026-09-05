@@ -40,7 +40,7 @@ Use this skill as the shared orchestrator for the narrower dev-core entrypoint s
 
 - Prefer concrete repository evidence over command-template ceremony.
 - Verify facts from the repository first. Continue with a stated reversible default; ask only when missing information changes the requested outcome materially or makes action unsafe.
-- Use `update_plan` for multi-step work in this thread when the work is substantial.
+- Use `update_plan` for substantial multi-step work when that tool is available; otherwise keep progress in the existing plan artifact. Do not invent a tool call or create a second plan just for the UI.
 - Use subagents only when the user directly requests them or an applicable `AGENTS.md` or skill explicitly authorizes a bounded delegation. Follow `references/orchestration.md` for the subagent gate.
 - Do not run destructive commands without explicit approval.
 - Do not claim a check passed unless you ran it in the current turn and saw passing output.

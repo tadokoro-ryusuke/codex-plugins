@@ -136,8 +136,8 @@ function checkHooks(hooksPath, pluginDir) {
     }
     for (const group of groups) {
       for (const hook of group.hooks ?? []) {
-        // Codex executes command handlers only; prompt/agent handlers are
-        // parsed but skipped, so shipping them is a silent no-op.
+        // Repository portability policy: ship command handlers only.
+        // Codex also supports mcp_tool; prompt/agent handlers are parsed but skipped.
         if (hook.type !== "command") {
           errors.push(`${rel}: ${event} handler type must be "command" (got ${JSON.stringify(hook.type)})`);
         }

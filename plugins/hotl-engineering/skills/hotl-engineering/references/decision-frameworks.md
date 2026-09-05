@@ -3,6 +3,11 @@
 Decision tables, criteria, and anti-patterns for use in advisory mode. Tools for translating
 the principles (principles.md) into concrete decisions. Numbers reference the corresponding principle.
 
+Treat numeric thresholds, sample counts, and elapsed periods below as examples
+to calibrate, not evidence-backed universal promotion criteria. Record the
+operation, representative cases, failure impact, owner, and existing authority.
+Preserve enforced protections when introducing a new advisory mechanism.
+
 ---
 
 ## F1. Risk-tier determination (Principle 5)
@@ -16,7 +21,8 @@ the principles (principles.md) into concrete decisions. Numbers reference the co
 | None of the above, and it's only docs, added tests, or a dependency patch? | Tier 0 |
 | Anything else | Tier 1 |
 
-When in doubt, round up to the higher tier. However, if Tier 2 exceeds 30% of all PRs, the path definition is too broad.
+Inspect uncertain risk paths. A high Tier 2 proportion is a reason to review the
+classification, not proof that the controls should be weakened.
 
 ## F2. Autonomy promotion criteria (Principle 4)
 
@@ -58,7 +64,7 @@ decision logic tightly coupled to your own data and your own permission model.
 ## F5. Criteria for enabling auto-merge (Principles 3, 5)
 
 Do not enable auto-merge until all of the following are Yes:
-- The mechanical Tier 0 determination (paths + dependency-patch check) has run for 4 weeks with zero misclassifications
+- The mechanical Tier 0 determination has enough representative reviewed cases to support the agreed error tolerance; elapsed weeks alone do not qualify it
 - All gates (5 layers) run stably as required checks, with false positives under one per week
 - Post-hoc monitoring: a mechanism for automatic revert after merge, or a deploy that can be rolled back immediately
 - Audit explanation: "the scope and conditions of auto-merge" is documented

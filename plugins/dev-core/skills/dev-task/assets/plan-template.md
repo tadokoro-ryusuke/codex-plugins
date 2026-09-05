@@ -21,6 +21,8 @@ What is deliberately out of scope.
 
 - Repository state inspected: <commands or files>
 - Existing behavior verified: <command and result, or "not yet verified">
+- Evidence identity: <working directory, HEAD, relevant diff/input fingerprint>
+- Runtime scope: <source/static, local service, browser/device, or deployed system>
 
 ## Facts, Assumptions, And Decisions Needed
 
@@ -40,6 +42,8 @@ What is deliberately out of scope.
 
 Record key decisions, affected modules, data flow, and why this approach fits.
 Reference concrete files (`path:line`) discovered while inspecting the repo.
+For authorized delegation, name each bounded task's inputs, ownership, shared
+resources, required return evidence, and stop condition. Omit for single-agent work.
 
 ## Completion Contract
 

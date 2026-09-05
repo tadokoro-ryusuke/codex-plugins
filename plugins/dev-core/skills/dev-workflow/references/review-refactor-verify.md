@@ -6,11 +6,10 @@ Use this for refactoring, self-review, PR readiness, and final quality checks.
 
 1. Confirm the target: working tree, PR, branch, commit, file, or directory.
 2. Run or inspect existing tests before changing behavior.
-3. Prioritize:
-   - Critical: security risk, bug, hardcoded secret, broken contract.
-   - High: duplicated logic, complex conditionals, oversized functions.
-   - Medium: naming, public API clarity, type precision.
-   - Low: import ordering, formatting, comments.
+3. Prioritize by concrete impact, likelihood, and the changed contract. Treat
+   duplication, conditionals, size, naming, and formatting as investigation
+   signals. Report a finding only when it causes an identifiable problem or
+   violates an enforced repository rule; do not assign severity from size alone.
 4. Preserve external behavior unless the user requested behavior change.
 5. Run tests after each meaningful refactor batch.
 

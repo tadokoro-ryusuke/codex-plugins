@@ -5,7 +5,10 @@ description: "Turn mistakes into durable prevention. Use after build/test/lint f
 
 # Continuous Learning
 
-Principle (Mitchell Hashimoto): every time the agent makes a mistake, build a mechanism that makes that mistake impossible to repeat.
+Turn a demonstrated recurring failure into the smallest useful prevention.
+Do not turn every typo, expected TDD failure, or one-off environment problem into
+a permanent rule. Prefer a regression test or existing tool configuration over
+another generic instruction.
 
 ## Learning loop
 
@@ -29,13 +32,25 @@ Identify what went wrong in this session: build errors, test failures, lint viol
 | Missing knowledge | Record the project constraint | `AGENTS.md` (keep it under the ~32 KiB default read limit; link out for detail) |
 | Missing tooling | Add a lint rule, test, or script | linter config, test files, `scripts/` |
 
-Notes on Codex hooks: only `"type": "command"` handlers execute (prompt handlers are parsed but skipped), and plugin-bundled hooks require the user to review and trust them before they run. Events include `SessionStart`, `PreToolUse`, `PostToolUse`, `PreCompact`, and `Stop`. The dev-core plugin ships working examples in its `hooks/` directory.
+Use command handlers for this repository's portable hooks. Current Codex also
+supports MCP tool hooks; prompt/agent handlers are parsed but skipped. Plugin
+hooks require user trust review. Use the host's documented event/payload contract;
+shell and unified-exec hooks use the canonical Bash name and command field.
+The dev-core plugin ships command examples in its hooks directory.
 
 ### 4. Verify the prevention works
 
-- Attempt the same forbidden operation — does the hook block it?
+- Pipe a synthetic payload to the hook in an isolated fixture and inspect its decision. Never execute a destructive operation to test a blocker.
 - Write the same bad code — does lint or a test catch it?
 - Start a fresh session — is the new rule actually loaded and followed?
+
+## Scope and durability
+
+Keep prevention within the authorized task. Change project rules only for an
+established project invariant; do not rewrite personal memory or global settings
+without an explicit request. A shell-pattern hook is defense in depth, not a
+complete security boundary. Test both its intended deny and safe pass-through
+cases, and keep sandbox/approval controls in place.
 
 ## Compounding improvement
 
@@ -49,4 +64,7 @@ Session 3: hook + rule hold → attention moves to harder problems
 
 ## Growing the Stop-time checks
 
-Use a `Stop` hook or verification script to auto-detect recurring leftovers: uncommitted changes, stray `console.log`/`debugger`, new TODO/FIXME comments. When a new leftover class appears in review, add it to the detection list — the Stop check itself is a learning artifact.
+Use a Stop hook only for a demonstrated recurring issue with an actionable,
+low-noise check. Uncommitted changes are normal when commits were not requested;
+TODOs and diagnostic logging need context. Do not block completion merely because
+these strings exist, or append permanent checks without a recurrence signal.

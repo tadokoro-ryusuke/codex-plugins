@@ -5,34 +5,54 @@
 # claim can be backed by real command output.
 #
 # Usage: verify.sh [--skip step,step] [project-dir]
-# Exit code: 0 only if no applicable step failed (skipped steps don't fail).
+# Exit codes: 0 selected checks passed; 1 check failed; 2 incomplete/usage error.
+# Detect manifests in project-dir only; use project workspace commands for nested packages.
 
 set -u
 
 SKIP=""
 DIR="."
+DIR_SET=0
+usage_error() { echo "verify.sh: $1" >&2; exit 2; }
 while [ $# -gt 0 ]; do
   case "$1" in
-    --skip) SKIP=",$2,"; shift 2 ;;
+    --skip)
+      [ $# -ge 2 ] && [ -n "$2" ] || usage_error "--skip requires a comma-separated step list"
+      case ",$2," in *,,*) usage_error "empty --skip step" ;; esac
+      IFS=',' read -r -a skip_steps <<< "$2"
+      for step in "${skip_steps[@]}"; do
+        case "$step" in build|types|lint|test|security|diff) ;; *) usage_error "unknown step: $step" ;; esac
+      done
+      SKIP="${SKIP},$2,"; shift 2 ;;
     -h|--help) grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
-    *) DIR="$1"; shift ;;
+    -*) usage_error "unknown option: $1" ;;
+    *) [ "$DIR_SET" -eq 0 ] || usage_error "provide only one project directory"
+       DIR="$1"; DIR_SET=1; shift ;;
   esac
 done
 
 cd "$DIR" || { echo "verify.sh: cannot cd to $DIR" >&2; exit 2; }
 
-LOG_DIR="$(mktemp -d "${TMPDIR:-/tmp}/verify.XXXXXX")"
+LOG_DIR="$(mktemp -d "${TMPDIR:-/tmp}/verify.XXXXXX")" || exit 2
 FAILURES=0
+BLOCKED=0
+CHECKS=0
 SUMMARY=""
 
 note() { SUMMARY="${SUMMARY}$1\n"; }
+is_skipped() { case "$SKIP" in *",${1%%:*},"*) return 0 ;; *) return 1 ;; esac; }
+blocked_step() {
+  if is_skipped "$1"; then note "SKIP  $1 (skipped by --skip)"; return; fi
+  note "BLOCKED  $1 ($2)"
+  BLOCKED=$((BLOCKED + 1))
+}
 
 # run_step <name> <command...>
 # name may carry a stack suffix ("build:cargo"); --skip matches the base name.
 run_step() {
   local name="$1"; shift
   local base="${name%%:*}"
-  if [ -n "$SKIP" ] && [ "${SKIP#*,"$base",}" != "$SKIP" ]; then
+  if is_skipped "$base"; then
     note "SKIP  $name (skipped by --skip)"
     return 0
   fi
@@ -40,7 +60,12 @@ run_step() {
     note "SKIP  $name (no applicable command detected)"
     return 0
   fi
+  if ! command -v "$1" >/dev/null 2>&1; then
+    blocked_step "$name" "missing executable: $1; use the project-managed command"
+    return
+  fi
   local log="$LOG_DIR/$name.log"
+  CHECKS=$((CHECKS + 1))
   if "$@" >"$log" 2>&1; then
     note "PASS  $name ($*)  log: $log"
   else
@@ -66,12 +91,15 @@ if [ -f package.json ]; then
   fi
 fi
 
-js_cmd() { # js_cmd <script-name> — echoes "<pm> run <script>" if defined
-  has_npm_script "$1" && echo "$PM run $1"
-}
-
 echo "== verification-loop: $(pwd) =="
 echo "logs: $LOG_DIR"
+if [ -n "$PM" ]; then
+  if ! command -v node >/dev/null 2>&1; then
+    blocked_step metadata:js "node is required to inspect package.json"
+  elif ! node -e "JSON.parse(require('fs').readFileSync('package.json','utf8'))" >"$LOG_DIR/metadata:js.log" 2>&1; then
+    blocked_step metadata:js "invalid package.json; see $LOG_DIR/metadata:js.log"
+  fi
+fi
 
 # Each step runs for EVERY detected stack, not just the first match.
 # A multi-manifest repo (Tauri = package.json + Cargo.toml, Python + JS
@@ -88,9 +116,9 @@ if [ -f go.mod ]; then run_step build:go go build ./...; ran=1; fi
 # --- Step 2: types ---
 ran=0
 if [ -n "$PM" ] && has_npm_script typecheck; then run_step types:js $PM run typecheck; ran=1
-elif [ -f tsconfig.json ]; then run_step types:js npx tsc --noEmit; ran=1
+elif [ -f tsconfig.json ]; then run_step types:js ./node_modules/.bin/tsc --noEmit; ran=1
 fi
-if [ -f pyproject.toml ] && command -v mypy >/dev/null 2>&1; then run_step types:py mypy .; ran=1; fi
+if [ -f pyproject.toml ]; then run_step types:py mypy .; ran=1; fi
 [ "$ran" -eq 1 ] || run_step types
 
 # --- Step 3: lint ---
@@ -98,7 +126,7 @@ ran=0
 if [ -n "$PM" ] && has_npm_script lint; then run_step lint:js $PM run lint; ran=1; fi
 if [ -f Cargo.toml ]; then run_step lint:cargo cargo clippy --all-targets -- -D warnings; ran=1; fi
 if [ -f go.mod ]; then run_step lint:go go vet ./...; ran=1; fi
-if [ -f pyproject.toml ] && command -v ruff >/dev/null 2>&1; then run_step lint:py ruff check .; ran=1; fi
+if [ -f pyproject.toml ]; then run_step lint:py ruff check .; ran=1; fi
 [ "$ran" -eq 1 ] || run_step lint
 
 # --- Step 4: test ---
@@ -106,7 +134,7 @@ ran=0
 if [ -n "$PM" ] && has_npm_script test; then run_step test:js $PM run test; ran=1; fi
 if [ -f Cargo.toml ]; then run_step test:cargo cargo test; ran=1; fi
 if [ -f go.mod ]; then run_step test:go go test ./...; ran=1; fi
-if [ -f pyproject.toml ] && command -v pytest >/dev/null 2>&1; then run_step test:py pytest -q; ran=1; fi
+if [ -f pyproject.toml ]; then run_step test:py pytest -q; ran=1; fi
 [ "$ran" -eq 1 ] || run_step test
 
 # --- Step 5: security (dependency audit) ---
@@ -114,17 +142,28 @@ ran=0
 if [ -n "$PM" ]; then
   case "$PM" in
     pnpm) run_step security:js pnpm audit --audit-level moderate ;;
-    yarn) run_step security:js yarn npm audit --severity moderate ;;
-    *) run_step security:js npm audit --audit-level=moderate ;;
+    yarn|bun) blocked_step security:js "use the declared $PM version's project audit command" ;;
+    npm) run_step security:js npm audit --audit-level=moderate ;;
   esac
   ran=1
 fi
-if [ -f Cargo.toml ] && command -v cargo-audit >/dev/null 2>&1; then run_step security:cargo cargo audit; ran=1; fi
-if [ -f pyproject.toml ] && command -v pip-audit >/dev/null 2>&1; then run_step security:py pip-audit; ran=1; fi
+if [ -f Cargo.toml ]; then
+  if command -v cargo-audit >/dev/null 2>&1; then run_step security:cargo cargo audit
+  else blocked_step security:cargo "missing cargo-audit"; fi
+  ran=1
+fi
+if [ -f go.mod ]; then run_step security:go govulncheck ./...; ran=1; fi
+if [ -f pyproject.toml ]; then
+  if [ -f requirements.txt ]; then run_step security:py pip-audit -r requirements.txt
+  else blocked_step security:py "no requirements.txt; audit a project lock/export with the project command"; fi
+  ran=1
+fi
 [ "$ran" -eq 1 ] || run_step security
 
 # --- Step 6: diff (working tree state) ---
-if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+if is_skipped diff; then
+  note "SKIP  diff (skipped by --skip)"
+elif git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   {
     echo "--- git status ---"
     git status --short
@@ -147,4 +186,8 @@ if [ "$FAILURES" -gt 0 ]; then
   echo "RESULT: FAIL ($FAILURES step(s) failed)"
   exit 1
 fi
-echo "RESULT: PASS (skipped steps are listed above; confirm they don't apply)"
+if [ "$BLOCKED" -gt 0 ] || [ "$CHECKS" -eq 0 ]; then
+  echo "RESULT: INCOMPLETE ($BLOCKED blocked step(s), $CHECKS executed check(s)); run project-specific checks"
+  exit 2
+fi
+echo "RESULT: PASS (selected commands passed; assess listed skips and inspect the diff separately)"

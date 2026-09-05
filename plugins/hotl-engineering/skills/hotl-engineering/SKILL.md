@@ -1,6 +1,6 @@
 ---
 name: hotl-engineering
-description: "Design and apply Human-on-the-Loop (HOTL) delivery workflows, and advise on CTO-level decisions for AI-native engineering operations. Apply mode — use for 'introduce quality gates', 'design CI/CD', 'wire AI review into the pipeline', 'build an eval gate', 'set up agent-operation guardrails', 'set up the deploy flow', 'install the HOTL workflow', 'I inherited this repository and need a working dev flow', 'make a small team run development autonomously', 'improve how this repo is operated'. Covers experimental/PoC/personal repos too — pick the proportional subset and push back on over-installation. Consult mode — use for judgment calls: buy-vs-build for AI SRE tools, how much autonomy to grant an agent, enabling auto-merge, explaining AI code quality to auditors, model switches, contractor permissions, J-SOX readiness. Do NOT use for individual coding work (implementing features, fixing bugs or CI failures, refactoring, one-off code reviews)."
+description: "Design proportional CI/CD, quality gates, AI review, eval gates, and agent-operation workflows with Human-on-the-Loop supervision. Use for repository delivery-flow setup or CTO decisions about autonomy, rollout, and audit evidence. Apply only the needed templates; do not use for a one-off feature, bug fix, or code review."
 ---
 
 # HOTL Engineering — Design, Apply, Consult
@@ -16,11 +16,11 @@ First determine which mode the request is:
   (config, files, design) → **Mode A**
 - The user wants a judgment, policy, yes/no, or how to explain something → **Mode B**
 - Both ("should we adopt it, and if so how") → settle the judgment in Mode B
-  first, then move to Mode A after agreement
+  first, then move to Mode A within the implementation authority already given
 - Repository takeover / dev-flow rebuild ("I inherited this repo and need
   development to run", "improve how this repo is operated") is also **both**:
-  run the Mode A assessment (Step 1) first, present "what to introduce and what
-  NOT to introduce" advice in the Mode B format, then apply after agreement
+  run the Mode A assessment (Step 1) first, state the proportional choice in the
+  Mode B format, then prepare authorized local changes
 
 In either mode, read `references/principles.md` first as the foundation.
 
@@ -46,7 +46,12 @@ single batched question:
    confidential-data boundaries
 5. Team size (including contractors) and audit requirements (J-SOX in scope?)
 
-### Step 2: Present the application plan (get user approval before implementing)
+### Step 2: Define the application plan and authority
+
+Reuse existing user authorization. Prepare local templates and checks when
+implementation is requested. Ask only about unresolved material policy or an
+external change outside that authority, after preparing a concrete reviewable
+result. Keep assessment-only requests at the plan stage.
 
 Recommended subset by repository nature:
 
@@ -54,8 +59,8 @@ Recommended subset by repository nature:
 |---|---|---|
 | Experimental / PoC | ci.yml L1/L2 only | Enforced AI review, deploy approval (speed first) |
 | Internal tool | Full ci.yml + ai-review (comment-only) + branch protection | Eval (unless there is an agent component) |
-| Production product | Everything (ci / ai-review / deploy+CP3 / incident-triage) | — |
-| Agent-based | All of the above + eval-gate (must-pass design required) | — |
+| Production product | Existing checks plus gates justified by the actual release risks | Unused integrations or duplicate approval gates |
+| Agent-based | Task-specific evals and selected delivery controls; protect must-pass cases | Retrieval metrics for a system without retrieval |
 
 The plan must always include: rollout order (comment-only → calibration →
 enforcement), consolidating required checks into the single `quality-gate`
@@ -69,25 +74,31 @@ checklist in `assets/ADJUST.md`. Main adaptation work:
 - Package manager and commands (templates assume pnpm → match reality)
 - Rewrite the Tier 2 paths-filter in ai-review.yml to the risk paths identified
   in Step 1, and keep it **in sync with CODEOWNERS**
-- Replace the Bedrock model ID with an inference profile enabled in your org
-- Rewrite the deploy commands in deploy.yml for the actual platform (keep the
-  structure: staging auto → environment approval → health watch → auto rollback)
+- Treat Bedrock/Azure examples as optional provider adapters. Preserve the selected platform and resolve an enabled model/profile from its current official documentation; do not replace a provider merely because this template uses another one
+- Implement and rehearse capture/restore adapters before enabling production
+  deployment. Restore actual routing and health, not just revision activation
 - For agent-based repos, read `references/eval-design.md` and start from golden
   set category design (do not reuse the template thresholds as-is)
 
 ### Step 4: Always introduce with Phase 1 settings
 
-- Keep `continue-on-error: true` on the security layer; do not make AI review a
-  required check yet
-- Branch protection: PR required + force-push forbidden only
-- State in the deliverable README that enforcement starts only after a
-  two-week calibration period that eliminates false positives
-  (run setup-branch-protection.sh in Phase 2, not Phase 1)
+- Introduce new noisy advisory/AI checks in observation mode; preserve existing
+  blocking security checks, branch protection, and agreed must-pass conditions
+- Promote after representative runs meet documented reliability and quality
+  criteria, with an owner and rollback switch; elapsed weeks alone are not evidence
+- Apply branch-protection changes only within explicit external-change authority;
+  prepare the policy diff first and never weaken an existing protection silently
 
 ### Step 5: Verify and hand over
 
 - Validate workflow YAML with yaml.safe_load; check scripts with bash -n /
   py_compile
+- Exercise missing/malformed artifacts, failed jobs, wrong target revisions, and
+  recovery-preflight failure with offline fixtures. Syntax validation is not
+  evidence that the hosted workflow or cloud recovery works
+- Install `assets/scripts/check_review_verdicts.py` at the project path specified
+  in `assets/ADJUST.md` before enabling AI-review enforcement. Review that
+  trust/adaptation contract before applying the workflow
 - Attach a "Phase 2 to-do" checklist to the handover (make checks required,
   set environment reviewers, enable CODEOWNERS, initialize the eval baseline)
 
