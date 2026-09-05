@@ -72,7 +72,70 @@ class ExecutionRoleTests(unittest.TestCase):
         self.assertEqual(result.stdout, "")
         self.assertTrue(result.stderr.strip())
 
-    def test_implementer_defaults_resolve_to_spawn_request(self):
+    def test_bundled_implementer_defaults_resolve_to_astra_spawn_request(self):
+        result = self.run_resolver(
+            "--role",
+            "implementer",
+            "--capabilities",
+            str(self.capabilities),
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            json.loads(result.stdout),
+            {
+                "role": "implementer",
+                "model": "gpt-6-astra",
+                "reasoning_effort": "medium",
+                "write_policy": "scoped-write",
+                "fork_turns": "none",
+            },
+        )
+
+    def test_bundled_implementer_allows_explicit_sol_medium(self):
+        result = self.run_resolver(
+            "--role",
+            "implementer",
+            "--capabilities",
+            str(self.capabilities),
+            "--model",
+            "gpt-5.6-sol",
+            "--effort",
+            "medium",
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            json.loads(result.stdout),
+            {
+                "role": "implementer",
+                "model": "gpt-5.6-sol",
+                "reasoning_effort": "medium",
+                "write_policy": "scoped-write",
+                "fork_turns": "none",
+            },
+        )
+
+    def test_bundled_implementer_rejects_sol_only_capabilities_without_fallback(self):
+        sol_only = self.write_json(
+            "sol-only.json",
+            {
+                "can_select_model": True,
+                "can_select_effort": True,
+                "models": {"gpt-5.6-sol": ["medium"]},
+            },
+        )
+        result = self.run_resolver(
+            "--role",
+            "implementer",
+            "--capabilities",
+            str(sol_only),
+        )
+
+        self.assert_rejected(result)
+        self.assertIn("model is unavailable: gpt-6-astra", result.stderr)
+
+    def test_custom_profile_implementer_resolves_to_sol_spawn_request(self):
         result = self.run_resolver(
             "--role",
             "implementer",

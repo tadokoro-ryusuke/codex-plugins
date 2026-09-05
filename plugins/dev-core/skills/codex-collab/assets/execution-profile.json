@@ -6,7 +6,7 @@
   },
   "roles": {
     "implementer": {
-      "model": "gpt-5.6-sol",
+      "model": "gpt-6-astra",
       "reasoning_effort": "medium",
       "write_policy": "scoped-write"
     },

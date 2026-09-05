@@ -68,8 +68,11 @@ and effort settings, without silently falling back to another model.
 
 The [execution contract](plugins/dev-core/skills/codex-collab/references/planned-execution.md)
 defines bounded writes, parent decisions, fresh handoffs, review independence,
-and evidence. Native tools accepting model/effort arguments do not require
-installing custom role files. Read-only task instructions and role names alone
+and evidence. It also permits the parent to choose Sol medium for an individual
+small, fully specified implementation item that follows an existing pattern and
+has focused checks. Record the reason before dispatch; preserve explicit task
+selections and custom profiles. Native tools accepting model/effort arguments do
+not require installing custom role files. Read-only task instructions and role names alone
 do not establish an enforced sandbox. Small steps can stay with the parent when
 delegation would add unnecessary overhead; explicit user preferences take priority.
 
@@ -106,6 +109,13 @@ candidate-written tests. The helper itself does not call a model; native dispatc
 effective model metadata, and observed outcomes are recorded separately.
 
 ### Source update migration (2026-09-05)
+
+- `dev-core` 5.1.1: change the bundled implementation default to Astra medium;
+  retain Astra high for the parent recommendation and independent reviewer.
+  Permit a documented Sol medium selection for bounded implementation work.
+  Preserve explicit overrides and custom profiles; an unavailable Astra request
+  does not silently fall back to Sol. Reinstall and start a new task to load the
+  updated profile and instructions.
 
 - `dev-core` 5.1.0: substantial approved-plan execution delegates implementation
   and independent review using the centralized execution profile. Explicit task
