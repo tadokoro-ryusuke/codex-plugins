@@ -1,11 +1,18 @@
 ---
 name: codex-collab
-description: "Codex-native collaboration for independent review, second opinions, rescue after repeated failures, bounded subagent delegation, and thread handoffs. Use when the user asks for collaboration or when an applicable AGENTS.md or skill explicitly authorizes an independent review, read-heavy delegation, or rescue pass."
+description: "Delegate bounded implementation, independent review, or investigation with role-specific models and evidence. Use when collaboration is requested or an applicable skill or AGENTS.md explicitly authorizes those roles."
 ---
 
 # Codex Collab
 
 Coordinate independent reasoning inside Codex: reviews that don't trust the implementer, rescue when an approach is looping, and explicit parallel subagent work.
+
+For substantial approved-plan execution, read
+`references/planned-execution.md`. Resolve implementation/review settings from
+`assets/execution-profile.json` with `scripts/resolve_execution_role.py`; this
+defines defaults for that workflow, not for every collaboration request.
+For a native-agent evaluation of that workflow, read
+`references/execution-evaluation.md` and use `scripts/execution_smoke.py`.
 
 ## Principles
 
@@ -50,7 +57,7 @@ Subagents require a direct user request or explicit authorization in an applicab
 - Subagents inherit the current sandbox policy — be deliberate when running with elevated permissions.
 - Prefer parallel subagents for read-heavy work: exploration, test runs, triage, review. Avoid parallel write-heavy work (edit conflicts).
 - Ask each subagent for a concise summary with evidence, not raw logs. Synthesize and independently verify claims before acting.
-- Follow the delegation contract in `../dev-workflow/references/orchestration.md`: scope, raw evidence, ownership, completion criteria, and stop condition. Specify shared resources as well as file ownership. Inherit model settings unless an explicit instruction selects an override.
+- Follow the delegation contract in `../dev-workflow/references/orchestration.md`: scope, raw evidence, ownership, completion criteria, and stop condition. Specify shared resources as well as file ownership. Use the planned-execution profile when that workflow applies; otherwise inherit model settings unless an explicit instruction selects an override.
 
 Good splits: security / test-gap / maintainability review; backend / frontend / infrastructure analysis; reproduction triage / code-path trace / fix strategy.
 
@@ -62,6 +69,12 @@ This skill ships ready-made custom agent roles:
 - `assets/agents/security-auditor.toml` — OWASP Top 10 auditor, read-only sandbox.
 
 To use them, copy the files into `<repo>/.codex/agents/` (project-wide) or `~/.codex/agents/` (personal), then reference the role when spawning (e.g. "spawn the code-reviewer agent on this diff").
+
+These optional TOML assets define review behavior and sandbox preferences. They
+do not load the JSON execution profile automatically. For planned execution,
+pass the resolved model/effort explicitly through the host's supported spawn
+interface. No custom-role installation is needed when that interface accepts
+model settings and a bounded task prompt directly.
 
 ## Output shape
 

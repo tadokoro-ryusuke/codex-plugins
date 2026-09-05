@@ -1,6 +1,6 @@
 ---
 name: dev-execute
-description: "Execute an existing development plan with branch/worktree preparation, gated TDD, verification, review, refactor/fix loops, and final reporting. Use to implement, continue, resume, or complete docs/plans work."
+description: "Execute approved development plans with a coordinating parent, role-specific implementation and review agents, TDD, and evidence gates. Use to implement, continue, resume, or complete docs/plans work."
 ---
 
 # Dev Execute
@@ -13,18 +13,23 @@ Use this skill to implement an existing plan as an end-to-end Codex workflow.
 2. Read `../dev-workflow/references/tdd-implementation.md`.
 3. Read `../dev-workflow/references/review-refactor-verify.md` before review/finalization.
 4. Use `$verification-loop` to select project checks and report final evidence. Use its bundled runner only when its detected commands fit the project.
-5. For non-trivial changes, use `$codex-collab` for one bounded, read-only independent review when collaboration tools are available. This skill explicitly authorizes that review; do not delegate overlapping write work.
+5. For substantial planned changes, read `../codex-collab/references/planned-execution.md`. Keep the parent responsible for coordination and acceptance; delegate bounded implementation and an independent read-only review using its centralized model profile. This skill explicitly authorizes those roles. Default to one active writer; parallelize only disjoint, sufficiently specified work with coordinated shared resources.
+6. Handle a small self-contained step directly when delegation would add more coordination than useful work, unless the user explicitly requests delegation. Preserve its relevant checks. If required delegation or model selection is unavailable, report the limitation and continue independent preparation; do not silently replace the requested roles or models.
+
+If a parent has already assigned you the implementation or review role, perform
+that bounded assignment and return evidence. Do not restart this orchestration
+workflow, spawn another implementation/review chain, or take over the parent plan.
 
 ## Execution Contract
 
 - Start by reading the plan and checking `git status --short`. If a legacy plan lacks a completion contract, progress log, decision log, blockers, or a current next action, backfill those sections from its acceptance criteria before changing code and record the migration. Ask only when no observable criterion can be derived safely.
 - Choose the workspace path deliberately: stay on a Codex worktree when one is already active; otherwise create a local branch when the tree is clean or its only dirty changes are the target plan and in-scope planning artifacts. Preserve those related files across the switch. Do not switch over unrelated user changes.
-- Convert the plan into small implementation steps with `update_plan` when exposed, or update the durable plan directly.
+- Convert the plan into independently verifiable implementation steps with `update_plan` when exposed, or update the durable plan directly. Before dispatch, record the role, requested model/effort, input identity, allowed writes, shared resources, acceptance checks, and return conditions. Resolve model choices through the collaboration profile; do not hardcode another copy here.
 - Treat the plan's completion contract as default-fail: keep every criterion `pending` until current evidence proves it, then record the evidence and mark it `satisfied`.
-- For each step: Red, Green, Refactor, focused verification, and self-review before moving on.
+- For each step, have the implementation owner perform Red, Green, Refactor, focused verification, and self-review. Keep the parent out of those files while the owner is working. Use the parent for requirement decisions, integration, and verification of returned evidence rather than duplicating the implementation.
 - After every iteration, update the plan's status, progress log, decision log, completion contract, and current next action. Update it again before a pause, handoff, or context compaction.
 - Resolve safe, reversible, in-scope concerns yourself. Reuse existing authorization, including explicitly requested delivery. Prepare a concrete reviewable result before asking about an unresolved material decision or an action outside that authority.
-- After implementation: run broader verification, then a zero-trust review gate.
+- After implementation, inspect the actual diff and evidence, perform remaining integration checks, and obtain the independent review before acceptance. Give the reviewer requirements and raw evidence so it can challenge the plan itself. Pin review evidence to the reviewed input identity and invalidate it after relevant changes.
 - If review finds real issues, fix or refactor narrowly and re-run affected checks. Stop after three failed similar rounds.
 - Commit, push, or open a PR only when explicitly requested or the current user request includes that delivery.
 
