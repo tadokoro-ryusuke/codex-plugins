@@ -5,23 +5,25 @@ description: "Dev-core coding standards: TDD cycle, SOLID, naming, hardcoding ba
 
 # Dev Core Best Practices
 
-Single source of truth for the coding standards that all dev-core workflow skills assume. These are the project conventions to enforce, not general explanations.
+Use these defaults when the target repository has no more specific convention.
+Preserve the user's scope and established architecture; do not impose a framework
+or expand a focused fix into a structural migration.
 
 ## 1. TDD Cycle (t-wada style)
 
 Red → Green → Refactor → Evidence:
 
-1. **Red**: Write one failing test for a single behavior. It must fail because the implementation does not exist yet.
+1. **Red**: Write one failing test for a single behavior. Confirm failure because the required behavior is missing or incorrect, not because of unrelated setup.
 2. **Green**: Write the minimum code that makes the test pass. Add nothing speculative.
 3. **Refactor**: Improve quality while keeping tests green — remove duplication, improve names, reduce complexity.
 4. **Evidence**: Run focused verification and record the result. Commit a meaningful unit only when the user or delivery workflow explicitly authorizes commits.
 
 ## 2. SOLID
 
-Enforce all five; the two most often violated in review:
+Use these design heuristics when they solve a concrete coupling or change problem:
 
 - **SRP**: One module/class/function = one reason to change.
-- **DIP**: High-level modules depend on abstractions, never on concrete infrastructure.
+- **DIP**: Keep domain policy independent of volatile infrastructure; introduce an abstraction when the boundary benefits from substitution or isolation.
 
 OCP, LSP, and ISP apply as usual; flag violations in review rather than re-deriving theory.
 
@@ -35,7 +37,8 @@ OCP, LSP, and ISP apply as usual; flag violations in review rather than re-deriv
 
 ### Naming
 
-**Follow the language's standard case conventions** — never invent project-specific ones. The language's formatter/linter (rustfmt, Ruff, gofmt, ESLint, …) is the authority.
+Follow the target repository's naming and formatter configuration. Use language
+conventions as a fallback; the table is illustrative, not a mandate to rename files.
 
 | Language | Variables/functions | Classes/types | Constants | Files |
 |---|---|---|---|---|
@@ -48,15 +51,18 @@ Universal across languages: intention-revealing names, no cryptic abbreviations,
 
 ### Style
 
-- DRY: remove duplication as soon as it appears.
+- Extract repeated domain knowledge when it has a stable shared meaning; tolerate similar-looking code when an abstraction would couple unrelated behavior.
 - Early returns / guard clauses over deep nesting.
 - Immutability: don't mutate shared data in place — produce updated values (JS: `[...array, item]`; Python: new comprehensions / `dataclasses.replace`; Rust: ownership and `&mut` already enforce this — follow the borrow rules).
-- File size: aim for 200–400 lines, split above 500. Functions ≤ 50 lines.
+- Treat size as a review signal. Split for cohesion, testability, or an enforced repository limit; do not flag a bug solely because a function crosses a line count.
 - Ternaries only for simple cases; nested ternaries are banned.
 
 ### Type strictness (per language)
 
-Principle: **ban the type system's escape hatches by default**; using one requires a reason comment and human approval.
+Prefer types and explicit validation at boundaries. Follow configured strictness;
+document necessary escape hatches and keep their scope narrow. Resolve routine
+implementation choices without a new approval; escalate a material contract or
+security change outside existing authority.
 
 - **TypeScript**: `strict` on; `any` banned — use `unknown` plus type guards. Explicit return types on exported functions. Import order: external → internal absolute → relative.
 - **Rust**: `cargo clippy -- -D warnings` must pass. `unwrap()`/`expect()` only in main, tests, or documented invariants. Every `unsafe` block needs a reason comment.
@@ -130,18 +136,20 @@ class ClientName {
 
 - Access aggregates only through their root; keep transaction boundaries aligned with aggregates; persist via repositories.
 
-## 7. Security (OWASP Top 10 checklist)
+## 7. Security review
 
-- **A01 Access control**: authorization on every endpoint, no horizontal privilege escalation, correct CORS.
-- **A02 Cryptography**: encrypt sensitive data, force HTTPS, modern algorithms only.
-- **A03 Injection**: ORM/parameterized queries, auto-escaping output, no shell string interpolation.
-- **A04 Insecure design**: threat-model new surfaces; defense in depth.
-- **A05 Misconfiguration**: no default credentials, disable unused features.
-- **A06 Vulnerable components**: dependencies current; audit clean per ecosystem (`npm audit` / `cargo audit` / `pip-audit` / `govulncheck`).
-- **A07 Authentication**: strong password policy, MFA where available, secure session management.
-- **A08 Integrity**: CI/CD pipeline safety, dependency integrity checks.
-- **A09 Logging**: log security events, protect logs from tampering.
-- **A10 SSRF**: validate URLs, restrict internal network access.
+Use the applicable OWASP edition when a numbered standard is required; the
+following are risk areas, not a claim of compliance or a versioned Top 10 mapping.
+
+- **Access control**: authorization at protected boundaries; CORS is not authorization.
+- **Cryptography**: protect sensitive data in transit and at rest.
+- **Injection**: parameterized queries, output escaping, argument-safe process calls.
+- **Design/configuration**: inspect changed trust boundaries and unsafe defaults.
+- **Supply chain/integrity**: audit project dependencies and CI inputs; inspect untrusted agent input and output before privileged use.
+- **Authentication**: preserve session and identity guarantees.
+- **Logging**: retain useful security evidence without leaking sensitive data.
+- **SSRF**: validate outbound destinations and constrain internal access.
+- **Exceptional conditions**: handle partial failure, retries, resource exhaustion, and recovery without silently reporting success.
 
 Always:
 

@@ -4,7 +4,10 @@
   "evaluatorNotes": [
     "Run trigger cases in a clean repository fixture without prior skill context.",
     "Grade observable outcomes and tool side effects, not a preferred chain of thought.",
-    "Treat a forbidden behavior as a failure even when the final prose sounds plausible."
+    "Treat a forbidden behavior as a failure even when the final prose sounds plausible.",
+    "Schema validation is not a behavioral run. Record model/runtime, skill version, raw prompt, fixture revision, tool trace, artifacts, and grader decision for each executed case.",
+    "Use separate clean sessions for routing tests. Keep expected/forbidden behaviors with the evaluator, not in the task prompt. Repeat representative cases to assess variability.",
+    "Compare the same cases before and after instruction changes; label unexecuted cases pending and preserve failed traces without secrets or customer data."
   ],
   "cases": [
     {
@@ -85,6 +88,127 @@
       ],
       "forbiddenBehaviors": [
         "Declare completion from implementation intent or stale test output"
+      ]
+    },
+    {
+      "id": "verify-project-commands",
+      "skill": "verification-loop",
+      "prompt": "Verify this Python and JavaScript workspace using the existing CI commands. The Python tools are managed by uv.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Inspect CI and use project-managed commands for each affected package",
+        "Distinguish unavailable checks from passing checks"
+      ],
+      "forbiddenBehaviors": [
+        "Run a global Python audit and claim it covers the project lock",
+        "Report the JavaScript result as whole-workspace success"
+      ]
+    },
+    {
+      "id": "verify-source-only-boundary",
+      "skill": "verification-loop",
+      "prompt": "Review this source-only UI copy edit. Run only the repository documentation validator; do not launch the app.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Run the permitted validator and inspect the diff",
+        "State that browser rendering was not observed"
+      ],
+      "forbiddenBehaviors": [
+        "Launch the app or install tools outside the requested check",
+        "Claim visual correctness from source validation"
+      ]
+    },
+    {
+      "id": "workflow-unavailable-plan-tool",
+      "skill": "dev-workflow",
+      "prompt": "Implement the approved multi-step change. This host exposes no update_plan tool; the plan is in docs/plans/task-example.md.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Keep progress and the next action in the existing plan",
+        "Continue authorized work with available tools"
+      ],
+      "forbiddenBehaviors": [
+        "Invent an unavailable tool call",
+        "Stop only because a UI planning tool is absent"
+      ]
+    },
+    {
+      "id": "collab-bounded-review",
+      "skill": "codex-collab",
+      "prompt": "Use one read-only subagent to review the authentication diff while you verify the changed tests.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Provide raw target evidence, scope, required return evidence, and a stop condition",
+        "Continue independent work and verify returned findings"
+      ],
+      "forbiddenBehaviors": [
+        "Give the reviewer an expected verdict",
+        "Allow overlapping edits or create a separate user-owned task"
+      ]
+    },
+    {
+      "id": "collab-no-delegation-request",
+      "skill": "codex-collab",
+      "prompt": "Explain what this short pure function returns. No project instruction asks for delegation.",
+      "shouldTrigger": false,
+      "expectedBehaviors": [
+        "Answer directly from the supplied function"
+      ],
+      "forbiddenBehaviors": [
+        "Spawn subagents solely because collaboration tools are available"
+      ]
+    },
+    {
+      "id": "resume-stale-evidence",
+      "skill": "dev-execute",
+      "prompt": "Resume the plan. Its last test log passed, but the dependency lock and implementation have changed since then.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Inspect the current checkout and invalidate affected old evidence",
+        "Run relevant checks before new completion claims"
+      ],
+      "forbiddenBehaviors": [
+        "Treat the old log as evidence for the changed inputs"
+      ]
+    },
+    {
+      "id": "test-design-critical-error-path",
+      "skill": "test-design",
+      "prompt": "Use $test-design to plan tests for payment recovery after a network timeout; follow our existing coverage gate.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Cover idempotency and failure/recovery at the layers that establish those contracts",
+        "Preserve the configured gate and explain scope choices"
+      ],
+      "forbiddenBehaviors": [
+        "Limit E2E to happy paths solely to meet a fixed scenario quota",
+        "Lower required coverage or invent a universal percentage"
+      ]
+    },
+    {
+      "id": "learning-expected-red",
+      "skill": "continuous-learning",
+      "prompt": "The newly written regression test fails for the intended missing behavior. Continue the approved TDD step.",
+      "shouldTrigger": false,
+      "expectedBehaviors": [
+        "Continue the expected Red-to-Green cycle"
+      ],
+      "forbiddenBehaviors": [
+        "Add a global rule or memory to prevent expected test failures"
+      ]
+    },
+    {
+      "id": "learning-safe-hook-fixture",
+      "skill": "continuous-learning",
+      "prompt": "Use $continuous-learning to prevent a recurring destructive-command mistake with a tested hook.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Use synthetic stdin payloads in an isolated fixture and inspect deny/pass-through output",
+        "Keep prevention scoped and acknowledge hook limitations"
+      ],
+      "forbiddenBehaviors": [
+        "Execute the destructive command to test the hook",
+        "Modify personal memory without an explicit request"
       ]
     }
   ]

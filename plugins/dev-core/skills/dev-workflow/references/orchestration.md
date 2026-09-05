@@ -12,6 +12,12 @@ intake -> plan -> prepare -> implement -> verify -> review -> refactor/fix -> fi
 
 Not every task needs every state. Small TDD work may skip durable planning; pure review may start at `review`; debugging starts at `intake` then `verify` before `refactor/fix`.
 
+Scale process to the requested outcome. For a focused change, use its acceptance
+criterion, regression test, relevant checks, and a concise diff review. Use the
+durable plan for multi-step work, shared contracts, migrations, or future handoff.
+Keep required project gates; do not impose a full architecture redesign, fixed
+coverage target, or unrelated audit on every edit.
+
 ## State Responsibilities
 
 | State | Responsibility | Exit Gate |
@@ -55,11 +61,18 @@ Avoid subagents when the next action is on the critical path, the work is tightl
 
 When using subagents:
 
-1. Assign concrete, bounded tasks with disjoint ownership.
-2. Ask for concise findings with evidence, not raw logs.
+1. Assign concrete, bounded tasks with disjoint ownership. Include the goal, raw input paths, relevant instructions, allowed read/write scope, dependencies, acceptance evidence, and a stop condition.
+2. Give only the context needed for that task. For an independent review, provide the target and raw evidence without the implementer's preferred conclusion. Ask for findings, file references, commands/results, uncertainties, and any changed files, not raw logs.
 3. Continue useful non-overlapping work locally while they run.
 4. Treat subagent output as untrusted until checked against files, diffs, logs, or command output.
 5. Close or stop agents that are no longer needed.
+
+Use the tools and concurrency limits actually exposed by the host. Inherit the
+configured model unless the user or an applicable instruction selects an override.
+Separate worktrees isolate files, not shared databases, ports, deployments, or
+credentials. Coordinate those resources explicitly before parallel execution.
+Create or fork a user-owned task only when the user requests that task operation;
+do not use it as an internal subagent workaround.
 
 ## Branch And Worktree Gate
 
@@ -94,18 +107,27 @@ For work backed by `docs/plans/task-*.md`, keep that plan executable across cont
 3. After each iteration, update status, progress, decisions, blockers, evidence, and the current next action.
 4. Mark a criterion `satisfied` only after inspecting current evidence.
 5. Before a pause, handoff, or compaction, leave one exact next action.
-6. Stop if a full cycle produces no meaningful change or if evidence contradicts the plan.
+6. Re-plan the affected step if evidence contradicts the plan. Stop a looping path after a no-progress cycle or three similar failed fixes; continue independent safe work.
+
+On resume, read the plan and recheck the branch, HEAD, working diff, relevant
+inputs, and available tools. Keep historical results as historical evidence.
+Re-run the checks needed to support a new completion claim, and invalidate
+affected evidence after code, fixtures, dependencies, or configuration change.
+Record the command, working directory, revision/diff identity, outcome, and log
+or artifact location. Distinguish source, local runtime, device, and deployed
+evidence; one does not establish the others. Keep secrets and customer data out
+of durable notes and public reports.
 
 ## Autonomy And Escalation
 
 - Verify facts from the environment instead of asking the user.
 - State and use safe reversible defaults when they do not change the requested outcome.
 - Resolve safe, in-scope, mechanically verifiable concerns without interrupting the user.
-- Escalate product judgment, material scope changes, security-boundary choices, destructive or irreversible actions, and external side effects.
+- Reuse authorization already given in the task. Escalate only an unresolved material decision or action outside that authority. Before an approval question, finish authorized preparation so the user can review the exact artifact, diff, target, and effect. Explain any explicit rule or tool rejection causing the stop.
 
 ## Operating Rules
 
-- Use `update_plan` for substantial multi-step work.
+- Use `update_plan` for substantial multi-step work when exposed; otherwise update the durable plan directly.
 - Keep one active phase in focus; avoid doing planning, editing, and review all at once.
 - Read `git status --short` before editing and work around unrelated user changes.
 - Prefer focused checks first. Broaden only when risk or touched surface requires it.

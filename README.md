@@ -50,7 +50,7 @@ Use narrow skills for daily work; `dev-workflow` provides shared orchestration.
 | `$dev-refactor` | Refactor safely without behavior changes. |
 | `$dev-e2e` | Run or diagnose Playwright E2E tests. |
 | `$dev-checkpoint` | Capture resumable state for handoff or continuation (template bundled). |
-| `$verification-loop` | Six-step evidence-based verification; bundles `scripts/verify.sh`. |
+| `$verification-loop` | Project-specific evidence from build, type, lint, test, security, and diff checks; bundles an optional common-stack runner. |
 | `$codex-collab` | Independent review, rescue, parallel subagents; bundles custom agent roles. |
 | `$continuous-learning` | Turn a mistake into durable prevention (rules, hooks, tests). |
 | `$dev-workflow` | Shared multi-phase orchestration when no narrower skill fits. |
@@ -61,7 +61,13 @@ Reference skills `$best-practices`, `$backend-patterns`, and `$frontend-patterns
 
 ## HOTL Engineering
 
-`$hotl-engineering` has two modes. Apply mode assesses a repository (stack, deploy target, risk paths, team, audit requirements), classifies its nature (experimental / internal / production / agent-based), proposes a proportional gate subset, and applies bundled GitHub Actions templates (5-layer CI, two-tier AI review, staged deploy with approval and auto-rollback, eval gate, read-only incident triage, issue-to-agent implementation) — always starting in observation-only Phase 1 and pushing back on "install everything" requests for experimental repos. Consult mode answers engineering-management questions (buy-vs-build, agent autonomy promotion, auto-merge, contractor permissions, audit explanations) grounded in `references/principles.md` and `references/decision-frameworks.md`, and always takes a position.
+`$hotl-engineering` has two modes. Apply mode assesses the stack, delivery risks,
+team, and current protections, then prepares proportional CI, AI-review, eval,
+and deployment templates. New advisory checks start in observation mode while
+existing enforced gates are preserved. Bedrock/Azure examples need project
+adaptation; production deployment requires rehearsed capture/restore adapters.
+Consult mode supports engineering-management decisions about autonomy,
+buy-vs-build, and audit evidence.
 
 For assessment only, ask it to stop after the plan: "Use $hotl-engineering to assess this repo and stop before applying templates."
 
@@ -70,9 +76,31 @@ For assessment only, ask it to stop after the plan: "Use $hotl-engineering to as
 ```bash
 node scripts/validate-codex-plugins.mjs
 node scripts/validate-skill-evals.mjs
+python3 -m unittest discover -s scripts/tests -v
 ```
 
-These commands check the marketplace catalog, plugin manifests, SKILL.md frontmatter, `agents/openai.yaml` files, bundled file references, hooks configuration, and the behavior-eval suite schema and skill references. CI runs both validators plus hook and script smoke tests on every push.
+Use Python 3.12 with PyYAML 6.0.2 for workflow fixtures. The validators check
+packaging and behavior-case schema; the offline tests execute script/gate
+behavior with fake toolchains and target responses. CI runs both layers plus
+hook tests. None of these checks executes the skill scenarios with a model or
+establishes hosted workflow/cloud behavior.
+
+### Source update migration (2026-09-05)
+
+- `dev-core` 5.0.0: the fallback runner returns `2` for incomplete verification
+  (including no workload checks), `1` for failed checks, and `0` only for selected
+  passing checks. Use project commands for nested workspaces and managed Python
+  environments. Yarn/Bun audit needs an explicit version-appropriate command.
+- `github-tools` 1.4.0: preserve dirty work and existing authorization; prepare
+  local drafts without mandatory fetch, and use a body file for multiline PRs.
+- `hotl-engineering` 2.0.0: install the trusted verdict validator before enabling
+  AI-review enforcement; emit verdicts with the reviewed SHA; adapt target
+  responses to include their deployed revision; implement recovery adapters
+  before production deployment. See the bundled `assets/ADJUST.md`.
+
+These are source versions. Reinstall from the intended marketplace source after
+release, then verify the installed version in a new task; a source edit does not
+prove the active cached plugin changed.
 
 Optionally cross-check with the official validator bundled with Codex:
 
@@ -91,3 +119,7 @@ codex plugin add dev-core@codex-plugins
 ## Research notes
 
 Current Codex plugin/skill/hook guidance and the migration decisions behind this layout are recorded in `docs/research/codex-plugin-research.md`.
+
+The development-workflow refresh, source evidence, prioritized findings, and
+remaining deployment adaptations are recorded in
+[the 2026-09-05 audit](docs/research/development-practices-2026-09-05.md).

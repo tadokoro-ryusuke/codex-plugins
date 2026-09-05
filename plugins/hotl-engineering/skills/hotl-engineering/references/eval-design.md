@@ -4,6 +4,11 @@ Procedure for designing an evaluation gate for agent, retrieval, and generation 
 assets/evals/ (run_evals.py, thresholds.json, judge_rubric.md) as the template for the concrete
 implementation.
 
+Treat sample counts, vote counts, agreement thresholds, and reading-time targets
+below as initial design examples. Calibrate them to representative task outcomes,
+latency/cost, and human judgments. A temperature setting does not make model
+results deterministic. Schema validation alone is not a skill-behavior eval.
+
 ## Three-layer structure (separating cost from signal)
 
 1. **L1 deterministic checks**: Retrieval metrics (recall@k, MRR), regex for prohibited output, format
@@ -36,6 +41,9 @@ Start at 50 cases and grow to 100-150. This only works paired with the operating
 - must-pass category: 100%. Block on a single failure. Do not mix it into the average
 - Quality score: a **dual threshold** of relative (baseline minus tolerance) and absolute (floor)
   (Principle 8)
+- Completeness: block on target/judge execution failures, invalid or missing
+  votes, empty selected suites, and mismatched deployed revisions. Keep these
+  failures separate from quality averages
 - The baseline is the result from "the last main that passed the full suite entirely." Update it
   automatically nightly
 - Give smoke (on PRs) a wider tolerance than full (to avoid false blocks from noise)
@@ -53,3 +61,10 @@ Start at 50 cases and grow to 100-150. This only works paired with the operating
   baseline diff). This becomes the evidence for CP4 (promotion approval)
 - Changes to the judge model and changes to the rubric itself are also subject to the eval-gate
   (control over meta-changes)
+- For workflow skills, test routing and observable tool/artifact behavior in
+  isolated fixtures. Include negative trigger cases and forbidden side effects;
+  give graders the rubric separately from the task prompt. Record model/runtime,
+  skill/input versions, selected cases, tool traces, latency/cost, and the outcome
+- Evaluate the same cases before/after a change, repeat representative cases,
+  and preserve regressions as fixtures. Never promote from plausible final prose
+  when required artifacts or actions are absent

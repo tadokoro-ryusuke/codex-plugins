@@ -14,6 +14,8 @@
 # Azure-side prerequisites:
 #   - GitHub OIDC federated credential on the Entra ID app
 #   - Role: Contributor scoped to the target resource group only (least privilege)
+#   - Implement and rehearse capture/restore adapters described in ADJUST.md.
+#     Revision activation alone does not restore production traffic.
 # =============================================================================
 name: Deploy
 
@@ -96,6 +98,20 @@ jobs:
       name: production # ← the required reviewer is tied to this
       url: ${{ vars.PRODUCTION_URL }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Require rehearsed recovery adapters
+        id: recovery-preflight
+        run: |
+          for adapter in capture-production-state restore-production-state; do
+            test -x ".github/scripts/$adapter.sh" || {
+              echo "::error::Implement and rehearse .github/scripts/$adapter.sh before production deployment"
+              exit 1
+            }
+          done
+
       - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
@@ -103,16 +119,16 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # Record the current revision before deploying (rollback target)
-      - name: Record current revision
+      # Capture the actual revision mode, immutable image/revision and traffic map.
+      - name: Capture production state
         id: current
         run: |
-          rev=$(az containerapp revision list \
-            --name $APP_NAME --resource-group $RESOURCE_GROUP \
-            --query "[?properties.active].name | [0]" -o tsv)
-          echo "revision=$rev" >> "$GITHUB_OUTPUT"
+          .github/scripts/capture-production-state.sh "$RUNNER_TEMP/production-before.json"
+          test -s "$RUNNER_TEMP/production-before.json"
+          echo "captured=true" >> "$GITHUB_OUTPUT"
 
       - name: Deploy to production
+        id: deploy
         run: |
           az containerapp update \
             --name $APP_NAME \
@@ -135,13 +151,8 @@ jobs:
           [ "$fails" -le 2 ] || { echo "unhealthy=true" >> "$GITHUB_OUTPUT"; exit 1; }
 
       - name: Auto rollback
-        if: failure() && steps.current.outputs.revision != ''
+        if: failure() && steps.current.outputs.captured == 'true' && steps.deploy.outcome != 'skipped'
         run: |
-          echo "::warning::Health check failed — rolling back to ${{ steps.current.outputs.revision }}"
-          az containerapp revision activate \
-            --name $APP_NAME --resource-group $RESOURCE_GROUP \
-            --revision ${{ steps.current.outputs.revision }}
-          # Always notify a human when a rollback happens (same Teams webhook as incident-triage)
-          curl -s -H "Content-Type: application/json" \
-            -d "{\"text\":\"🔴 production auto-rollback executed: ${{ github.sha }} → ${{ steps.current.outputs.revision }} (run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\"}" \
-            "${{ secrets.TEAMS_WEBHOOK_URL }}"
+          # Return success only after restoring routing and verifying health.
+          .github/scripts/restore-production-state.sh "$RUNNER_TEMP/production-before.json"
+          echo "::warning::Production state restored and verified; inspect this failed deployment run"

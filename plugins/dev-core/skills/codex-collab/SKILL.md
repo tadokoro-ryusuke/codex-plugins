@@ -18,7 +18,7 @@ Coordinate independent reasoning inside Codex: reviews that don't trust the impl
 
 - `/review` or a review-style response: review of the current working tree.
 - Subagents: when the user directly asks or an applicable `AGENTS.md` or skill explicitly authorizes a bounded task. Do not infer authorization from task size alone.
-- New thread or fork: isolated exploration without polluting the main thread.
+- New task or fork: only for a user-requested task operation. Use authorized subagents for internal bounded work; do not silently create user-owned tasks.
 - Browser / computer use: only when the task needs UI inspection or browser testing.
 - MCP/connectors: when the needed context lives outside the repo (GitHub, Slack, docs, issue trackers).
 
@@ -50,6 +50,7 @@ Subagents require a direct user request or explicit authorization in an applicab
 - Subagents inherit the current sandbox policy — be deliberate when running with elevated permissions.
 - Prefer parallel subagents for read-heavy work: exploration, test runs, triage, review. Avoid parallel write-heavy work (edit conflicts).
 - Ask each subagent for a concise summary with evidence, not raw logs. Synthesize and independently verify claims before acting.
+- Follow the delegation contract in `../dev-workflow/references/orchestration.md`: scope, raw evidence, ownership, completion criteria, and stop condition. Specify shared resources as well as file ownership. Inherit model settings unless an explicit instruction selects an override.
 
 Good splits: security / test-gap / maintainability review; backend / frontend / infrastructure analysis; reproduction triage / code-path trace / fix strategy.
 

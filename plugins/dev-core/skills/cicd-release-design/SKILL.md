@@ -10,10 +10,17 @@ description: "CI/CD pipeline and deploy/release strategy design: staged quality 
 CI/CD is an up-front investment made the moment the repository is created; it sets the floor for the speed and quality of everything that follows.
 In a solo-developer + AI-agent setup, CI is the quality supervisor that is always awake on the human's behalf — an agent's output becomes trustworthy only after it passes the CI gates.
 
-Measure the design with the DORA Four Keys (deployment frequency, lead time for changes, change failure rate, MTTR).
-Why: so pipeline quality is discussed in industry-standard metrics, not gut feeling.
+Choose delivery metrics that match the goal and define their measurement window.
+Use DORA's current five measures when adopting that framework: change lead time,
+deployment frequency, failed deployment recovery time, change fail rate, and
+deployment rework rate. Measure one service over time; do not treat them as
+individual productivity quotas. Recheck the [DORA definitions](https://dora.dev/guides/dora-metrics/)
+when revising the measurement policy.
 
-## Deliverables every design must produce
+## Deliverables to select for the requested scope
+
+Reuse existing pipeline and runbook artifacts. Omit non-applicable flag,
+migration, or deployment sections with a reason; do not install unrelated systems.
 
 - [ ] Pipeline definition (GitHub Actions workflow YAML / GitLab CI)
 - [ ] Quality gate definition (lint / typecheck / test / coverage threshold / SAST / dependency audit / build)
@@ -31,12 +38,12 @@ Why: piling every check onto the PR pushes it past 15 minutes and stalls develop
 
 | Stage | Checks | Target time |
 |---|---|---|
-| On PR | lint + typecheck + unit | a few minutes |
-| On merge | integration + build | — |
-| Pre-release | E2E + security scans | — |
+| On PR | lint, types, focused tests, and affected build/integration/security checks | fast enough for useful feedback |
+| On merge | broader regression and packaging checks for the exact merged revision | bounded by project needs |
+| Pre-release | remaining runtime, environment, and release-risk checks | before exposure to users |
 
 - Tune thresholds to balance developer friction against safety — e.g. fail the build only on critical/high vulnerabilities.
-- Coverage ratcheting (never lower the bar) and flaky-test quarantine rules are owned by the sister skill → $test-design (its operating rules and test-plan review checklist). CI owns the mechanical enforcement: threshold gates, quarantine labels, skip procedure.
+- Preserve existing coverage gates and investigate flakes before an authorized, owned, time-bounded quarantine; see $test-design. Do not defer a merge-blocking contract/security check merely to keep a preset time budget.
 - Test distribution (pyramid), techniques, and test-perspective tables → $test-design.
 - Local verification flow → $verification-loop.
 
@@ -56,15 +63,15 @@ Mandatory extra hardening:
   Why: the March 2025 tj-actions/changed-files compromise (~23k repositories affected) spread through tag references.
 - [ ] Declare `permissions:` explicitly and keep **GITHUB_TOKEN least-privilege** (never run on the broad default).
 - [ ] Never put secrets in repository variables or committed `.env` files.
-  Why: one survey reports ~61% of organizations have exposed secrets in public repositories (rough figure — verify).
+  Keep credentials out of source and logs; do not rely on masking after exposure.
 - [ ] Enable automated dependency updates (Dependabot/Renovate). Add SLSA / SBOM when the client's security requirements call for them.
 
-## Step 3: Build one standard template, clone it into every project
+## Step 3: Adapt a maintained template to the project
 
-Do not write a pipeline from scratch per project.
-Why: for a solo contractor, cloning a template is the single biggest efficiency win. CI plumbing is not a differentiator — do not sink time into it.
+Reuse known commands and controls while checking their assumptions against the
+target project. Keep provider-specific adapters explicit and test failure paths.
 
-- [ ] Go all-in on managed CI (GitHub Actions / GitLab CI). Do not self-host Jenkins.
+- [ ] Prefer the project's existing CI service; propose a platform migration only when its benefits justify the scope and operational cost.
 - [ ] **Consolidate verification commands into one place** (package.json scripts / Makefile / justfile / cargo aliases / uv + pyproject — follow the stack's standard) so local and CI run the exact same commands. In multi-language repos (Tauri, etc.), bundle every stack behind a Makefile / justfile.
   Why: a CI failure that cannot be reproduced locally doubles debugging cost.
 - [ ] Include the flaky-quarantine procedure (label, skip method, reinstatement criteria) in the template.
@@ -136,7 +143,7 @@ When AI agents touch CI/CD, their permission design is a first-class design item
 - [ ] Restrict agent tokens to specific write targets.
 - [ ] **Protect workflow files with CODEOWNERS.**
   Why: CI is the last line of defense against a runaway agent — the agent must not be able to rewrite the gate itself.
-- [ ] Require human approval whenever the write target is production, the operation is irreversible, or the cost of an error exceeds the cost of a review.
+- [ ] Require authority appropriate to the production effect. Preserve existing approval and documented preauthorized recovery conditions; do not ask again for the same approved action.
 - General design of human supervision points → $hotl-engineering (separate plugin).
 
 ## Division of labor: what AI does / what only humans can decide
@@ -153,10 +160,11 @@ When AI agents touch CI/CD, their permission design is a first-class design item
 
 - **Quality gate thresholds** (what constitutes failure)
 - **Go/No-Go for production releases; approval of promotion to production**
-- **Triggering a rollback**; customer-facing impact notices
+- **Defining rollback authority and thresholds**; authorize bounded automated recovery explicitly, and separately authorize customer-facing notices
 - Final say on secrets/permission design (including the agent's own permissions)
 
-Why draw the line: keeping irreversible production operations out of autonomous agent execution and requiring a human in the loop is the practical consensus as of 2026 (verify against current guidance).
+Keep these decisions with the owner; execute within the recorded authority.
+Do not present a local supervision policy as an industry-wide consensus.
 
 ## Review checklist (use during design review)
 

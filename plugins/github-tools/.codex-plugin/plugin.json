@@ -1,6 +1,6 @@
 {
   "name": "github-tools",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Codex-native GitHub workflows for pull requests, issue-linked branch analysis, and documentation updates.",
   "author": {
     "name": "Ryusuke Tadokoro",

@@ -21,6 +21,16 @@ jobs:
       - name: Validate skill behavior eval cases
         run: node scripts/validate-skill-evals.mjs
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install workflow parser for offline fixture tests
+        run: python3 -m pip install PyYAML==6.0.2
+
+      - name: Test verification and delivery gates with offline fixtures
+        run: python3 -m unittest discover -s scripts/tests -v
+
       - name: Smoke-test PreToolUse blocker hook
         run: |
           blocked=$(echo '{"tool_input":{"command":"git reset --hard"}}' | python3 plugins/dev-core/hooks/scripts/block_dangerous_commands.py)
@@ -30,9 +40,6 @@ jobs:
 
       - name: Smoke-test SessionStart hook
         run: bash plugins/dev-core/hooks/scripts/test_session_start.sh
-
-      - name: Smoke-test verify.sh
-        run: plugins/dev-core/skills/verification-loop/scripts/verify.sh --skip security
 
       - name: Validate bundled agent TOML definitions
         run: |

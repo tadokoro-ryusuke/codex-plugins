@@ -7,30 +7,33 @@ description: "Test strategy, test design, and acceptance-criteria authoring: tes
 
 **Boundary: this skill covers the design question — where to place tests, how deep, and with which technique. Test execution and evidence-based completion judgment → $verification-loop.**
 
-In contract development, tests feed directly into client acceptance (the formal pass/fail judgment on deliverables — *kenshū* in Japanese practice) and into contract non-conformity liability. So test planning starts at the **estimation and contract stage**, not after implementation.
-Why: when acceptance criteria arrive late, you personally absorb both the "he said, she said" dispute risk and the full cost of rework.
+Start from the user's acceptance criteria and the repository's current testing
+strategy. Use the contract-work section only for an actual client-acceptance or
+contract-planning task. Do not introduce a client-approval workflow into routine
+engineering work.
 
 ## Division of labor: what AI does / what only humans may decide
 
-| AI (the agent running this skill) does | Only humans may decide |
+| Agent work within authorized scope | Decisions reserved for the owner |
 |---|---|
-| Draft the test-perspective matrix | What NOT to test (risk acceptance) |
+| Draft the matrix and choose proportional checks | Material reduction of agreed acceptance coverage |
 | Mechanically expand techniques into cases (equivalence classes, boundary values) | Finalizing acceptance criteria and getting client agreement |
-| Backfill unit tests on existing code | Final verdict on test *quality* (rejecting tests that only look like tests) |
-| Run exploratory testing via a browser agent | Approving risk-based priorities (which features get shallow coverage) |
-| Detect flaky tests and propose quarantine | Approving the overall test strategy and scope |
+| Write and critically review regression tests | Changes to the product's pass/fail contract |
+| Run authorized exploratory testing | Accepting unresolved material release risk |
+| Investigate flakes and propose bounded quarantine | Waiving required repository or client gates |
 
-Why split it this way: some reports find no significant correlation between AI-generated test volume and issue resolution (a guideline as of 2026 — verify against primary sources). Use AI as an **amplifier on top of human-owned acceptance criteria**, never as the owner.
+Reuse decisions and approval already present in the task. Judge generated tests
+by the defects they detect and the contracts they cover, not by their volume.
 
 ## Step 1: Pick a test allocation model from the project type
 
-Choose exactly one allocation model first, and state it in the test plan.
+Choose a useful allocation model and explain it only when the test strategy needs one.
 Why: without a declared allocation, tests pile up wherever they are easiest to write — manual checks and E2E.
 
-1. **Test pyramid** (the default): unit tests as the base at 70–80%, integration in the middle, E2E kept minimal
+1. **Test pyramid**: prefer fast, focused lower-level tests where they establish the contract; add integration tests at real boundaries
    - Why: the economics of execution speed, maintenance cost, and debugging signal overwhelmingly favor the lower layers
-2. **E2E covers only the happy paths of the most critical user journeys.** Rule of thumb: 5–15 scenarios
-   - Why: more E2E feels safer, but flakiness destroys CI credibility long before the safety materializes
+2. **E2E covers critical journeys and failures that lower layers cannot prove**, including permission denial, recovery, and relevant browser/device integration
+   - Bound runtime and flakiness; do not impose a universal scenario count or exclude critical error paths
 3. **Testing trophy** (Kent C. Dodds): a variant that makes integration (component-integration) tests the thickest layer
 
 | Project type | Recommended model | Notes |
@@ -53,8 +56,8 @@ Why: an equal-depth plan degrades into everything-half-done the moment the sched
    - **High**: technique-driven case design + automated tests + exploratory testing
    - **Medium**: automated tests for the main happy and error paths
    - **Low**: happy path only, or explicitly "not tested" with accepted risk
-3. Every "not tested" decision requires explicit human approval and goes into the test plan
-   - Why: risk acceptance is a contractual liability judgment — never territory an AI decides on its own
+3. Record omitted checks and distinguish not applicable, deferred, blocked, and explicitly waived
+   - Choose routine depth within the agreed scope; ask before waiving required coverage or accepting a material release/contract risk not already authorized
 
 ## Step 3: Build the test-perspective matrix
 
@@ -70,7 +73,7 @@ Template (add or drop perspective columns per project):
 | … | | | | | | |
 
 - Each cell gets more than Y/—: add one representative perspective in parentheses
-- A "—" is a declaration of "not tested" and must be treated as Step 2 risk acceptance
+- Label an empty cell with its reason; not applicable and knowingly waived are different decisions
 - Reserve one slot for **exploratory testing** (session-based, with a charter and a time box) as the final critique before acceptance
   - Why: a solo contractor has no independent QA department — this is the only place an off-script, customer's-eye check is guaranteed
 
@@ -99,8 +102,8 @@ Judge written tests (especially AI-generated ones) against the four pillars from
 4. **Maintainability**: is the intent readable, is it easy to change?
 
 Coverage policy rules:
-- Run the coverage threshold (e.g. 80%) as a **ratchet — it never goes down**
-  - Why: chasing the number alone mass-produces tests with zero regression-detection power, and a lowered threshold never recovers
+- Preserve the repository's coverage gate and inspect uncovered changed behavior
+  - Treat a percentage as a signal, not proof of correctness; do not add a universal target or weaken an agreed gate to turn a failure green
 - For critical logic, apply mutation-testing thinking: "could I write a bug that this test fails to catch?"
 
 ## Step 6: Contract-work acceptance flow — agree on acceptance criteria before signing
@@ -123,12 +126,12 @@ Deliverable shapes:
 
 ## Step 7: Operating rules (the AI-agent era)
 
-1. **Separate test generation and test review into different agents/sessions**
-   - Why: an agent asked to test its own implementation tends to write self-justifying tests that merely ratify what it built
+1. **Review tests independently from implementation claims**
+   - Use a bounded read-only subagent when explicitly authorized by the user or an applicable instruction; otherwise review locally without creating a new user-owned task
 2. **Humans own the canonical acceptance criteria.** AI drafts and expands the matrix and cases; it never finalizes the criteria
    - Why: acceptance criteria ARE the decision of what to build — the pass/fail line of acceptance must not be delegated to AI
-3. **Quarantine flaky tests immediately.** Pull them from CI until fixed and open a quarantine issue
-   - Why: tolerated flaky tests spread CI distrust until every quality gate becomes theater. CI-side gate design → $cicd-release-design
+3. **Investigate flakes before changing gates.** Preserve the first failure and use a bounded diagnostic retry
+   - Never count retry-until-green as proof. If quarantine is authorized, retain an owner, expiry, tracked failure, and replacement coverage for critical paths. Create an external issue only when authorized
 4. Review AI-generated tests against the Step 5 pillars before merging. Volume is not an outcome
 5. When using E2E self-healing or agent-driven exploratory testing, humans predefine the judgment criteria (what counts as a failure)
 
@@ -137,15 +140,15 @@ Deliverable shapes:
 Self-check before finalizing the plan; resolve every unmet item before requesting human approval:
 
 - [ ] Allocation model (pyramid/trophy) chosen with a project-type rationale
-- [ ] E2E limited to happy paths of the most critical journeys (guideline: 5–15)
+- [ ] E2E covers critical journeys and relevant failure/recovery paths without a fixed quota
 - [ ] Not an ice-cream cone (manual + E2E dependent)
 - [ ] Per-feature risk priorities exist; depth is not uniform across features
-- [ ] "Not tested" areas are written down and a human approved the risk acceptance
+- [ ] Omitted checks have reasons; material waivers have explicit owner authorization
 - [ ] Test-perspective matrix exists (feature × normal/error/boundary/permissions/performance/compatibility)
 - [ ] Techniques (Step 4) selected per perspective
-- [ ] Acceptance criteria client-agreed before contract (or the agreement flow is in the plan)
-- [ ] Coverage threshold defined with ratchet operation (never lowered)
-- [ ] Flaky quarantine rule and generation/review agent separation built into operations
+- [ ] Client agreement is addressed when contract acceptance is actually in scope
+- [ ] Existing coverage gates are preserved and changed behavior has meaningful assertions
+- [ ] Flake diagnosis and authorized independent review are proportionate to risk
 
 ## Boundaries (one-line pointers)
 

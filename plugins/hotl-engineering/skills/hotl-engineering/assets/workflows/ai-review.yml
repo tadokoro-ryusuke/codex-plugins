@@ -34,9 +34,7 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: write
-  issues: write
-  id-token: write # required for OIDC
+  pull-requests: read
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -73,6 +71,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: classify
     timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -85,6 +88,8 @@ jobs:
           aws-region: ap-northeast-1
 
       - uses: anthropics/claude-code-action@v1
+        env:
+          VERDICT_PATH: ${{ runner.temp }}/review-light/verdict.json
         with:
           use_bedrock: "true"
           prompt: |
@@ -105,9 +110,11 @@ jobs:
             ## Output
             1. A result summary as a PR comment (short enough for a human to read in 3 minutes at CP2)
             2. Individual findings as inline comments on the relevant lines
-            3. Always finish by creating `ai-review-verdict.json` at the repo root, containing only
-               `{"critical": <CRITICAL count>, "high": <HIGH count>}`
-               (use {"critical": 0, "high": 0} when there are zero findings; the gate decision is made from this file)
+            3. Create the parent directory of VERDICT_PATH and write the current review to that
+               environment-variable path. Never reuse a verdict from repository content.
+               Write {"critical": <nonnegative integer>, "high": <nonnegative integer>,
+                      "head_sha": "${{ github.event.pull_request.head.sha }}"}.
+               Use zero counts when there are no findings. Review this exact head revision.
           claude_args: |
             --max-turns 5
             --model apac.anthropic.claude-sonnet-4-5-20250929-v1:0
@@ -118,7 +125,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ai-review-verdict-light
-          path: ai-review-verdict.json
+          path: ${{ runner.temp }}/review-light/verdict.json
           if-no-files-found: warn
 
   # ---------------------------------------------------------------------------
@@ -130,6 +137,11 @@ jobs:
     needs: classify
     if: needs.classify.outputs.tier2 == 'true'
     timeout-minutes: 25
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -142,6 +154,8 @@ jobs:
           aws-region: ap-northeast-1
 
       - uses: anthropics/claude-code-action@v1
+        env:
+          VERDICT_PATH: ${{ runner.temp }}/review-deep/verdict.json
         with:
           use_bedrock: "true"
           prompt: |
@@ -166,8 +180,10 @@ jobs:
             Post an audit-style report to the PR comment stating, for each angle,
             "no issues" or "issue found (with evidence)". For findings where an
             attack scenario is viable, include an outline of the PoC steps.
-            Always finish by creating `ai-review-verdict.json` at the repo root,
-            containing only `{"critical": <CRITICAL count>, "high": <HIGH count>}`.
+            Create the parent directory of VERDICT_PATH and write a fresh verdict to that
+            environment-variable path. Never reuse repository verdicts. Review this exact head.
+            Write {"critical": <nonnegative integer>, "high": <nonnegative integer>,
+                   "head_sha": "${{ github.event.pull_request.head.sha }}"}.
           claude_args: |
             --max-turns 8
             --model apac.anthropic.claude-opus-4-6-v1:0
@@ -178,7 +194,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ai-review-verdict-deep
-          path: ai-review-verdict.json
+          path: ${{ runner.temp }}/review-deep/verdict.json
           if-no-files-found: warn
 
   # ---------------------------------------------------------------------------
@@ -190,11 +206,19 @@ jobs:
   ai-review-gate:
     name: "ai-review-gate"
     runs-on: ubuntu-latest
-    needs: [review, deep-review]
+    needs: [classify, review, deep-review]
     if: always() && !cancelled()
     timeout-minutes: 5
     steps:
+      # Install assets/scripts/check_review_verdicts.py at this path on the base
+      # branch before enforcing. Never execute a gate script supplied by the PR.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .trusted
+          persist-credentials: false
       - name: Download verdicts
+        continue-on-error: true # the validator reports missing evidence in either phase
         uses: actions/download-artifact@v4
         with:
           pattern: ai-review-verdict-*
@@ -205,17 +229,8 @@ jobs:
           REVIEW_RESULT: ${{ needs.review.result }}
           DEEP_RESULT: ${{ needs.deep-review.result }}
           ENFORCE: ${{ vars.AI_REVIEW_ENFORCE }}
-        run: |
-          total=$(cat verdicts/*/ai-review-verdict.json 2>/dev/null \
-            | jq -s '[.[].critical // 0] | add // 0' 2>/dev/null || echo 0)
-          echo "CRITICAL total: ${total:-0} / review=${REVIEW_RESULT} / deep=${DEEP_RESULT}"
-          if [ "$ENFORCE" != "true" ]; then
-            echo "Phase 1 (observe mode): does not fail. Enforce via vars.AI_REVIEW_ENFORCE=true"
-            exit 0
-          fi
-          # Enforce mode: block on any CRITICAL findings, or on the review job itself failing (prevents fail-open)
-          fail=0
-          [ "${total:-0}" -gt 0 ] && { echo "::error::${total} CRITICAL finding(s)"; fail=1; }
-          [ "$REVIEW_RESULT" != "success" ] && { echo "::error::ai-review job: $REVIEW_RESULT"; fail=1; }
-          [ "$DEEP_RESULT" = "failure" ] && { echo "::error::ai-review-deep job: failure"; fail=1; }
-          exit $fail
+          CLASSIFY_RESULT: ${{ needs.classify.result }}
+          TIER2: ${{ needs.classify.outputs.tier2 }}
+          IS_DRAFT: ${{ github.event.pull_request.draft }}
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 .trusted/.github/scripts/check_review_verdicts.py

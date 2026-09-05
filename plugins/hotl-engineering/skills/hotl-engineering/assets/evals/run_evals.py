@@ -142,7 +142,10 @@ def eval_l2(
 ) -> dict:
     prompt = make_judge_prompt(case, response, rubric)
     votes: list[dict] = []
-    for _ in range(int(cfg.get("votes", 3))):
+    vote_count = cfg.get("votes", 3)
+    if type(vote_count) is not int or vote_count < 1:
+        raise ValueError("judge votes must be a positive integer")
+    for _ in range(vote_count):
         try:
             msg = client.messages.create(
                 model=JUDGE_MODEL,
@@ -151,19 +154,26 @@ def eval_l2(
                 messages=[{"role": "user", "content": prompt}],
             )
         except Exception as e:  # noqa: BLE001 — do not stop the whole suite for a single judge vote failure
-            print(f"  judge vote failed ({e})", file=sys.stderr)
+            print(f"  judge vote failed ({type(e).__name__})", file=sys.stderr)
             continue
         text = "".join(b.text for b in msg.content if b.type == "text")
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if not m:
             continue
         try:
-            votes.append(json.loads(m.group(0)))
+            vote = json.loads(m.group(0))
+            if not isinstance(vote, dict):
+                continue
+            if not all(isinstance(vote.get(axis), dict)
+                       and type(vote[axis].get("score")) is int
+                       and 1 <= vote[axis]["score"] <= 5 for axis in AXES):
+                continue
+            votes.append(vote)
         except json.JSONDecodeError:
             continue
 
-    if not votes:
-        return {a: {"score": 0, "reason": "judge parse failure"} for a in AXES}
+    if len(votes) != vote_count:
+        raise ValueError("incomplete or invalid judge votes")
 
     result = {}
     for axis in AXES:
@@ -179,6 +189,10 @@ def eval_l2(
 # ---------------------------------------------------------------------------
 def gate(summary: dict, thresholds: dict, baseline: dict | None) -> tuple[bool, list[str]]:
     failures: list[str] = []
+    if summary["n_cases"] == 0:
+        failures.append("no cases selected")
+    if summary["infrastructure_failed_ids"]:
+        failures.append(f"incomplete evaluation: {summary['infrastructure_failed_ids']}")
 
     if summary["must_pass_rate"] < thresholds["must_pass_rate"]:
         failures.append(
@@ -257,6 +271,7 @@ def main() -> int:
     ap.add_argument("--thresholds", required=True)
     ap.add_argument("--baseline", default=None)
     ap.add_argument("--out", default="evals/out")
+    ap.add_argument("--expected-revision", help="Require every target response to identify this deployed revision")
     args = ap.parse_args()
 
     out = Path(args.out)
@@ -267,8 +282,10 @@ def main() -> int:
     rubric = RUBRIC_PATH.read_text(encoding="utf-8")
 
     baseline = None
-    if args.baseline and Path(args.baseline).exists():
-        baseline = json.loads(Path(args.baseline).read_text()).get("summary")
+    if args.baseline:
+        baseline = json.loads(Path(args.baseline).read_text())["summary"]
+        if not isinstance(baseline, dict) or not baseline:
+            raise ValueError("baseline summary is missing or invalid")
 
     cases = [
         json.loads(line)
@@ -284,14 +301,17 @@ def main() -> int:
 
     results: list[dict] = []
     for case in cases:
-        print(f"[{case['id']}] {case['query'][:40]}…")
+        print(f"[{case['id']}]")
         row: dict = {"id": case["id"], "category": case["category"],
                      "must_pass": case.get("must_pass", False),
                      "failed": False, "fail_reason": ""}
         try:
             response = call_target(case["query"], case.get("user_context") or {})
+            if args.expected_revision and response.get("revision") != args.expected_revision:
+                raise ValueError("target revision mismatch")
         except Exception as e:  # noqa: BLE001
-            row.update(failed=True, fail_reason=f"target error: {e}")
+            row.update(failed=True, infrastructure_error=True,
+                       fail_reason=f"target error or revision mismatch: {type(e).__name__}")
             results.append(row)
             continue
 
@@ -303,7 +323,13 @@ def main() -> int:
             results.append(row)
             continue  # do not spend judge cost on an L1 hard fail
 
-        judge = eval_l2(client, case, response, rubric, judge_cfg)
+        try:
+            judge = eval_l2(client, case, response, rubric, judge_cfg)
+        except Exception as e:  # noqa: BLE001 — preserve a report for incomplete runs
+            row.update(failed=True, infrastructure_error=True,
+                       fail_reason=f"judge error: {type(e).__name__}")
+            results.append(row)
+            continue
         total = sum(judge[a]["score"] for a in AXES)
         row.update(judge=judge, judge_total=total)
 
@@ -323,6 +349,8 @@ def main() -> int:
     summary = {
         "suite": args.suite,
         "n_cases": len(results),
+        "expected_revision": args.expected_revision,
+        "infrastructure_failed_ids": [r["id"] for r in results if r.get("infrastructure_error")],
         "recall_at_5_mean": statistics.mean(recalls) if recalls else None,
         "judge_total_mean": statistics.mean(totals) if totals else 0.0,
         "must_pass_rate": 1.0 - (len(mp_failed) / len(mp)) if mp else 1.0,

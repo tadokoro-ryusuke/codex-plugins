@@ -12,7 +12,7 @@ Use this when executing a plan or running a standalone TDD cycle.
    - If unrelated changes exist, work around them only when safe. Stop before branch switches or edits that would overwrite them.
 4. Inspect relevant existing tests and implementation files.
 5. Identify the package manager and project commands from `package.json`, `AGENTS.md`, Makefiles, or local docs.
-6. Convert the plan into small steps with `update_plan`.
+6. Convert the plan into small steps with `update_plan` when available, or update the existing durable plan.
 
 ## Tidy First
 
@@ -30,7 +30,7 @@ Keep Tidy First behavior-preserving and verify it before starting Red.
 For each small behavior or plan iteration:
 
 1. Red: write or update one focused failing test.
-2. Run the narrowest relevant test and confirm it fails for the expected reason.
+2. Run the narrowest relevant test and confirm it fails because the required behavior is absent or incorrect, rather than because of syntax, imports, missing tools, or unrelated setup. Use observable contracts, not assertions that merely repeat implementation details.
 3. Green: implement the smallest change that makes the test pass.
 4. Run the narrow test again and confirm it passes.
 5. Refactor: improve names, duplication, boundaries, or architecture while tests stay green.
