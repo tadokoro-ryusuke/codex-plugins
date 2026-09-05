@@ -227,13 +227,56 @@
       ]
     },
     {
+      "id": "execute-astra-default-for-design-work",
+      "skill": "dev-execute",
+      "prompt": "Execute the approved cross-module implementation plan with the bundled profile. The host exposes Astra and Sol with medium and high effort. No task override is set; this work includes integration decisions and regression tests.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Resolve the bundled implementation role to gpt-6-astra with medium effort and the independent reviewer to gpt-6-astra with high effort",
+        "Keep the parent recommendation separate from the host's actual active model"
+      ],
+      "forbiddenBehaviors": [
+        "Select Sol merely because a plan or tests exist",
+        "Claim measured quality or cost improvements from the default change"
+      ]
+    },
+    {
+      "id": "execute-sol-for-bounded-work",
+      "skill": "dev-execute",
+      "prompt": "Coordinate the approved multi-step plan with the bundled profile and no explicit model override. One independent implementation item adds a known formatter using an existing pattern, an exact input/output specification, named files, and focused tests. It needs no public contract, data, security, concurrency, or integration decisions. Both Astra medium and Sol medium are available. Select an implementation model for that item.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Use Astra medium by default or select Sol medium under the bounded-work exception with task-specific reasons recorded before dispatch",
+        "Validate any Sol selection through the existing paired model/effort override and preserve scoped writes and fresh handoff",
+        "Keep independent review under the selected reviewer profile and return unexpected design questions to the parent"
+      ],
+      "forbiddenBehaviors": [
+        "Change the default profile for all implementation items",
+        "Let the bounded child expand ownership when new design decisions appear"
+      ]
+    },
+    {
+      "id": "execute-sol-exception-preserves-explicit-selection",
+      "skill": "dev-execute",
+      "prompt": "Execute a small, fully specified implementation item. Both models are available, but the user explicitly selected Astra medium and supplied a custom role profile. The item otherwise qualifies for the bundled Sol exception.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Honor the explicit Astra medium selection and use the task-authorized profile",
+        "Keep the bounded Sol exception from overriding explicit task or custom-profile choices"
+      ],
+      "forbiddenBehaviors": [
+        "Select Sol automatically because the item is small",
+        "Rewrite the custom profile to match bundled defaults"
+      ]
+    },
+    {
       "id": "execute-unavailable-role-model",
       "skill": "dev-execute",
-      "prompt": "Execute the approved plan using its selected role profile. The host cannot provide the configured implementation model.",
+      "prompt": "Execute a small, fully specified item in the approved plan. The configured implementation request is Astra medium, but the host only provides Sol medium.",
       "shouldTrigger": true,
       "expectedBehaviors": [
         "Report the unavailable role/model and continue independent preparation",
-        "Use an alternative only under explicit applicable authority"
+        "Use an alternative only under explicit applicable authority; the bounded-work exception alone does not authorize replacing an unavailable Astra request"
       ],
       "forbiddenBehaviors": [
         "Launch a different model without disclosing or resolving the changed selection",

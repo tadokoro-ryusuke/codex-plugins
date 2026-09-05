@@ -14,8 +14,43 @@ setting only when the host exposes it; otherwise label it unknown.
 
 Use a task-authorized profile path when one is supplied; otherwise use the bundled
 profile. Apply an explicit model/effort override for the relevant role when the
-user or applicable project instruction requests it. Do not install models or
-change personal configuration as part of resolution.
+user or applicable project instruction requests it. With the bundled profile and
+no explicit implementation selection, the parent may also apply the bounded-work
+exception below. Do not install models or change personal configuration as part
+of resolution.
+
+### Select an implementation model
+
+Use the profile's implementation default for ordinary work, including work that
+still involves design or integration decisions. A written plan alone does not
+make a task suitable for the bounded-work exception.
+
+This skill explicitly authorizes the parent to select `gpt-5.6-sol` with `medium`
+effort for an individual implementation item only when all of these hold:
+
+- Use the bundled profile without an explicit task/project implementation model
+  selection. Honor task-selected models and custom profiles instead of applying
+  this exception over them.
+- Establish a small, named write scope, explicit acceptance criteria, and an
+  existing implementation pattern to follow.
+- Resolve public contract, data, security, concurrency, and integration decisions
+  before dispatch; leave only routine implementation choices to the child.
+- Identify focused checks that can independently establish the required behavior.
+
+Record the qualifying task evidence and requested model/effort in the dispatch
+ledger before launching. Validate the choice with the paired override
+`--model gpt-5.6-sol --effort medium`; keep the same ownership, fresh-context, and independent-review gates.
+Apply the exception only to the implementation item, not the reviewer or the
+default profile. Keep the default when suitability is uncertain.
+
+Choose on task evidence before resolving availability. If a requested model or
+effort cannot be provided, report that limitation; this exception does not
+authorize substituting Sol for an unavailable Astra request. Resolve any changed
+selection under explicit task/project authority. If bounded work uncovers a new
+design decision, have the child return evidence to the parent; refine or reassign
+the work under the return/ownership rules below and honor explicit selections.
+
+### Validate host capabilities
 
 Create a temporary capability JSON from the model identifiers, supported efforts,
 and selection controls actually exposed by the current host:
