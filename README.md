@@ -68,11 +68,13 @@ and effort settings, without silently falling back to another model.
 
 The [execution contract](plugins/dev-core/skills/codex-collab/references/planned-execution.md)
 defines bounded writes, parent decisions, fresh handoffs, review independence,
-and evidence. It also permits the parent to choose Sol medium for an individual
-small, fully specified implementation item that follows an existing pattern and
-has focused checks. Record the reason before dispatch; preserve explicit task
-selections and custom profiles. Native tools accepting model/effort arguments do
-not require installing custom role files. Read-only task instructions and role names alone
+and evidence. Use the bundled implementation default for ordinary work; select
+Astra medium for difficult investigation, concurrency/state logic, or coupled
+integration work under that contract. Record the reason before dispatch and
+preserve explicit task selections and custom profiles. Check the actual parent
+setting separately: a profile recommendation cannot change the running task.
+Native tools accepting model/effort arguments do not require installing custom
+role files. Read-only task instructions and role names alone
 do not establish an enforced sandbox. Small steps can stay with the parent when
 delegation would add unnecessary overhead; explicit user preferences take priority.
 
@@ -109,6 +111,14 @@ candidate-written tests. The helper itself does not call a model; native dispatc
 effective model metadata, and observed outcomes are recorded separately.
 
 ### Source update migration (2026-09-05)
+
+- `dev-core` 5.1.2: recommend Astra medium for the parent and restore Sol medium
+  as the ordinary implementation default. Retain Astra high independent review
+  for substantial work; recommend a high-effort parent for difficult design or
+  acceptance decisions. Keep small changes with one agent and select Astra
+  medium for difficult implementation items. Compare requested routing with
+  child runtime metadata when available. Reinstall and select the parent setting
+  in the host; neither a profile edit nor reinstall changes the active parent.
 
 - `dev-core` 5.1.1: change the bundled implementation default to Astra medium;
   retain Astra high for the parent recommendation and independent reviewer.

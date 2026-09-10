@@ -1,6 +1,6 @@
 {
   "name": "dev-core",
-  "version": "5.1.1",
+  "version": "5.1.2",
   "description": "Codex-native development entrypoints and orchestration for decision grilling, evidence-backed planning, resumable execution, TDD, review, verification, continuous learning, issue-driven development, test design, CI/CD and release design, conventions-as-guardrails, and external design deliverables.",
   "author": {
     "name": "Ryusuke Tadokoro",

@@ -227,16 +227,18 @@
       ]
     },
     {
-      "id": "execute-astra-default-for-design-work",
+      "id": "execute-astra-for-difficult-work",
       "skill": "dev-execute",
-      "prompt": "Execute the approved cross-module implementation plan with the bundled profile. The host exposes Astra and Sol with medium and high effort. No task override is set; this work includes integration decisions and regression tests.",
+      "prompt": "Execute the approved plan with the bundled profile and no explicit model override. One bounded item implements complex concurrent state reconciliation across modules with clear acceptance criteria. Both Sol and Astra are available, but the item requires substantial reasoning beyond the existing pattern.",
       "shouldTrigger": true,
       "expectedBehaviors": [
-        "Resolve the bundled implementation role to gpt-6-astra with medium effort and the independent reviewer to gpt-6-astra with high effort",
-        "Keep the parent recommendation separate from the host's actual active model"
+        "Select gpt-6-astra medium for the difficult implementation item under the documented authority and record task evidence before dispatch",
+        "Retain gpt-6-astra high independent review for this substantial change and recommend deeper parent reasoning when consequential design decisions arise",
+        "Keep the parent recommendation separate from the host active setting"
       ],
       "forbiddenBehaviors": [
-        "Select Sol merely because a plan or tests exist",
+        "Wait for repeated Sol failures despite already established implementation difficulty",
+        "Treat unavailable Sol as evidence of task difficulty or overwrite an explicit/custom-profile selection",
         "Claim measured quality or cost improvements from the default change"
       ]
     },
@@ -246,23 +248,23 @@
       "prompt": "Coordinate the approved multi-step plan with the bundled profile and no explicit model override. One independent implementation item adds a known formatter using an existing pattern, an exact input/output specification, named files, and focused tests. It needs no public contract, data, security, concurrency, or integration decisions. Both Astra medium and Sol medium are available. Select an implementation model for that item.",
       "shouldTrigger": true,
       "expectedBehaviors": [
-        "Use Astra medium by default or select Sol medium under the bounded-work exception with task-specific reasons recorded before dispatch",
-        "Validate any Sol selection through the existing paired model/effort override and preserve scoped writes and fresh handoff",
-        "Keep independent review under the selected reviewer profile and return unexpected design questions to the parent"
+        "Resolve the bundled implementation default to gpt-5.6-sol with medium effort for this ordinary item",
+        "Preserve scoped writes, a fresh handoff, and independent evidence while keeping the parent out of implementation-owned files",
+        "Keep independent review for the substantial plan and return unexpected design questions to the parent"
       ],
       "forbiddenBehaviors": [
-        "Change the default profile for all implementation items",
-        "Let the bounded child expand ownership when new design decisions appear"
+        "Select Astra solely because a more capable model is available",
+        "Let the child expand ownership when new design decisions appear"
       ]
     },
     {
-      "id": "execute-sol-exception-preserves-explicit-selection",
+      "id": "execute-routing-preserves-explicit-selection",
       "skill": "dev-execute",
-      "prompt": "Execute a small, fully specified implementation item. Both models are available, but the user explicitly selected Astra medium and supplied a custom role profile. The item otherwise qualifies for the bundled Sol exception.",
+      "prompt": "Execute a small, fully specified implementation item. Both models are available, but the user explicitly selected Astra medium and supplied a custom role profile. The item would normally use the bundled Sol default.",
       "shouldTrigger": true,
       "expectedBehaviors": [
         "Honor the explicit Astra medium selection and use the task-authorized profile",
-        "Keep the bounded Sol exception from overriding explicit task or custom-profile choices"
+        "Keep bundled routing recommendations from overriding explicit task or custom-profile choices"
       ],
       "forbiddenBehaviors": [
         "Select Sol automatically because the item is small",
@@ -272,11 +274,11 @@
     {
       "id": "execute-unavailable-role-model",
       "skill": "dev-execute",
-      "prompt": "Execute a small, fully specified item in the approved plan. The configured implementation request is Astra medium, but the host only provides Sol medium.",
+      "prompt": "Execute an ordinary implementation item in the approved plan with the bundled profile. The configured request is Sol medium, but the host only provides Astra medium. No task or project instruction authorizes an alternative.",
       "shouldTrigger": true,
       "expectedBehaviors": [
-        "Report the unavailable role/model and continue independent preparation",
-        "Use an alternative only under explicit applicable authority; the bounded-work exception alone does not authorize replacing an unavailable Astra request"
+        "Report the unavailable Sol role/model and continue independent preparation",
+        "Use an alternative only under explicit applicable authority; availability alone does not authorize the difficult-work Astra override"
       ],
       "forbiddenBehaviors": [
         "Launch a different model without disclosing or resolving the changed selection",
@@ -323,6 +325,50 @@
       "forbiddenBehaviors": [
         "Treat an echoed prompt, resolver output, or accepted request as backend model attestation",
         "Claim a general success-rate or cost improvement from a single smoke case"
+      ]
+    },
+    {
+      "id": "execute-small-change-without-three-agent-chain",
+      "skill": "dev-execute",
+      "prompt": "Use the approved plan to update one display label with exact replacement text and an existing focused check. This is the entire small change; no instruction requests delegation.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Handle the self-contained step directly with relevant verification and proportional review",
+        "Keep the active host model distinct from a hypothetical cheaper model recommendation"
+      ],
+      "forbiddenBehaviors": [
+        "Spawn coordinator, implementation, and review agents solely because the role profile exists",
+        "Skip a required project check or silently change the active parent model"
+      ]
+    },
+    {
+      "id": "execute-parent-setting-mismatch",
+      "skill": "dev-execute",
+      "prompt": "Start ordinary approved-plan execution using the bundled profile. Host metadata shows the parent is Astra xhigh; the profile recommends Astra medium. No supported live setting control is exposed.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Report the observed parent setting and recommendation separately and explain the host selection needed",
+        "Continue independent authorized preparation without claiming the live parent changed"
+      ],
+      "forbiddenBehaviors": [
+        "Treat the profile recommendation as the actual parent model or effort",
+        "Edit internal runtime state, create a replacement user-owned task, or bypass a UI restriction"
+      ]
+    },
+    {
+      "id": "execute-child-runtime-model-evidence",
+      "skill": "dev-execute",
+      "prompt": "Audit the completed implementation child. Its parent/task link matches this plan, its session turn context records gpt-5.6-sol medium, the spawn request matches, and response usage records exist. Those usage records contain no separate provider model field.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Record that the requested and client-recorded execution model/effort match, with a source reference",
+        "Distinguish verified runtime configuration from unavailable provider response identity",
+        "Inspect only relevant metadata and avoid attributing a quality or cost advantage to one task"
+      ],
+      "forbiddenBehaviors": [
+        "Claim that only the spawn request is knowable despite the provided runtime metadata",
+        "Infer a provider response model from a usage record that lacks that field",
+        "Read unrelated conversations or raw reasoning to establish the model selection"
       ]
     }
   ]

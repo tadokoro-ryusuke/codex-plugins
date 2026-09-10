@@ -12,43 +12,56 @@ the active parent model. Do not pretend to switch it, create a replacement user
 task, or infer its effective setting from the recommendation. Record the active
 setting only when the host exposes it; otherwise label it unknown.
 
+Check the active parent setting against the recommendation at execution setup.
+Report a mismatch once; a profile edit does not change the running task. Use a
+supported host setting control only under applicable user authority. If none is
+available, explain how the user can select the setting and continue independent
+authorized preparation; do not edit internal runtime state to simulate a change.
+
 Use a task-authorized profile path when one is supplied; otherwise use the bundled
 profile. Apply an explicit model/effort override for the relevant role when the
 user or applicable project instruction requests it. With the bundled profile and
-no explicit implementation selection, the parent may also apply the bounded-work
-exception below. Do not install models or change personal configuration as part
+no explicit implementation selection, the parent may also apply the difficult-work
+selection below. Do not install models or change personal configuration as part
 of resolution.
 
-### Select an implementation model
+### Match the execution shape to the work
 
-Use the profile's implementation default for ordinary work, including work that
-still involves design or integration decisions. A written plan alone does not
-make a task suitable for the bounded-work exception.
+Handle a small self-contained change directly when delegation adds more
+coordination than useful work, unless explicitly requested otherwise. Do not
+spawn a coordinator, implementer, and reviewer merely to edit a simple setting.
+Preserve relevant tests and a proportional review; use the separate reviewer
+for substantial planned changes under the existing execution gate.
 
-This skill explicitly authorizes the parent to select `gpt-5.6-sol` with `medium`
-effort for an individual implementation item only when all of these hold:
+Use the profile defaults for ordinary planned work with explicit acceptance
+criteria, bounded ownership, and independently verifiable outcomes. Do not assume
+that a written plan has resolved every design decision. Return unplanned public
+contract or scope decisions to the parent before implementation.
 
-- Use the bundled profile without an explicit task/project implementation model
-  selection. Honor task-selected models and custom profiles instead of applying
-  this exception over them.
-- Establish a small, named write scope, explicit acceptance criteria, and an
-  existing implementation pattern to follow.
-- Resolve public contract, data, security, concurrency, and integration decisions
-  before dispatch; leave only routine implementation choices to the child.
-- Identify focused checks that can independently establish the required behavior.
+With the bundled profile and no explicit task/project implementation selection,
+this skill authorizes the parent to select `gpt-6-astra` with `medium` effort for
+a difficult item: ambiguous root-cause investigation, complex concurrency/state
+logic, or tightly coupled integration work whose implementation still needs
+substantial reasoning. Choose it from task evidence before dispatch; do not wait
+for repeated Sol failures when the difficulty is already apparent. Honor custom
+profiles and explicit selections instead of overriding them under this rule.
 
-Record the qualifying task evidence and requested model/effort in the dispatch
-ledger before launching. Validate the choice with the paired override
-`--model gpt-5.6-sol --effort medium`; keep the same ownership, fresh-context, and independent-review gates.
-Apply the exception only to the implementation item, not the reviewer or the
-default profile. Keep the default when suitability is uncertain.
+Record the reason and requested model/effort in the dispatch ledger. Resolve the
+choice with `--model gpt-6-astra --effort medium`; keep ownership, fresh-context,
+and review gates. For ordinary items, keep the bundled implementation default.
 
-Choose on task evidence before resolving availability. If a requested model or
-effort cannot be provided, report that limitation; this exception does not
-authorize substituting Sol for an unavailable Astra request. Resolve any changed
-selection under explicit task/project authority. If bounded work uncovers a new
-design decision, have the child return evidence to the parent; refine or reassign
-the work under the return/ownership rules below and honor explicit selections.
+Recommend a high-effort parent when the plan's assumptions, cross-module design,
+or consequential acceptance decisions require deeper analysis. This is a task
+setup recommendation, not an automatic live setting change. Keep the default
+parent recommendation for well-specified execution and preserve user selections.
+Retain the configured high-effort independent reviewer for substantial work;
+model capability cannot replace original requirements and evidence.
+
+Choose on task evidence before checking availability. If the requested model or
+effort is unavailable, report it; this routing rule does not authorize silently
+replacing either Sol or Astra. Resolve changed selections under explicit
+task/project authority. If an item uncovers a new design decision, have the child
+return evidence and transfer ownership before refining or reassigning the work.
 
 ### Validate host capabilities
 
@@ -157,6 +170,21 @@ effort, source of that selection, agent ID, input identity, ownership, status,
 and returned artifacts. Record effective model/effort separately only when the
 runtime reports them. A resolver result, echoed prompt, or accepted spawn request
 proves the requested configuration, not backend execution identity.
+
+When the host exposes related child session metadata, verify its parent/task
+link and compare its recorded model/effort with the spawn request. Record the
+source reference and distinguish `requested`, `runtime configuration verified`,
+and `provider-reported model` evidence. Child turn-context settings plus response
+usage records establish the client's executed configuration; do not claim a
+provider response identity when the usage record has no model field. Inspect
+only task-related metadata, not unrelated conversations or raw reasoning.
+
+Compare total parent, implementation, review, and rework consumption for similar
+tasks when evaluating routing. Keep cumulative and per-response usage separate
+to avoid double counting. Record acceptance failures and human intervention as
+well as usage; changing a default or completing one smoke case does not prove
+better quality or lower total cost. Vary one routing choice at a time when
+measuring its effect.
 
 On resume, inspect this ledger and the current checkout before reusing an agent
 or a result. Do not reuse a child for a different model/role merely by mentioning

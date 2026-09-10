@@ -72,12 +72,36 @@ class ExecutionRoleTests(unittest.TestCase):
         self.assertEqual(result.stdout, "")
         self.assertTrue(result.stderr.strip())
 
-    def test_bundled_implementer_defaults_resolve_to_astra_spawn_request(self):
+    def test_bundled_implementer_defaults_resolve_to_sol_spawn_request(self):
         result = self.run_resolver(
             "--role",
             "implementer",
             "--capabilities",
             str(self.capabilities),
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            json.loads(result.stdout),
+            {
+                "role": "implementer",
+                "model": "gpt-5.6-sol",
+                "reasoning_effort": "medium",
+                "write_policy": "scoped-write",
+                "fork_turns": "none",
+            },
+        )
+
+    def test_bundled_implementer_allows_explicit_astra_medium(self):
+        result = self.run_resolver(
+            "--role",
+            "implementer",
+            "--capabilities",
+            str(self.capabilities),
+            "--model",
+            "gpt-6-astra",
+            "--effort",
+            "medium",
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -92,31 +116,26 @@ class ExecutionRoleTests(unittest.TestCase):
             },
         )
 
-    def test_bundled_implementer_allows_explicit_sol_medium(self):
+    def test_bundled_implementer_rejects_astra_only_capabilities_without_fallback(self):
+        astra_only = self.write_json(
+            "astra-only.json",
+            {
+                "can_select_model": True,
+                "can_select_effort": True,
+                "models": {"gpt-6-astra": ["medium", "high"]},
+            },
+        )
         result = self.run_resolver(
             "--role",
             "implementer",
             "--capabilities",
-            str(self.capabilities),
-            "--model",
-            "gpt-5.6-sol",
-            "--effort",
-            "medium",
+            str(astra_only),
         )
 
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(
-            json.loads(result.stdout),
-            {
-                "role": "implementer",
-                "model": "gpt-5.6-sol",
-                "reasoning_effort": "medium",
-                "write_policy": "scoped-write",
-                "fork_turns": "none",
-            },
-        )
+        self.assert_rejected(result)
+        self.assertIn("model is unavailable: gpt-5.6-sol", result.stderr)
 
-    def test_bundled_implementer_rejects_sol_only_capabilities_without_fallback(self):
+    def test_sol_implementation_does_not_require_astra_availability(self):
         sol_only = self.write_json(
             "sol-only.json",
             {
@@ -125,17 +144,23 @@ class ExecutionRoleTests(unittest.TestCase):
                 "models": {"gpt-5.6-sol": ["medium"]},
             },
         )
-        result = self.run_resolver(
-            "--role",
-            "implementer",
-            "--capabilities",
-            str(sol_only),
+        implementation = self.run_resolver(
+            "--role", "implementer", "--capabilities", str(sol_only)
         )
+        self.assertEqual(implementation.returncode, 0, implementation.stderr)
+        self.assertEqual(json.loads(implementation.stdout)["model"], "gpt-5.6-sol")
+        review = self.run_resolver(
+            "--role", "reviewer", "--capabilities", str(sol_only)
+        )
+        self.assert_rejected(review)
+        self.assertIn("model is unavailable: gpt-6-astra", review.stderr)
 
-        self.assert_rejected(result)
-        self.assertIn("model is unavailable: gpt-6-astra", result.stderr)
-
-    def test_custom_profile_implementer_resolves_to_sol_spawn_request(self):
+    def test_custom_profile_implementer_overrides_bundled_sol_default(self):
+        profile = json.loads(self.profile.read_text(encoding="utf-8"))
+        profile["roles"]["implementer"].update(
+            model="gpt-6-astra", reasoning_effort="high"
+        )
+        self.profile.write_text(json.dumps(profile), encoding="utf-8")
         result = self.run_resolver(
             "--role",
             "implementer",
@@ -150,8 +175,8 @@ class ExecutionRoleTests(unittest.TestCase):
             json.loads(result.stdout),
             {
                 "role": "implementer",
-                "model": "gpt-5.6-sol",
-                "reasoning_effort": "medium",
+                "model": "gpt-6-astra",
+                "reasoning_effort": "high",
                 "write_policy": "scoped-write",
                 "fork_turns": "none",
             },
