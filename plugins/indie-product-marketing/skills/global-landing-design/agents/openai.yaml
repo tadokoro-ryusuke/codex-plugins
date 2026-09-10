@@ -1,0 +1,4 @@
+interface:
+  display_name: "Global Landing Design"
+  short_description: "Research, design, and localize product landing pages"
+  default_prompt: "Use $global-landing-design to research my reference sites and create a landing page for my target international audience."

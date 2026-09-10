@@ -14,6 +14,7 @@ A Codex-native plugin marketplace: reusable agent skills, hooks, and custom agen
 | `github-tools` | Pull request preparation and documentation sync using the GitHub CLI. |
 | `hotl-engineering` | Human-on-the-Loop delivery workflow design/application and CTO decision support (staged quality gates, AI review, eval gates, audit readiness). |
 | `ui-ux-pro-max` | Searchable UI/UX design intelligence (styles, palettes, typography, charts, stacks). |
+| `indie-product-marketing` | Opportunity discovery, demand validation, international landing-page design, launch, acquisition, retention, and unit economics. |
 
 ## Install
 
@@ -34,6 +35,27 @@ codex plugin add dev-core@codex-plugins
 Then start a new Codex thread so the skills and hooks are picked up. You can also browse and install interactively with `/plugins` inside Codex.
 
 Note: `dev-core` bundles hooks (destructive-command blocking, session-start project state). Codex asks you to review and trust plugin hooks before they run.
+
+## Indie Product Marketing and Landing Design
+
+- `$indie-idea-discovery`: find and rank evidence-backed product opportunities.
+- `$indie-product-marketing`: validate demand, choose distribution, launch, and diagnose growth.
+- [`$global-landing-design`](plugins/indie-product-marketing/skills/global-landing-design/SKILL.md): research references, design or build an international product LP, and localize or review an existing page.
+
+The landing-page skill bundles dated observations of SPREAD, Circleback,
+Inkdrop, Granola, Things, Mobbin, UI Pocket, and the Stride prototype. It
+connects audience and buying motion to product proof, visual direction,
+working CTAs, mobile layout, localization, and verification. It does not
+prescribe one palette or treat a polished page as validated demand.
+
+Example after loading the updated plugin:
+
+> Use $global-landing-design to research these reference sites and build an English LP for my prelaunch product. Keep the existing brand, show the working demo, and distinguish unimplemented features. Add a Japanese version using the same structure.
+
+The bundled behavioral cases specify future model evaluations; packaging
+validation alone does not execute them. See the
+[creation and verification record](docs/plans/task-global-landing-design-skill.md)
+for the source update's scope and evidence.
 
 ## Dev Core Entrypoints
 

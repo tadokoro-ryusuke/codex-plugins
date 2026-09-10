@@ -1,7 +1,7 @@
 {
   "name": "indie-product-marketing",
-  "version": "0.2.0+codex.20260803145248",
-  "description": "Evidence-backed opportunity discovery, demand validation, launch, acquisition, retention, and unit-economics workflows for indie products.",
+  "version": "0.2.0+codex.20260909053507",
+  "description": "Evidence-backed opportunity discovery, demand validation, global landing-page design, launch, acquisition, retention, and unit-economics workflows for indie products.",
   "author": {
     "name": "Ryusuke Tadokoro",
     "email": "tado56@poshiri.org"
@@ -18,25 +18,29 @@
     "aso",
     "seo",
     "idea-generation",
-    "opportunity-discovery"
+    "opportunity-discovery",
+    "landing-page-design",
+    "localization"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Indie Product Discovery & Marketing",
-    "shortDescription": "Discover, validate, launch, and grow indie products.",
-    "longDescription": "Indie Product Discovery & Marketing helps solo developers and small teams mine evidence-backed problems, generate and rank product opportunities, validate demand before overbuilding, choose distribution channels, prepare a measurable launch, diagnose post-launch funnels, improve ASO and SEO, design ethical product-led growth loops, and decide when acquisition can scale. It separates observation from founder reports and hypotheses, protects AI ideation from convergence and vanity signals, and turns recommendations into bounded learning experiments.",
+    "shortDescription": "Discover, validate, design landing pages, and grow.",
+    "longDescription": "Indie Product Discovery & Marketing helps solo developers and small teams mine evidence-backed problems, generate and rank product opportunities, validate demand before overbuilding, choose distribution channels, prepare a measurable launch, diagnose post-launch funnels, improve ASO and SEO, design ethical product-led growth loops, and decide when acquisition can scale. It separates observation from founder reports and hypotheses, protects AI ideation from convergence and vanity signals, and turns recommendations into bounded learning experiments. Its global landing-page workflow turns reference-site research into original product presentation, honest demos, multilingual copy, and verified page interactions without mistaking visual polish for demand evidence.",
     "developerName": "Ryusuke Tadokoro",
     "category": "Business",
     "capabilities": [
       "Skills",
       "Research",
       "Marketing",
-      "Product Strategy"
+      "Product Strategy",
+      "Design"
     ],
     "defaultPrompt": [
       "Use $indie-idea-discovery to find and rank product opportunities I can validate.",
       "Use $indie-product-marketing to validate and launch this selected product idea.",
-      "Use $indie-product-marketing to diagnose my acquisition, retention, and unit economics."
+      "Use $indie-product-marketing to diagnose my acquisition, retention, and unit economics.",
+      "Use $global-landing-design to research reference sites and create a landing page for my international audience."
     ]
   }
 }
