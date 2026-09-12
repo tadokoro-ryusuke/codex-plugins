@@ -1,6 +1,6 @@
 ---
 name: hotl-engineering
-description: "Design proportional CI/CD, quality gates, AI review, eval gates, and agent-operation workflows with Human-on-the-Loop supervision. Use for repository delivery-flow setup or CTO decisions about autonomy, rollout, and audit evidence. Apply only the needed templates; do not use for a one-off feature, bug fix, or code review."
+description: "Design repository delivery gates and Human-on-the-Loop supervision when setting up CI/CD or deciding rollout and approval policy."
 ---
 
 # HOTL Engineering — Design, Apply, Consult
@@ -32,10 +32,11 @@ In either mode, read `references/principles.md` first as the foundation.
 repository's nature. Over-installation kills speed, erodes the team's trust,
 and gets ripped out.
 
-### Step 1: Assessment (always do this before proposing)
+### Step 1: Assess the relevant delivery risks
 
-Investigate the repository and confirm the following. Ask about unknowns in a
-single batched question:
+Inspect the repository for facts relevant to the requested change. Reuse known
+policy and ask only about unresolved decisions that materially affect the result.
+For a broader delivery setup, consider:
 
 1. Stack and existing CI (language / package manager / existing workflows / tests)
 2. Deploy target (Azure Container Apps / App Service / Vercel / other) and the
@@ -62,14 +63,16 @@ Recommended subset by repository nature:
 | Production product | Existing checks plus gates justified by the actual release risks | Unused integrations or duplicate approval gates |
 | Agent-based | Task-specific evals and selected delivery controls; protect must-pass cases | Retrieval metrics for a system without retrieval |
 
-The plan must always include: rollout order (comment-only → calibration →
-enforcement), consolidating required checks into the single `quality-gate`
-context, and where the human approval points (CP1–CP4) sit.
+For new advisory/AI gates, specify observation, calibration, and promotion
+criteria. When adopting the bundled CI workflow, define its `quality-gate`
+context without silently replacing existing required checks. Identify the human
+approval points needed by the selected scope; do not introduce all CP1–CP4
+points for a bounded change.
 
 ### Step 3: Apply the templates
 
-Copy templates from `assets/` and adapt them to the project following the
-checklist in `assets/ADJUST.md`. Main adaptation work:
+Use only the templates needed from `assets/` and the matching sections of
+`assets/ADJUST.md`. Apply the relevant adaptations:
 
 - Package manager and commands (templates assume pnpm → match reality)
 - Rewrite the Tier 2 paths-filter in ai-review.yml to the risk paths identified
@@ -99,21 +102,24 @@ checklist in `assets/ADJUST.md`. Main adaptation work:
 - Install `assets/scripts/check_review_verdicts.py` at the project path specified
   in `assets/ADJUST.md` before enabling AI-review enforcement. Review that
   trust/adaptation contract before applying the workflow
-- Attach a "Phase 2 to-do" checklist to the handover (make checks required,
-  set environment reviewers, enable CODEOWNERS, initialize the eval baseline)
+- Record remaining promotion or setup work for the selected gates, with its
+  evidence and authority requirements.
 
 ---
 
 ## Mode B: CTO consultation
 
-Read `references/principles.md` and `references/decision-frameworks.md` before
-answering. For J-SOX / audit / controls topics also read
+Use the already-read principles and consult `references/decision-frameworks.md`
+when its decision framework helps resolve the question. For J-SOX / audit / controls topics also read
 `references/jsox-audit.md`. For eval / quality-measurement topics also read
 `references/eval-design.md`.
 
-### Answer format
+### Decision content
 
-1. **Principle**: which principle governs (cite the number in principles.md)
+Adapt the response to the decision; a short recommendation does not need five
+sections. Include the relevant reasoning:
+
+1. **Principle**: which principle governs when it helps explain the decision
 2. **Context**: apply it to the asker's situation (scale, risk, stage)
 3. **Recommendation**: take a position; never end on "it depends"
 4. **Trade-off**: state explicitly what the recommendation gives up

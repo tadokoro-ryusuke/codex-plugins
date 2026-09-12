@@ -84,16 +84,19 @@ Reference skills `$best-practices`, `$backend-patterns`, and `$frontend-patterns
 For substantial planned work, `dev-execute` keeps the parent coordinating and
 delegates implementation and a separate review. Default model/effort assignments
 live in one [execution profile](plugins/dev-core/skills/codex-collab/assets/execution-profile.json).
+The bundled defaults are Astra high for the parent, implementer, and independent
+reviewer, with Sol medium for optional read-only research. Use research for bounded
+source lookup or log classification; keep design and acceptance judgments with the
+parent. An execution-only parent may use Astra medium when the plan is settled.
 The profile recommends the parent setting; choose that model in the task's host.
 The plugin resolves explicit child requests against the host's exposed models
 and effort settings, without silently falling back to another model.
 
 The [execution contract](plugins/dev-core/skills/codex-collab/references/planned-execution.md)
 defines bounded writes, parent decisions, fresh handoffs, review independence,
-and evidence. Use the bundled implementation default for ordinary work; select
-Astra medium for difficult investigation, concurrency/state logic, or coupled
-integration work under that contract. Record the reason before dispatch and
-preserve explicit task selections and custom profiles. Check the actual parent
+and evidence. Use the bundled Astra high implementation default for ordinary
+and difficult work. Preserve explicit task selections and custom profiles, and
+record authorized overrides before dispatch. Check the actual parent
 setting separately: a profile recommendation cannot change the running task.
 Native tools accepting model/effort arguments do not require installing custom
 role files. Read-only task instructions and role names alone
@@ -132,7 +135,30 @@ Its helper prepares a disposable repository and grades behavior independently of
 candidate-written tests. The helper itself does not call a model; native dispatch,
 effective model metadata, and observed outcomes are recorded separately.
 
-### Source update migration (2026-09-05)
+### Source update migration
+
+- `dev-core` 5.3.0 (2026-09-12): recommend Astra high for the parent and add an
+  optional read-only Sol medium researcher. Keep implementation/review at Astra
+  high; permit an execution-only parent to use Astra medium. Preserve existing
+  two-role custom profiles and reject requests for a missing researcher instead
+  of merging in bundled defaults.
+
+- `dev-core` 5.2.0 (2026-09-12): use Astra high for implementation and independent
+  review; retain Astra medium as the parent recommendation. Narrow skill
+  descriptions and load workflow/domain references only when relevant. Continue
+  already-authorized work through its completion criteria without extra approval
+  stops. Preserve TDD, ownership, model overrides, and evidence requirements.
+- `indie-product-marketing` 0.3.0 and `ui-ux-pro-max` 1.3.0 (2026-09-12): focus
+  discovery and guidance on the selected task; preserve existing product intent,
+  brand, stack, and observed evidence instead of imposing a fixed recipe.
+
+- `hotl-engineering` 2.0.1 (2026-09-12): scope assessment, templates, and
+  consultation output to the actual delivery decision while preserving gate
+  enforcement and recovery evidence.
+
+See the [Astra refresh record](docs/plans/task-astra-skill-refresh.md) for the
+article-based audit, scope, and validation limits. Earlier migrations:
+
 
 - `dev-core` 5.1.2: recommend Astra medium for the parent and restore Sol medium
   as the ordinary implementation default. Retain Astra high independent review

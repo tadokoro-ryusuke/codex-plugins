@@ -1,6 +1,6 @@
 {
   "name": "hotl-engineering",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Human-on-the-Loop (HOTL) delivery workflow design and application, plus CTO-level decision support for AI-native engineering operations: repository takeover, staged quality gates, CI/CD and eval gates, autonomy promotion, and J-SOX/audit readiness.",
   "author": {
     "name": "Ryusuke Tadokoro",

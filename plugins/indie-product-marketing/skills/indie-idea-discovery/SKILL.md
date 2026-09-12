@@ -1,6 +1,6 @@
 ---
 name: indie-idea-discovery
-description: Research-driven indie product idea discovery, opportunity mining, problem selection, structured ideation, founder-market-fit analysis, and evidence-based idea ranking for apps, SaaS, developer tools, marketplaces, and creator products. Use when the user has no concrete product idea, asks for app or business ideas, wants to find problems worth solving, needs ideas derived from personal experience or a market, wants to expand or compare several early concepts, or needs a shortlist to validate before building. Use $indie-product-marketing after a concrete opportunity has been selected.
+description: Discover and rank indie product opportunities from founder and market evidence. Use when finding problems worth solving, expanding an early concept, or comparing ideas before choosing one to validate.
 ---
 
 # Indie Idea Discovery
@@ -19,6 +19,8 @@ Select the narrowest mode that fits the request:
 6. **Idea audit** — identify unsupported assumptions, imitation, AI convergence, selection bias, safety risk, and missing validation in an idea-generation method or output.
 
 Infer the mode from context. Ask only for information that would materially change the search space; otherwise state assumptions and proceed.
+
+Use the phases that advance the selected mode. Reuse supplied research and candidates; an audit or portfolio comparison can proceed directly to evidence review and evaluation without generating new ideas.
 
 ## Separate evidence from imagination
 
@@ -76,13 +78,13 @@ Reject statements that describe only a feature or demographic.
 
 ## Phase 3: generate independently before converging
 
-Run at least three distinct passes:
+For substantial discovery or concept expansion, use separate generation passes when they expose different evidence or mechanisms. Choose among:
 
-1. **Founder seed pass** — capture the founder's unaided problems and concepts before showing AI suggestions.
+1. **Founder seed pass** — preserve the founder's supplied unaided problems and concepts before adding AI suggestions. Do not invent founder experience when it is unavailable.
 2. **Evidence-led pass** — generate responses only to verified problem cards.
 3. **Structured combination pass** — vary explicit dimensions through a morphological matrix.
 
-Add a fourth **unsexy pass** for tedious, operational, regulated, migration, compliance, reconciliation, and service-heavy problems that visually attractive consumer ideas may hide.
+Use an **unsexy pass** when the search might otherwise overlook tedious, operational, regulated, migration, compliance, reconciliation, or service-heavy problems.
 
 Do not generate every pass in one growing conversation where earlier ideas anchor later output. Withhold prior candidates where possible, change the evidence or dimensions intentionally, and merge only after independent passes.
 
@@ -171,7 +173,7 @@ Treat a mockup, social reaction, ad click, or waitlist as evidence of message in
 
 ## Hand off selected opportunities
 
-Stop discovery after producing a decision-ready shortlist. For each selected opportunity, prepare:
+For a shortlist request, finish with decision-ready opportunities. For each selected opportunity, include the relevant handoff information:
 
 - Customer, trigger, job, and consequence.
 - Current substitute and evidence.
@@ -182,11 +184,11 @@ Stop discovery after producing a decision-ready shortlist. For each selected opp
 - First validation and stop rule.
 - Evidence ledger and open questions.
 
-Then invoke `$indie-product-marketing` to validate demand, choose channels, prepare launch, instrument metrics, and diagnose growth. Use `assets/validation-handoff.md` for the transfer.
+When the request also includes validation or launch work, continue into that work using `$indie-product-marketing` if available. Carry forward the evidence, assumptions, and decision rules; do not stop at a handoff when that requested work remains. For discovery-only requests, identify the next validation action without starting a broader campaign. Use `assets/validation-handoff.md` when a durable transfer is useful.
 
 ## Produce decision-ready outputs
 
-Return:
+Return the minimum useful artifacts for the selected mode, drawing from:
 
 1. **Discovery brief** — founder constraints, search boundary, assumptions, and objective.
 2. **Evidence map** — observed facts, reported facts, inferences, gaps, and source quality.

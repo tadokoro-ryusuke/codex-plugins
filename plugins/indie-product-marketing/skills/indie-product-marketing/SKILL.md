@@ -1,13 +1,13 @@
 ---
 name: indie-product-marketing
-description: Indie product marketing and demand validation for a concrete product idea, defined customer problem, or launched product, including market research, launch planning, acquisition experiments, retention diagnosis, and unit economics for apps, SaaS, developer tools, marketplaces, and creator products. Use when validating a selected idea before building, preparing a launch, choosing distribution channels, improving ASO/SEO/social/referrals, diagnosing weak traction or retention, evaluating product-market fit, or turning product metrics into a prioritized marketing plan. Use $indie-idea-discovery first when no concrete opportunity has been selected.
+description: Validate demand and plan launch or growth for a selected indie product opportunity. Use for customer research, channel experiments, traction or retention diagnosis, and marketing decisions grounded in unit economics.
 ---
 
 # Indie Product Marketing
 
 Build an evidence-backed route from a customer problem to retained, profitable demand. Treat marketing as customer learning and distribution design across the whole product lifecycle, not as promotion added after development.
 
-If the user has no concrete opportunity, wants a broad list of app ideas, or needs to discover problems worth solving, invoke `$indie-idea-discovery` first. Start this skill once a customer-problem hypothesis or product concept exists.
+If the user has no concrete opportunity, wants a broad list of app ideas, or needs to discover problems worth solving, use `$indie-idea-discovery` if available to establish a customer-problem hypothesis or product concept. Carry that context into any validation or marketing work already requested.
 
 ## Choose the operating mode
 
@@ -44,7 +44,7 @@ Read [references/evidence-base.md](references/evidence-base.md) when validating 
 
 ## Build the product-market thesis
 
-Write a one-page thesis before recommending tactics:
+Reuse an existing product-market thesis. Establish or clarify the parts that affect the requested decision before recommending tactics:
 
 - **Customer** — one narrow segment and the situation that triggers action.
 - **Job and pain** — what progress they seek, current friction, urgency, and frequency.
@@ -56,9 +56,11 @@ Write a one-page thesis before recommending tactics:
 - **Economic premise** — revenue model, gross contribution, service cost, and affordable acquisition cost.
 - **Riskiest assumption** — the single belief most likely to invalidate the business.
 
-Use the marketing brief in `assets/marketing-brief.md` when the user wants a reusable artifact.
+For broad strategy work, use the marketing brief in `assets/marketing-brief.md` to capture a reusable thesis. Keep a narrow channel or metric diagnosis focused on its relevant assumptions.
 
 ## Route by lifecycle
+
+Apply the guidance for the product's current stage and the requested scope. Use available customer evidence; do not make an interview or a full launch program a prerequisite for a bounded desk-research or experiment-design request. Prepare the requested artifacts and continue authorized work through verification; planned campaigns, proposed instrumentation, and observed outcomes are different evidence.
 
 ### Before building
 
@@ -72,11 +74,11 @@ Use the marketing brief in `assets/marketing-brief.md` when the user wants a reu
 ### Before launch
 
 1. Define the activation event and first-value path.
-2. Install source, funnel, cohort, retention, revenue, refund, and support measurement.
+2. Define measurement for the launch decision, covering the relevant source, funnel, cohort, retention, revenue, refund, and support signals. Install it when implementation is in scope.
 3. Recruit a small, concentrated seed cohort and observe them using the product.
 4. Fix severe onboarding, reliability, privacy, and value-delivery failures.
-5. Prepare one primary channel, one secondary channel, and one owned follow-up channel.
-6. Schedule launch-day actions and at least four weeks of follow-up experiments.
+5. Choose a primary channel; add secondary or owned follow-up channels when audience access and operating capacity justify them.
+6. Plan launch actions and follow-up experiments over a window that can reveal the product's activation and natural usage cycle.
 
 ### After launch
 
