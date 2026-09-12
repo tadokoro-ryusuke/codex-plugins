@@ -1,6 +1,6 @@
 ---
 name: dev-checkpoint
-description: "Checkpoint and handoff workflow for resumable development state. Use to checkpoint, pause, resume, hand off, summarize progress, capture evidence, or record next actions."
+description: "Record or restore durable development state when pausing, resuming, or handing off work."
 ---
 
 # Dev Checkpoint
@@ -9,7 +9,7 @@ Use this skill when work needs a durable handoff or resumable state.
 
 ## Workflow
 
-1. Read `../dev-workflow/references/orchestration.md`.
+1. Read `../dev-workflow/references/orchestration.md` only when coordinating a multi-step plan or handoff; a focused task can use the matching reference below directly.
 2. Read the Checkpoints section in `../dev-workflow/references/e2e-checkpoint.md`.
 3. If work has a `docs/plans/task-*.md` plan, update that plan's status, completion contract, progress log, decision log, blockers, evidence, and current next action. Keep one durable source of execution state.
 4. If no plan exists or the user explicitly asks for a standalone handoff, capture goal, completed steps, files changed, commands run, results, blockers, decisions, and next actions from `assets/checkpoint-template.md`.

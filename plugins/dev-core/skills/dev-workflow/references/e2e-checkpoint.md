@@ -5,13 +5,13 @@ Use this for Playwright E2E work, progress snapshots, and resuming longer tasks.
 ## Playwright E2E
 
 1. Confirm tests are not pointed at production systems.
-2. Check Playwright availability with `npx playwright --version` or project docs.
+2. Resolve Playwright from the project scripts or installed local environment; do not trigger an implicit download to check availability.
 3. Prefer existing test commands from `package.json`.
 4. Use headed or debug mode only when the user asks or visual diagnosis is needed.
-5. For new tests, prefer Page Object Model or established project patterns.
+5. Follow established project test patterns; introduce Page Objects only when repeated interactions justify them.
 6. Report failures with test name, file, error, artifact path, and likely cause.
 
-Common commands:
+Examples for a project with Playwright already installed; adapt to its package manager:
 
 ```bash
 npx playwright test

@@ -1,90 +1,56 @@
 ---
 name: backend-patterns
-description: "Framework-agnostic backend patterns: REST API design, response/Result shapes, Repository, use-case service layer, caching, transactions. Reference skill loaded by dev-core workflow skills; invoke explicitly with $backend-patterns when implementing or reviewing APIs, data access, or domain logic."
+description: "Backend implementation patterns for API, data-access, and domain changes. Use when implementing or reviewing these boundaries."
 ---
 
 # Backend Patterns
 
-Framework-agnostic backend conventions. For ORM- or framework-specific APIs (Eloquent, Prisma, etc.), consult the project's `AGENTS.md`, official docs, or available MCP connectors instead of guessing.
+Follow the target repository's contracts, language idioms, and architecture. Use
+these patterns where they solve the current problem; do not introduce a new
+layering scheme for a focused change. Check project dependencies and official
+framework documentation before choosing concrete APIs.
 
-## API design
+## API contracts
 
-RESTful endpoints:
+Preserve established endpoint naming, response shapes, and status-code semantics.
+Validate untrusted inputs and enforce authorization at the server boundary.
+Keep success and error responses unambiguous; use a discriminated union when the
+project has no established shape. Do not replace an existing public contract merely
+to match an example.
 
-```
-GET    /api/users          # list
-GET    /api/users/:id      # detail
-POST   /api/users          # create
-PUT    /api/users/:id      # update
-DELETE /api/users/:id      # delete
-```
+## Domain and persistence boundaries
 
-Response shape — discriminated union, no mixed success/error payloads:
+Keep business policy independent of volatile infrastructure when substitution,
+testing, or multiple adapters make that boundary useful. Use the existing service
+or use-case shape; a class with a single `execute` method is an option, not a rule.
+Introduce a repository interface when it provides a meaningful domain boundary,
+not as a mandatory wrapper around every ORM call.
 
-```typescript
-type ApiResponse<T> =
-  | { success: true; data: T }
-  | { success: false; error: { code: string; message: string } };
-```
+Return expected failures using the language's established mechanism. Use Rust's
+native `Result` and Go's `(T, error)`; use dedicated exceptions or established
+structured returns in Python. At serialization boundaries such as Tauri commands,
+map domain errors to a serializable public error without leaking internal details.
+For TypeScript, follow the project's Result or exception convention rather than
+adding a competing one.
 
-Status codes: 200 OK | 201 created | 400 validation | 401 authentication | 403 authorization | 404 not found | 500 server error.
+## Transactions and external effects
 
-## Repository pattern
+Group writes that must succeed atomically in a transaction. Define the boundary
+from the business invariant rather than wrapping unrelated writes together.
+Use consistent lock ordering where locking is required, and inspect the ORM's
+actual transaction semantics.
 
-```typescript
-interface Repository<T, ID> {
-  findById(id: ID): Promise<T | null>;
-  findAll(): Promise<T[]>;
-  save(entity: T): Promise<T>;
-  delete(id: ID): Promise<void>;
-}
-```
+A database transaction does not make an email, payment, or remote API call atomic.
+Keep remote latency outside held database locks; use the project's outbox,
+idempotency, or compensation mechanism when durable cross-system effects matter.
+Do not report all effects as completed when only the database commit succeeded.
 
-Concrete implementations depend on the ORM (Eloquent, Prisma, TypeORM, …). Domain code depends only on the interface (dependency inversion).
+## Caching
 
-## Service layer (use cases)
+For cache-aside behavior, check the cache, read the source on a miss, and populate
+the cache. Define invalidation on writes and TTLs for the use case. Include tenant,
+identity, or permission scope in keys where it affects the result; do not let cached
+authorization-sensitive data cross those boundaries.
 
-One use case = one class with a single `execute`. Dependencies injected as abstractions:
-
-```typescript
-class CreateUserUseCase {
-  constructor(
-    private userRepository: UserRepository,
-    private emailService: EmailService
-  ) {}
-
-  async execute(input: CreateUserInput): Promise<Result<User>> {
-    const validated = CreateUserSchema.parse(input);
-    const user = User.create(validated);
-    const saved = await this.userRepository.save(user);
-    await this.emailService.sendWelcome(saved.email);
-    return ok(saved);
-  }
-}
-```
-
-## Result pattern
-
-Return expected failures as values; reserve exceptions (or panics) for the unexpected.
-
-**If the language has a native Result mechanism, use it — do not define your own**: Rust has `std::result::Result` + `thiserror` (at a Tauri command boundary, convert to a `Serialize`-able error type); Go has `(T, error)`. Python's ecosystem is exception-first: model expected business failures as dedicated exception classes or structured return values, and adopt a Result library only with team agreement. The definition below is for TS/JS-style languages with no standard Result:
-
-```typescript
-type Result<T, E = Error> =
-  | { success: true; value: T }
-  | { success: false; error: E };
-
-const ok = <T>(value: T): Result<T, never> => ({ success: true, value });
-const err = <E>(error: E): Result<never, E> => ({ success: false, error });
-```
-
-## Caching (cache-aside)
-
-1. Check cache → 2. on miss, read DB → 3. populate cache.
-Invalidate on writes; set TTLs per use case rather than one global value.
-
-## Transactions
-
-- Wrap every multi-write operation in a transaction (ACID).
-- Prevent deadlocks with a consistent lock ordering.
-- The concrete API is framework-specific (`DB::transaction()`, `prisma.$transaction()`, …) — check the project.
+Use `$best-practices` for TDD and shared coding standards, or `$test-design` when the
+change needs a test strategy beyond the existing suite.

@@ -1,6 +1,6 @@
 ---
 name: dev-debug
-description: "Root-cause debugging for errors, failing tests, regressions, flakes, logs, and incidents. Use to debug, investigate, diagnose, fix errors, or explain failures."
+description: "Diagnose and fix software failures when root cause is unclear or a regression needs investigation."
 ---
 
 # Dev Debug
@@ -9,7 +9,7 @@ Use this skill to investigate before fixing.
 
 ## Workflow
 
-1. Read `../dev-workflow/references/orchestration.md`.
+1. Read `../dev-workflow/references/orchestration.md` only when coordinating a multi-step plan or handoff; a focused task can use the matching reference below directly.
 2. Read `../dev-workflow/references/systematic-debugging.md`.
 3. Reproduce or inspect the failure before editing when possible.
 4. Form independent hypotheses and verify them with evidence.

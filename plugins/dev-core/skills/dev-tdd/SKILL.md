@@ -1,6 +1,6 @@
 ---
 name: dev-tdd
-description: "Standalone test-first workflow for one behavior, bug fix, or small feature. Use for TDD, regression tests, focused implementation, Red, Green, Refactor, and verification."
+description: "Implement one behavior or regression with a test-first Red/Green/Refactor cycle."
 ---
 
 # Dev TDD

@@ -72,7 +72,67 @@ class ExecutionRoleTests(unittest.TestCase):
         self.assertEqual(result.stdout, "")
         self.assertTrue(result.stderr.strip())
 
-    def test_bundled_implementer_defaults_resolve_to_sol_spawn_request(self):
+    def test_bundled_parent_recommends_astra_high(self):
+        profile = json.loads((RESOLVER.parent.parent / "assets/execution-profile.json").read_text())
+        self.assertEqual(profile["parent_recommendation"],
+                         {"model": "gpt-6-astra", "reasoning_effort": "high"})
+
+    def test_bundled_researcher_resolves_to_sol_medium_read_only(self):
+        result = self.run_resolver("--role", "researcher", "--capabilities", str(self.capabilities))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {
+            "role": "researcher", "model": "gpt-5.6-sol", "reasoning_effort": "medium",
+            "write_policy": "read-only", "fork_turns": "none",
+        })
+
+    def test_legacy_custom_profile_does_not_inherit_bundled_researcher(self):
+        for override in ([], ["--model", "gpt-6-astra", "--effort", "high"]):
+            with self.subTest(override=override):
+                result = self.run_resolver("--role", "researcher", "--capabilities", str(self.capabilities),
+                                           "--profile", str(self.profile), *override)
+                self.assert_rejected(result)
+                self.assertIn("profile does not define role: researcher", result.stderr)
+
+    def test_custom_researcher_and_explicit_override_preserve_read_only(self):
+        profile = json.loads(self.profile.read_text())
+        profile["roles"]["researcher"] = {"model": "gpt-6-astra", "reasoning_effort": "high",
+                                         "write_policy": "read-only"}
+        self.profile.write_text(json.dumps(profile))
+        for override, expected in (([], ("gpt-6-astra", "high")),
+                                   (["--model", "gpt-5.6-sol", "--effort", "low"],
+                                    ("gpt-5.6-sol", "low"))):
+            with self.subTest(override=override):
+                result = self.run_resolver("--role", "researcher", "--capabilities", str(self.capabilities),
+                                           "--profile", str(self.profile), *override)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                output = json.loads(result.stdout)
+                self.assertEqual((output["model"], output["reasoning_effort"]), expected)
+                self.assertEqual(output["write_policy"], "read-only")
+
+    def test_researcher_unavailable_model_or_effort_never_falls_back(self):
+        for models, message in (({"gpt-6-astra": ["high"]}, "model is unavailable: gpt-5.6-sol"),
+                                ({"gpt-5.6-sol": ["low"], "gpt-6-astra": ["medium"]},
+                                 "effort is unavailable for gpt-5.6-sol: medium")):
+            with self.subTest(models=models):
+                capabilities = self.write_json("research-capabilities.json", {
+                    "can_select_model": True, "can_select_effort": True, "models": models})
+                result = self.run_resolver("--role", "researcher", "--capabilities", str(capabilities))
+                self.assert_rejected(result)
+                self.assertIn(message, result.stderr)
+
+    def test_optional_researcher_is_validated_when_present(self):
+        for value in (None, {"model": "gpt-5.6-sol", "reasoning_effort": "medium",
+                             "write_policy": "scoped-write"}):
+            with self.subTest(value=value):
+                profile = json.loads(self.profile.read_text())
+                profile["roles"]["researcher"] = value
+                path = self.write_json("bad-researcher.json", profile)
+                result = self.run_resolver("--role", "implementer", "--capabilities", str(self.capabilities),
+                                           "--profile", str(path))
+                self.assert_rejected(result)
+                self.assertIn("researcher", result.stderr)
+
+    def test_bundled_implementer_defaults_resolve_to_astra_high_spawn_request(self):
         result = self.run_resolver(
             "--role",
             "implementer",
@@ -85,8 +145,8 @@ class ExecutionRoleTests(unittest.TestCase):
             json.loads(result.stdout),
             {
                 "role": "implementer",
-                "model": "gpt-5.6-sol",
-                "reasoning_effort": "medium",
+                "model": "gpt-6-astra",
+                "reasoning_effort": "high",
                 "write_policy": "scoped-write",
                 "fork_turns": "none",
             },
@@ -116,51 +176,64 @@ class ExecutionRoleTests(unittest.TestCase):
             },
         )
 
-    def test_bundled_implementer_rejects_astra_only_capabilities_without_fallback(self):
-        astra_only = self.write_json(
-            "astra-only.json",
+    def test_bundled_implementer_rejects_sol_only_capabilities_without_fallback(self):
+        sol_only = self.write_json(
+            "sol-only.json",
             {
                 "can_select_model": True,
                 "can_select_effort": True,
-                "models": {"gpt-6-astra": ["medium", "high"]},
+                "models": {"gpt-5.6-sol": ["medium", "high"]},
             },
         )
         result = self.run_resolver(
             "--role",
             "implementer",
             "--capabilities",
-            str(astra_only),
+            str(sol_only),
         )
 
         self.assert_rejected(result)
-        self.assertIn("model is unavailable: gpt-5.6-sol", result.stderr)
+        self.assertIn("model is unavailable: gpt-6-astra", result.stderr)
 
-    def test_sol_implementation_does_not_require_astra_availability(self):
-        sol_only = self.write_json(
-            "sol-only.json",
+    def test_bundled_roles_do_not_require_sol_availability(self):
+        astra_only = self.write_json(
+            "astra-only.json",
             {
                 "can_select_model": True,
                 "can_select_effort": True,
-                "models": {"gpt-5.6-sol": ["medium"]},
+                "models": {"gpt-6-astra": ["high"]},
             },
         )
-        implementation = self.run_resolver(
-            "--role", "implementer", "--capabilities", str(sol_only)
-        )
-        self.assertEqual(implementation.returncode, 0, implementation.stderr)
-        self.assertEqual(json.loads(implementation.stdout)["model"], "gpt-5.6-sol")
-        review = self.run_resolver(
-            "--role", "reviewer", "--capabilities", str(sol_only)
-        )
-        self.assert_rejected(review)
-        self.assertIn("model is unavailable: gpt-6-astra", review.stderr)
+        for role in ("implementer", "reviewer"):
+            with self.subTest(role=role):
+                result = self.run_resolver(
+                    "--role", role, "--capabilities", str(astra_only)
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                output = json.loads(result.stdout)
+                self.assertEqual((output["model"], output["reasoning_effort"]),
+                                 ("gpt-6-astra", "high"))
 
-    def test_custom_profile_implementer_overrides_bundled_sol_default(self):
-        profile = json.loads(self.profile.read_text(encoding="utf-8"))
-        profile["roles"]["implementer"].update(
-            model="gpt-6-astra", reasoning_effort="high"
+    def test_bundled_implementer_rejects_missing_high_effort_without_downgrade(self):
+        medium_only = self.write_json(
+            "medium-only.json",
+            {
+                "can_select_model": True,
+                "can_select_effort": True,
+                "models": {
+                    "gpt-6-astra": ["medium"],
+                    "gpt-5.6-sol": ["medium", "high"],
+                },
+            },
         )
-        self.profile.write_text(json.dumps(profile), encoding="utf-8")
+        result = self.run_resolver(
+            "--role", "implementer", "--capabilities", str(medium_only)
+        )
+
+        self.assert_rejected(result)
+        self.assertIn("effort is unavailable for gpt-6-astra: high", result.stderr)
+
+    def test_custom_profile_implementer_overrides_bundled_astra_high_default(self):
         result = self.run_resolver(
             "--role",
             "implementer",
@@ -175,8 +248,8 @@ class ExecutionRoleTests(unittest.TestCase):
             json.loads(result.stdout),
             {
                 "role": "implementer",
-                "model": "gpt-6-astra",
-                "reasoning_effort": "high",
+                "model": "gpt-5.6-sol",
+                "reasoning_effort": "medium",
                 "write_policy": "scoped-write",
                 "fork_turns": "none",
             },

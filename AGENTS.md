@@ -14,12 +14,14 @@ This repository is a Codex plugin marketplace source. Keep it Codex-native.
 
 - Write all skill content in English; imperative form.
 - Skill frontmatter: `name` and `description` (optional `metadata`, `license`, `compatibility` are tolerated; nothing else). The description must state what the skill does AND when to use it, with trigger words up front.
-- Keep `SKILL.md` under 500 lines; push detail into `references/` (one level deep) and deterministic logic into tested `scripts/`.
+- Keep descriptions short and specific to the actual workflow; omit capability catalogs and generic trigger words that attract unrelated work.
+- Keep `SKILL.md` under 500 lines; use conditional links for substantial mode-specific detail in `references/` (one level deep) and deterministic logic in tested `scripts/`. Keep useful domain constraints; avoid generic tutorials and fixed step counts without a correctness reason.
+- Define completion and reuse the user's existing authorization. A skill must not stop an authorized implementation at a planning or first-draft stage; preserve real external-action and sign-off boundaries.
 - Every skill ships `agents/openai.yaml` with `display_name`, `short_description`, and a `default_prompt` that mentions `$<skill-name>`. Pure reference skills set `policy.allow_implicit_invocation: false` to keep the always-on skill list inside Codex's ~8,000 character budget.
 - Hook handlers must be `"type": "command"` — prompt handlers are parsed but skipped by Codex. Test hook scripts by piping sample payloads before committing.
 - Keep `plugin.json` paths relative (`./`), `skills: "./skills/"`, and versions strict semver. Bump the version on every released change.
 - Keep marketplace `source.path` as `./plugins/<plugin-name>` and include `policy` and `category` on every entry.
-- Run `node scripts/validate-codex-plugins.mjs` before handing back changes.
+- Run `node scripts/validate-codex-plugins.mjs` before handing back changes. Use `node scripts/validate-skill-evals.mjs` for changed behavior cases. The offline tests in `scripts/tests/` use disposable fixtures and mocked services; run them and repair in-scope failures without a fresh approval at each step. Schema/fixture validation is not a live skill-behavior evaluation.
 
 ## Sibling Repository (cc-plugins)
 

@@ -19,7 +19,7 @@ Do not fix before root-cause investigation. A quick patch without a confirmed ca
 
 ### 2. Hypothesize
 
-Write three independent hypotheses. For each:
+Form plausible hypotheses from the evidence. Start with the strongest explanation; add alternatives when evidence is ambiguous or contradicts it. For each:
 
 - What would be true if this hypothesis is correct.
 - How to test it.
@@ -36,7 +36,7 @@ Write three independent hypotheses. For each:
 
 - Add a regression test when practical.
 - Make the smallest root-cause fix.
-- Run focused verification first, then broader checks.
+- Run focused verification; broaden only for affected shared behavior or unresolved risk.
 - Capture the lesson with `continuous-learning` when the pattern can recur.
 
 ## Three Strikes Rule

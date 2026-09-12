@@ -1,40 +1,31 @@
 ---
 name: dev-workflow
-description: "Shared dev-core orchestration for multi-phase coding work. Use for phase gates, planning, implementation, verification, review, debugging, handoff, or fallback when no narrower dev-* skill applies."
+description: "Coordinate multi-phase development when no narrower dev-core workflow fits."
 ---
 
 # Dev Workflow
 
 Use this skill as the shared orchestrator for the narrower dev-core entrypoint skills. Prefer a specific skill when the user intent is clear.
 
-## Start Here
+## Choose the needed workflow
 
-1. Classify the user request.
-2. Read `references/orchestration.md` for any multi-phase task.
-3. Read only the matching workflow reference below.
-4. Combine it with `$verification-loop` or `$codex-collab` when the task needs that workflow. Load the reference skills `$best-practices`, `$frontend-patterns`, or `$backend-patterns` explicitly when their standards matter — they are not injected implicitly.
+Use one matching entrypoint or reference. Load orchestration for coordination,
+shared ownership, or durable multi-step state; do not add it to a focused review,
+diagnosis, or test cycle solely because this skill is available.
 
-## Workflow Map
+| Task | Entrypoint | Supporting guidance |
+| --- | --- | --- |
+| Coordinate a multi-step plan | `dev-execute` | `references/orchestration.md` |
+| Define requirements and acceptance | `dev-task` | `references/task-planning.md` |
+| Implement one test-driven behavior | `dev-tdd` | `references/tdd-implementation.md` |
+| Investigate a failure | `dev-debug` | `references/systematic-debugging.md` |
+| Review or refactor a change | `dev-review` or `dev-refactor` | `references/review-refactor-verify.md` |
+| Test browser behavior or capture a handoff | `dev-e2e` or `dev-checkpoint` | Matching section of `references/e2e-checkpoint.md` |
 
-| User asks for | Read |
-| --- | --- |
-| Multi-phase implementation, phase gates, handoff, state tracking | `references/orchestration.md` |
-| Requirement shaping, BDD scenarios, TDD plan, issue-ready plan | `references/task-planning.md` |
-| Execute an existing plan, TDD cycle, Red/Green/Refactor/Commit | `references/tdd-implementation.md` |
-| Debug an error, root cause analysis, repeated failed fixes | `references/systematic-debugging.md` |
-| Refactor, review, final verification, PR readiness | `references/review-refactor-verify.md` |
-| Playwright E2E, checkpoint, resume work | `references/e2e-checkpoint.md` |
-
-## Narrow Entrypoints
-
-- Use `dev-task` for task planning.
-- Use `dev-execute` for executing a plan.
-- Use `dev-debug` for root-cause debugging.
-- Use `dev-tdd` for a standalone TDD cycle.
-- Use `dev-review` for a dev-core code review.
-- Use `dev-refactor` for behavior-preserving refactoring.
-- Use `dev-e2e` for Playwright E2E work.
-- Use `dev-checkpoint` for resumable handoff notes.
+Use `$verification-loop` when selecting completion checks, and `$codex-collab`
+when the work benefits from authorized delegation. Load reference skills such as
+`$best-practices`, `$frontend-patterns`, or `$backend-patterns` only for decisions
+that need those standards; they are not prerequisites for every edit.
 
 ## Codex-Specific Rules
 

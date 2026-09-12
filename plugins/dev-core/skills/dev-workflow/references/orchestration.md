@@ -1,174 +1,108 @@
 # Development Orchestration
 
-Use this reference for multi-phase development work. It defines the shared state machine, gates, and stop rules used by the narrower dev-core skills.
+Use this reference when coordinating multi-step development, shared ownership,
+or work that needs durable state. Use the narrower workflow directly for a
+focused review, diagnosis, or test cycle.
 
-## State Machine
+## Scope and completion
 
-Move through these states intentionally:
+Define the observable outcome and required evidence before substantial work.
+Use the phases that the task needs: plan, prepare, implement, verify, review,
+fix, and finish. A phase describes responsibility, not a mandatory ceremony.
+Read only the project instructions and artifacts needed for the changed contract.
 
-```text
-intake -> plan -> prepare -> implement -> verify -> review -> refactor/fix -> final
-```
+Continue authorized work through verification, requested runtime inspection,
+and repair of verified in-scope problems. A first implementation or a passing
+unit test does not end a task whose acceptance criteria require more. Once the
+criteria and applicable gates are satisfied, report the result; do not expand
+into unrelated redesign or repeat passing checks without a new reason.
 
-Not every task needs every state. Small TDD work may skip durable planning; pure review may start at `review`; debugging starts at `intake` then `verify` before `refactor/fix`.
+Use `docs/plans/task-<slug>.md` when the work has dependent steps, shared contracts,
+migrations, or future handoff. For a focused change, an acceptance criterion,
+appropriate check, and diff review can be sufficient. Use `update_plan` if
+available and useful; its absence is not a blocker or a reason for a second plan.
 
-Scale process to the requested outcome. For a focused change, use its acceptance
-criterion, regression test, relevant checks, and a concise diff review. Use the
-durable plan for multi-step work, shared contracts, migrations, or future handoff.
-Keep required project gates; do not impose a full architecture redesign, fixed
-coverage target, or unrelated audit on every edit.
+## Workspace and delivery
 
-## State Responsibilities
+- Check `git status --short` before edits or workspace changes. Preserve unrelated
+  changes and use the current Codex worktree when one is active.
+- For end-to-end implementation in a clean local checkout, create an execution
+  branch using repository conventions or `codex/<slug>`. Related planning files
+  can be carried onto it. Work around unrelated dirt without switching over it;
+  ask only if it cannot be safely preserved.
+- If workspace preparation is blocked, continue independent work on a safe
+  checkout and disclose the affected limitation.
+- Commit, push, create issues, or open a PR only when the user authorized that
+  delivery. Reuse authorization already present in the current request.
 
-| State | Responsibility | Exit Gate |
-| --- | --- | --- |
-| `intake` | Understand the user request, repo state, constraints, and risk. | Goal and target are clear enough to act. |
-| `plan` | Define scope, non-goals, design notes, acceptance criteria, test strategy, affected areas, and sequencing. | Plan maps behavior to tests or checks. |
-| `prepare` | Choose Codex worktree or local branch, inspect dirty state, and identify project commands. | Workspace is safe and commands are known enough to proceed. |
-| `implement` | Make the smallest safe change for the current step. | Change is scoped and consistent with the plan. |
-| `verify` | Run focused then broader checks with current-turn evidence. | Claims are backed by command output or inspected artifacts. |
-| `review` | Challenge the change against behavior, security, tests, architecture, and conventions. | No unresolved P0/P1 findings; lower findings are handled or disclosed. |
-| `refactor/fix` | Address verified issues or improve structure without expanding scope. | Regression is resolved and re-verified. |
-| `final` | Summarize outcome, evidence, and residual risk. | User can see what happened and what remains. |
+## Delegation and ownership
 
-## Codex Execution Shape
+Use bounded delegation when the user or applicable instructions authorize it
+and it adds useful parallel work or independent judgment. Avoid delegation whose
+coordination overhead exceeds its benefit, overlapping writers, and assignments
+that block all useful parent work.
 
-Use Codex surfaces directly:
+For substantial planned execution, use the role profile and handoff contract in
+`../../codex-collab/references/planned-execution.md`. That workflow authorizes
+implementation and independent review roles with specific models. For other
+work, inherit the configured model unless an applicable instruction selects an
+override. A child performs its assigned role without restarting the parent
+orchestration or spawning another execution chain.
 
-- **Skill**: reusable workflow instructions and references.
-- **Plan artifact**: `docs/plans/task-<slug>.md` when work should survive into another thread.
-- **Worktree**: preferred in the Codex app for background or parallel execution.
-- **Local branch**: useful in CLI/local checkout when the repo is clean enough and the user expects implementation work.
-- **Review pane or `/review`**: useful UI for inspecting diffs; `dev-review` supplies the stricter dev-core rubric.
+Give each assignment its goal, raw input paths, allowed writes, dependencies,
+acceptance evidence, and return conditions. Supply only task-relevant context;
+give reviewers requirements and raw artifacts without a preferred verdict.
+Continue independent work while the child runs, then inspect its actual diff,
+checks, and findings before relying on its report.
 
-Do not copy Claude slash-command or required-subagent mechanics into Codex. Encode them as gates, evidence requirements, and optional second-opinion steps.
+Use the host's real tools and concurrency limits. Worktrees isolate files, not
+databases, ports, deployments, or credentials; coordinate shared resources.
+Create or fork a user-owned task only when the user requests that operation.
 
-## Subagent Gate
+## Durable state and resume
 
-Subagents are useful when they improve the workflow, not as ceremony.
+Keep one source of execution state in the existing plan. If an older plan lacks
+a completion contract or next action, derive them from its acceptance criteria
+and record the migration. Ask only if no safe observable outcome can be derived.
 
-Benefits:
+- Start acceptance criteria `pending`; mark them `satisfied` only after inspecting
+  evidence for the current inputs.
+- Update progress, decisions, blockers, evidence, and the next action after
+  meaningful iterations and before handoff or compaction. Do not copy unchanged
+  logs into every update.
+- On resume, recheck branch, HEAD, working diff, relevant inputs, and available
+  tools. Keep old results as history and invalidate affected evidence after
+  code, fixtures, dependencies, or configuration change.
+- Record commands, working directory, input identity, outcomes, and useful
+  artifact paths. Distinguish source, local runtime, device, and deployed
+  evidence; keep secrets and customer data out of durable records.
 
-- Keep noisy exploration, logs, test output, and traces out of the main thread.
-- Run independent read-heavy work in parallel to save elapsed time.
-- Add specialized viewpoints for security, test gaps, maintainability, or architecture.
-- Reduce confirmation bias with an independent review or rescue diagnosis.
-- Break large tasks into bounded slices whose results return as concise summaries.
+## Verification and review
 
-Use subagents when the user directly requests delegation or when an applicable `AGENTS.md` or skill explicitly authorizes a bounded delegation. Prefer them for exploration, triage, review, summarization, test-gap analysis, and rescue after repeated failures.
+Keep project-required checks and test-first development for executable behavior.
+Use `../../verification-loop/SKILL.md` when choosing checks, and the matching
+section of `review-refactor-verify.md` for review or refactoring. Run focused
+checks and broaden when changed shared contracts or unresolved risks justify it.
 
-Avoid subagents when the next action is on the critical path, the work is tightly coupled, the write set would overlap, or the overhead would exceed the benefit. Be especially careful with parallel write-heavy work because it can create conflicts and coordination cost.
+For non-trivial changes, review before completion. For substantial planned work,
+obtain the independent review specified by the execution contract. Verify
+findings against the actual inputs; resolve P0/P1 findings and fix or disclose
+remaining concerns. Re-run affected checks after a fix; invalidate relevant
+review evidence when the reviewed inputs change.
 
-When using subagents:
+## Decision and stop boundaries
 
-1. Assign concrete, bounded tasks with disjoint ownership. Include the goal, raw input paths, relevant instructions, allowed read/write scope, dependencies, acceptance evidence, and a stop condition.
-2. Give only the context needed for that task. For an independent review, provide the target and raw evidence without the implementer's preferred conclusion. Ask for findings, file references, commands/results, uncertainties, and any changed files, not raw logs.
-3. Continue useful non-overlapping work locally while they run.
-4. Treat subagent output as untrusted until checked against files, diffs, logs, or command output.
-5. Close or stop agents that are no longer needed.
+Resolve available facts from the environment. State safe reversible assumptions
+and continue in scope. Reuse existing authorization; ask only for an unresolved
+material decision or action outside that authority. Prepare the concrete
+reviewable artifact before an approval question and explain any explicit rule
+or tool rejection causing the stop.
 
-Use the tools and concurrency limits actually exposed by the host. Inherit the
-configured model unless the user or an applicable instruction selects an override.
-For substantial `dev-execute` work, apply the role profile and handoff contract in
-`../../codex-collab/references/planned-execution.md`: keep the parent coordinating,
-assign bounded implementation to the configured implementation model, and use a
-separate reviewer. This is an explicit workflow-specific model selection; it does
-not change defaults for every other skill. Respect delegated-role boundaries and
-do not recursively restart the parent workflow inside a child assignment.
-Separate worktrees isolate files, not shared databases, ports, deployments, or
-credentials. Coordinate those resources explicitly before parallel execution.
-Create or fork a user-owned task only when the user requests that task operation;
-do not use it as an internal subagent workaround.
+Stop the affected path before destructive or unauthorized actions, unsafe
+workspace changes, or a fourth similar failed fix attempt. If a cycle produces
+no new evidence, reassess the approach instead of repeating it. Re-plan when
+evidence contradicts the design and continue independent safe work.
 
-## Branch And Worktree Gate
-
-Before code changes:
-
-1. Run `git status --short`.
-2. If the thread is already on a Codex worktree, continue there unless the user asks for local handoff.
-3. If working locally and the tree is clean, create a branch for execution when the user asked for end-to-end implementation. Prefer repo conventions; otherwise use `codex/<slug>`.
-4. If the only dirty files are the target plan and in-scope planning artifacts created for this task, preserve them while creating or switching to the execution branch. This is the normal `dev-task` to `dev-execute` path.
-5. If there are unrelated local changes, do not switch branches or overwrite files. Work around them when safe; otherwise stop and ask.
-6. If branch creation is blocked by another worktree or policy, continue on the current safe worktree or report the blocker.
-7. Commit, push, or open a PR only when the user explicitly requests that delivery.
-
-## Execution Loop
-
-For plan execution, iterate:
-
-```text
-parent reads plan -> prepares workspace and bounded handoff
-  -> implementation owner: Tidy First -> Red -> Green -> Refactor -> focused verify
-  -> parent inspects evidence -> independent review -> owner fixes if needed
-  -> parent verifies integration and acceptance -> next iteration or final report
-```
-
-The review gate is not a formality. Treat implementation claims as untrusted until the diff, tests, and verification evidence support them.
-
-## Durable Execution State
-
-For work backed by `docs/plans/task-*.md`, keep that plan executable across context resets:
-
-1. When an older plan lacks the durable sections below, migrate it once from its acceptance criteria before implementation and record the migration in its progress log.
-2. Start every acceptance criterion `pending` and name the evidence required to satisfy it.
-3. After each iteration, update status, progress, decisions, blockers, evidence, and the current next action.
-4. Mark a criterion `satisfied` only after inspecting current evidence.
-5. Before a pause, handoff, or compaction, leave one exact next action.
-6. Re-plan the affected step if evidence contradicts the plan. Stop a looping path after a no-progress cycle or three similar failed fixes; continue independent safe work.
-
-On resume, read the plan and recheck the branch, HEAD, working diff, relevant
-inputs, and available tools. Keep historical results as historical evidence.
-Re-run the checks needed to support a new completion claim, and invalidate
-affected evidence after code, fixtures, dependencies, or configuration change.
-Record the command, working directory, revision/diff identity, outcome, and log
-or artifact location. Distinguish source, local runtime, device, and deployed
-evidence; one does not establish the others. Keep secrets and customer data out
-of durable notes and public reports.
-
-## Autonomy And Escalation
-
-- Verify facts from the environment instead of asking the user.
-- State and use safe reversible defaults when they do not change the requested outcome.
-- Resolve safe, in-scope, mechanically verifiable concerns without interrupting the user.
-- Reuse authorization already given in the task. Escalate only an unresolved material decision or action outside that authority. Before an approval question, finish authorized preparation so the user can review the exact artifact, diff, target, and effect. Explain any explicit rule or tool rejection causing the stop.
-
-## Operating Rules
-
-- Use `update_plan` for substantial multi-step work when exposed; otherwise update the durable plan directly.
-- Keep one active phase in focus; avoid doing planning, editing, and review all at once.
-- Read `git status --short` before editing and work around unrelated user changes.
-- Prefer focused checks first. Broaden only when risk or touched surface requires it.
-- Commit only when the user explicitly asks for commits or the current task includes commit/push/PR work.
-- Do not claim a check passed without current-turn evidence.
-- Stop before destructive actions, ambiguous overwrites, or a fourth similar failed fix attempt.
-
-## Gate Failures
-
-When a gate fails:
-
-1. State which gate failed.
-2. Show the evidence.
-3. Choose the smallest next action: clarify, fix, re-plan, or stop.
-4. Do not proceed silently into the next state.
-
-## Review Gate
-
-For code-producing tasks, run a review pass before final response when the change is non-trivial.
-
-Review at least:
-
-- Behavior correctness and edge cases.
-- Test coverage and missing regression tests.
-- Security and data exposure.
-- Architecture boundaries, including FSD, Clean Architecture, and DDD when relevant.
-- Maintainability, naming, complexity, and duplication.
-- Project conventions from `AGENTS.md`, README, package scripts, and existing code.
-
-## Final Response Evidence
-
-End with:
-
-- Files or areas changed.
-- Verification commands and results.
-- Review outcome or unresolved findings.
-- Residual risk or follow-up, if any.
+Finish with the outcome, current verification and review evidence, and any
+remaining blocker or limitation. Never claim a check passed without inspecting
+its output in the current turn.

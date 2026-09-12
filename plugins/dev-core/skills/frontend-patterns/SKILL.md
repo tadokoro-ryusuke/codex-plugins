@@ -1,90 +1,50 @@
 ---
 name: frontend-patterns
-description: "Web frontend patterns: component composition, props design, state management scope, schema-based forms, data fetching, performance. Principles are framework-agnostic; library examples are React/Vue-centric (also applies to a Tauri WebView frontend). Reference skill loaded by dev-core workflow skills; invoke explicitly with $frontend-patterns when building or reviewing UI code."
+description: "Web frontend implementation patterns for component, state, form, and data-flow changes. Use when implementing or reviewing UI code."
 ---
 
 # Frontend Patterns
 
-Web frontend conventions. Principles (composition, state scope, validation strategy) are framework-agnostic; library examples lean React/Vue and apply equally to a Tauri WebView frontend. For framework-specific APIs (React hooks, Vue Composition API, …), consult the project's `AGENTS.md`, official docs, or available MCP connectors instead of guessing.
+Follow the target frontend's component conventions, dependencies, and rendering
+model. These principles also apply to a Tauri WebView; they do not prescribe a
+framework migration or a redesign of the requested product.
 
-## Component design
+## Components and state
 
-Compose small single-responsibility components:
+Compose around cohesive behavior and stable interfaces. Split when ownership,
+reuse, or testability improves; line count alone is not a reason to split.
+Use typed props, constrained variants, and children or slots where composition
+helps. Keep state local, lift it only as far as sharing requires, and use the
+project's store for state that truly crosses those boundaries.
 
-```
-Card
-├── CardHeader  # title
-├── CardBody    # content
-└── CardFooter  # actions
-```
+## Forms and permissions
 
-Props:
+Reuse the project's validation and form tooling. Keep field rules consistent
+across applicable boundaries without exposing server-only logic to the client.
+Show actionable field errors and retain recoverable input after failure.
+Server-side validation and authorization remain authoritative; hidden controls
+and client validation alone do not enforce either contract.
 
-- Type-safe definitions (TypeScript / prop types); constrain `variant`, `size`, etc. with union types.
-- Defaults for optional props; use children/slots for composition.
+## Data flow
 
-Size: aim ≤ 200 lines per component, split above 300; extract logic into custom hooks / composables.
+Model loading, empty, error, and successful states as applicable. Preserve the
+project's caching and revalidation ownership so two layers do not fetch the same
+data independently. For optimistic updates, define failure recovery and reconcile
+with the server response.
 
-## State management
+Choose the fetching mechanism from the rendering model and trigger: server or
+router loading for route data, an event handler for user-triggered work, and the
+existing query library for cached client data. If a React effect owns a request,
+handle cleanup and stale responses. Do not force Server Components into a client
+SPA or add a query dependency just to satisfy a generic preference.
 
-- **Local state first**: keep state inside the component when it doesn't need to be shared.
-- **Lift minimally**: move to the parent only when sharing requires it.
-- **Global stores sparingly**: only truly global concerns (auth, theme).
-- Library choice (Pinia, Zustand, Jotai, …) follows the project — check `AGENTS.md`, README, and package metadata before introducing anything.
+## Performance and verification
 
-## Forms
+Measure the affected path before adding memoization, virtualization, or other
+complexity. Use route-level loading and appropriately sized media when the
+measured workload benefits. Preserve keyboard operation, focus behavior, and
+accessible error feedback through state changes.
 
-- Schema-based validation (zod / yup); define the schema once and reuse it.
-- Server-side validation is mandatory — client-side validation is UX only.
-- Show inline errors per field.
-
-```typescript
-import { z } from "zod";
-
-const UserSchema = z.object({
-  email: z.string().email(),
-  name: z.string().min(2).max(50),
-  password: z.string().min(8),
-});
-```
-
-Form library follows the project (VeeValidate, react-hook-form, …) — check before adding.
-
-## Data fetching
-
-- Always model the three states: loading / error / data.
-- Cache + revalidate with the project's query library (TanStack Query, SWR, Vue Query).
-- Optimistic updates where UX benefits; reconcile on server response.
-- SSR: fetch on the server for SEO and first paint; let the cache library own client refetching.
-
-### Avoid `useEffect` for data fetching (React)
-
-Fetching in `useEffect` breeds race conditions, double fetches, and missing cleanup. Prefer, in order:
-
-```typescript
-// Bad: fetching in useEffect
-useEffect(() => {
-  fetchData().then(setData);
-}, []);
-
-// Good 1: Server Component (fetch on the server)
-async function Component() {
-  const data = await fetchData();
-  return <div>{data}</div>;
-}
-
-// Good 2: event handler when the fetch is user-initiated
-function handleClick() {
-  fetchData().then(setData);
-}
-
-// Good 3: data-fetching library (cache + revalidation included)
-const { data } = useSWR("/api/data", fetcher);
-```
-
-## Performance
-
-- Memoize only expensive computations — avoid reflexive memoization.
-- Lazy-load by route and for heavy components.
-- Virtualize long lists.
-- Optimize images: lazy loading, correct sizes, framework facilities (e.g. next/image).
+Cover changed executable behavior with the project's tests. Use `$test-design`
+for test allocation decisions and `$verification-loop` for execution evidence;
+a local component test does not establish browser, device, or production behavior.

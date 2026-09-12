@@ -1,12 +1,13 @@
 ---
 name: verification-loop
-description: "Verify coding changes with current evidence from project build, type, lint, test, security, and diff checks. Use to validate work, prepare a PR, or assess completion; includes a fallback runner for common stacks."
+description: "Verify changed software using project checks when assessing completion or delivery readiness."
 ---
 
 # Verification Loop
 
-Choose checks that prove the requested change. Inspect AGENTS.md, CI, manifests,
-lockfiles, and existing project commands before running a generic command.
+Choose checks that prove the requested change. Use applicable project instructions
+and existing commands; consult CI, manifests, or lockfiles when command selection
+or environment details are unclear.
 Keep required repository gates. Run focused checks first, then broaden for the
 touched contracts and risks. Do not repeat a completed suite without a new
 change, failure, or unresolved concern.

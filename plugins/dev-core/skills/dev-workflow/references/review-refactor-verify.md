@@ -58,7 +58,10 @@ Approve only when:
 
 ## Verification
 
-Use `verification-loop` for the full check. Adapt commands to the project, but keep the evidence rule:
+Use `verification-loop` to choose applicable checks. Keep required project gates,
+and run additional checks only when the changed contract or unresolved risk
+justifies them. Once sufficient checks pass, finish the authorized work; do not
+repeat a suite without a relevant change or new failure. Consider:
 
 - Build: compile or bundle.
 - Type: TypeScript or language type checks.

@@ -1,6 +1,6 @@
 ---
 name: dev-refactor
-description: "Behavior-preserving refactoring workflow. Use to refactor, clean up, simplify, remove duplication, improve naming, reduce complexity, or prepare code for review."
+description: "Refactor existing code while preserving behavior when structural improvements are requested."
 ---
 
 # Dev Refactor
@@ -9,7 +9,7 @@ Use this skill for behavior-preserving improvements.
 
 ## Workflow
 
-1. Read `../dev-workflow/references/orchestration.md`.
+1. Read `../dev-workflow/references/orchestration.md` only when coordinating a multi-step plan or handoff; a focused task can use the matching reference below directly.
 2. Read the Refactoring section in `../dev-workflow/references/review-refactor-verify.md`.
 3. Establish current behavior with tests or code inspection.
 4. Make small refactor batches.

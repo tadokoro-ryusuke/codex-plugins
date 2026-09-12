@@ -2,7 +2,8 @@
 
 Use this contract when `dev-execute` coordinates substantial approved-plan work.
 Honor explicit user instructions over these defaults. Keep narrow standalone
-tasks and ordinary collaboration outside this automatic role assignment.
+tasks outside the full execution workflow. Use the optional research role only
+for the bounded information-gathering work described below.
 
 ## Resolve roles before dispatch
 
@@ -20,10 +21,9 @@ authorized preparation; do not edit internal runtime state to simulate a change.
 
 Use a task-authorized profile path when one is supplied; otherwise use the bundled
 profile. Apply an explicit model/effort override for the relevant role when the
-user or applicable project instruction requests it. With the bundled profile and
-no explicit implementation selection, the parent may also apply the difficult-work
-selection below. Do not install models or change personal configuration as part
-of resolution.
+user or applicable project instruction requests it. Preserve custom profiles and
+explicit selections. Do not install models or change personal configuration as
+part of resolution.
 
 ### Match the execution shape to the work
 
@@ -33,35 +33,43 @@ spawn a coordinator, implementer, and reviewer merely to edit a simple setting.
 Preserve relevant tests and a proportional review; use the separate reviewer
 for substantial planned changes under the existing execution gate.
 
-Use the profile defaults for ordinary planned work with explicit acceptance
-criteria, bounded ownership, and independently verifiable outcomes. Do not assume
-that a written plan has resolved every design decision. Return unplanned public
+Use the selected profile's implementation default for both ordinary and difficult
+planned work. Complexity determines the handoff, scope, and checks; it does not
+silently change the model or effort. Establish explicit acceptance criteria,
+bounded ownership, and independently verifiable outcomes. Return unplanned public
 contract or scope decisions to the parent before implementation.
 
-With the bundled profile and no explicit task/project implementation selection,
-this skill authorizes the parent to select `gpt-6-astra` with `medium` effort for
-a difficult item: ambiguous root-cause investigation, complex concurrency/state
-logic, or tightly coupled integration work whose implementation still needs
-substantial reasoning. Choose it from task evidence before dispatch; do not wait
-for repeated Sol failures when the difficulty is already apparent. Honor custom
-profiles and explicit selections instead of overriding them under this rule.
+Use the selected profile's parent recommendation for requirements, design,
+integration, and acceptance decisions. For a parent dedicated to executing an
+already-settled plan, this workflow permits recommending Astra medium when scope,
+design, ownership, and acceptance evidence are specified. Record that selection
+and preserve explicit task settings; a recommendation does not change the live
+host setting. Reassess when new design or consequential acceptance decisions arise.
 
-Record the reason and requested model/effort in the dispatch ledger. Resolve the
-choice with `--model gpt-6-astra --effort medium`; keep ownership, fresh-context,
-and review gates. For ordinary items, keep the bundled implementation default.
+Retain the selected profile's independent reviewer for substantial work. Apply
+changed role selections only under explicit task/project authority and record
+their source in the dispatch ledger. Use original requirements and fresh review
+context; a different reviewer model is not itself evidence of independence.
 
-Recommend a high-effort parent when the plan's assumptions, cross-module design,
-or consequential acceptance decisions require deeper analysis. This is a task
-setup recommendation, not an automatic live setting change. Keep the default
-parent recommendation for well-specified execution and preserve user selections.
-Retain the configured high-effort independent reviewer for substantial work;
-model capability cannot replace original requirements and evidence.
+### Optional bounded research
 
-Choose on task evidence before checking availability. If the requested model or
-effort is unavailable, report it; this routing rule does not authorize silently
-replacing either Sol or Astra. Resolve changed selections under explicit
-task/project authority. If an item uncovers a new design decision, have the child
-return evidence and transfer ownership before refining or reassigning the work.
+This skill authorizes the profile's `researcher` role for read-only source lookup,
+API inventories, or log classification when independent work helps the active
+dev-core task. Keep architecture, ambiguous root-cause conclusions, and acceptance
+judgments with the parent. Research does not replace implementation or review,
+and is not a prerequisite for every task. Use scripts directly for deterministic
+checks rather than introducing another model role merely to execute them.
+
+Give the researcher its question, permitted input paths, evidence to return, and
+stop condition. Require source references, uncertainties, and no file or external
+mutations. Use the same capability validation, fresh context, and parent evidence
+checks as other roles. Resolve `--role researcher` only when dispatch is useful.
+
+The researcher entry is optional in schema-version-1 custom profiles. Existing
+profiles with only implementation and review remain valid. If the requested role
+is absent, report that limitation; neither an explicit model override nor the
+bundled profile may synthesize the missing role. Respect configured choices and
+never silently fall back to a different model or effort.
 
 ### Validate host capabilities
 
@@ -144,10 +152,10 @@ a design question outside the handoff. Stop the failing path after three similar
 failed fixes; do not mask that history by replacing the agent.
 
 Resolve safe in-scope decisions in the parent. Refine the work item and return it
-to the implementation owner, or explicitly assign the difficult portion to a
-more capable model using the same capability/override process. Record the reason
-and transfer write ownership before another agent edits it. Reuse user authority;
-ask only for a material decision or action that remains outside it.
+to the implementation owner. If an authorized model/effort change is needed, use
+the same capability/override process and transfer write ownership before another
+agent edits it. Reuse user authority; ask only for a material decision or action
+that remains outside it.
 
 ## Independent review and acceptance
 

@@ -9,10 +9,12 @@ from typing import Any
 
 
 DEFAULT_PROFILE = Path(__file__).resolve().parent.parent / "assets/execution-profile.json"
-ROLE_NAMES = ("implementer", "reviewer")
+REQUIRED_ROLES = ("implementer", "reviewer")
+ROLE_NAMES = (*REQUIRED_ROLES, "researcher")
 ROLE_WRITE_POLICIES = {
     "implementer": "scoped-write",
     "reviewer": "read-only",
+    "researcher": "read-only",
 }
 
 
@@ -70,6 +72,8 @@ def validate_profile(value: Any) -> dict[str, Any]:
 
     roles = require_object(profile.get("roles"), "profile roles")
     for role_name in ROLE_NAMES:
+        if role_name not in REQUIRED_ROLES and role_name not in roles:
+            continue
         role = require_object(roles.get(role_name), f"profile role {role_name}")
         require_nonempty_string(role.get("model"), f"{role_name} model")
         require_nonempty_string(role.get("reasoning_effort"),
@@ -113,6 +117,8 @@ def resolve(arguments: argparse.Namespace) -> dict[str, str]:
     capabilities = validate_capabilities(
         load_json(arguments.capabilities, "capabilities")
     )
+    if arguments.role not in profile["roles"]:
+        raise InputError(f"profile does not define role: {arguments.role}")
     role = profile["roles"][arguments.role]
     model = arguments.model if arguments.model is not None else role["model"]
     effort = (

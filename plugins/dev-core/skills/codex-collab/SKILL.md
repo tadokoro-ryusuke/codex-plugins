@@ -1,6 +1,6 @@
 ---
 name: codex-collab
-description: "Delegate bounded implementation, independent review, or investigation with role-specific models and evidence. Use when collaboration is requested or an applicable skill or AGENTS.md explicitly authorizes those roles."
+description: "Delegate bounded implementation, review, or investigation when collaboration is requested or authorized by applicable instructions."
 ---
 
 # Codex Collab
@@ -11,6 +11,9 @@ For substantial approved-plan execution, read
 `references/planned-execution.md`. Resolve implementation/review settings from
 `assets/execution-profile.json` with `scripts/resolve_execution_role.py`; this
 defines defaults for that workflow, not for every collaboration request.
+For bounded dev-core source lookup or log classification, the optional researcher
+role is authorized under the "Optional bounded research" section of
+`references/planned-execution.md`; do not load the full execution workflow for it.
 For a native-agent evaluation of that workflow, read
 `references/execution-evaluation.md` and use `scripts/execution_smoke.py`.
 
@@ -24,7 +27,7 @@ For a native-agent evaluation of that workflow, read
 ## Choosing the Codex surface
 
 - `/review` or a review-style response: review of the current working tree.
-- Subagents: when the user directly asks or an applicable `AGENTS.md` or skill explicitly authorizes a bounded task. Do not infer authorization from task size alone.
+- Subagents: for bounded work authorized by the user or applicable instructions. Use them when independent work or review justifies the coordination cost.
 - New task or fork: only for a user-requested task operation. Use authorized subagents for internal bounded work; do not silently create user-owned tasks.
 - Browser / computer use: only when the task needs UI inspection or browser testing.
 - MCP/connectors: when the needed context lives outside the repo (GitHub, Slack, docs, issue trackers).
@@ -44,20 +47,24 @@ Use when the same issue has failed three times, the current approach is looping,
 1. Freeze implementation. Do not attempt the fourth similar fix.
 2. Summarize the failed attempts with evidence and why each failed.
 3. Rebuild the problem statement from symptoms, reproduction steps, and logs.
-4. Produce three independent root-cause hypotheses.
+4. Form competing root-cause hypotheses from the evidence.
 5. Validate or eliminate each hypothesis before editing.
 6. Make the smallest fix that addresses the confirmed root cause.
 7. Run $verification-loop and report evidence.
 
 ## Parallel subagents
 
-Subagents require a direct user request or explicit authorization in an applicable project instruction or skill. Requirements and behavior:
+Follow the delegation contract in
+`../dev-workflow/references/orchestration.md`: scope, raw evidence, ownership,
+completion criteria, and stop condition. Specify shared resources as well as file
+ownership. Prefer independent exploration, test runs, triage, and review; parallel
+edits need disjoint ownership and resources. Respect the host's role, concurrency,
+model, and sandbox limits.
 
-- Current Codex releases enable subagent workflows by default. Local configuration can still limit roles, concurrency, models, and sandbox behavior.
-- Subagents inherit the current sandbox policy — be deliberate when running with elevated permissions.
-- Prefer parallel subagents for read-heavy work: exploration, test runs, triage, review. Avoid parallel write-heavy work (edit conflicts).
-- Ask each subagent for a concise summary with evidence, not raw logs. Synthesize and independently verify claims before acting.
-- Follow the delegation contract in `../dev-workflow/references/orchestration.md`: scope, raw evidence, ownership, completion criteria, and stop condition. Specify shared resources as well as file ownership. Use the planned-execution profile when that workflow applies; otherwise inherit model settings unless an explicit instruction selects an override.
+Request concise findings plus command results or artifact references that the
+parent can verify. Use the profile for planned execution or its optional research role;
+otherwise inherit model settings unless an explicit instruction selects an
+override.
 
 Good splits: security / test-gap / maintainability review; backend / frontend / infrastructure analysis; reproduction triage / code-path trace / fix strategy.
 

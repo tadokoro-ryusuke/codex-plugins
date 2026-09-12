@@ -1,6 +1,6 @@
 ---
 name: dev-grill
-description: "Grill and stress-test a plan, decision, or idea through one question at a time before implementation. Use only when the user explicitly asks to grill, challenge, pressure-test, interrogate, or find hidden assumptions in a proposal."
+description: "Pressure-test a proposal through questions when the user explicitly asks to grill or challenge it."
 ---
 
 # Dev Grill

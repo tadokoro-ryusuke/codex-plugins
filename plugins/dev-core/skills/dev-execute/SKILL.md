@@ -1,6 +1,6 @@
 ---
 name: dev-execute
-description: "Execute approved development plans with a coordinating parent, role-specific implementation and review agents, TDD, and evidence gates. Use to implement, continue, resume, or complete docs/plans work."
+description: "Implement or resume an existing development plan through verification and review."
 ---
 
 # Dev Execute
@@ -9,9 +9,9 @@ Use this skill to implement an existing plan as an end-to-end Codex workflow.
 
 ## Workflow
 
-1. Read `../dev-workflow/references/orchestration.md`.
-2. Read `../dev-workflow/references/tdd-implementation.md`.
-3. Read `../dev-workflow/references/review-refactor-verify.md` before review/finalization.
+1. Read `../dev-workflow/references/orchestration.md` for dependent steps, shared ownership, or resume/handoff coordination. For one self-contained step, use the plan and execution contract below directly.
+2. Use `../dev-workflow/references/tdd-implementation.md` for test-first implementation details when needed; reuse relevant guidance already loaded.
+3. Use the matching section of `../dev-workflow/references/review-refactor-verify.md` for substantial review or refactoring. A small step needs a focused diff and evidence review.
 4. Use `$verification-loop` to select project checks and report final evidence. Use its bundled runner only when its detected commands fit the project.
 5. For substantial planned changes, read `../codex-collab/references/planned-execution.md`. Keep the parent responsible for coordination and acceptance; delegate bounded implementation and an independent read-only review using its centralized model profile. This skill explicitly authorizes those roles. Default to one active writer; parallelize only disjoint, sufficiently specified work with coordinated shared resources.
 6. Handle a small self-contained step directly when delegation would add more coordination than useful work, unless the user explicitly requests delegation. Preserve its relevant checks. If required delegation or model selection is unavailable, report the limitation and continue independent preparation; do not silently replace the requested roles or models.
@@ -27,9 +27,9 @@ workflow, spawn another implementation/review chain, or take over the parent pla
 - Convert the plan into independently verifiable implementation steps with `update_plan` when exposed, or update the durable plan directly. Before dispatch, record the role, requested model/effort, input identity, allowed writes, shared resources, acceptance checks, and return conditions. Resolve model choices through the collaboration profile; do not hardcode another copy here.
 - Treat the plan's completion contract as default-fail: keep every criterion `pending` until current evidence proves it, then record the evidence and mark it `satisfied`.
 - For each step, have the implementation owner perform Red, Green, Refactor, focused verification, and self-review. Keep the parent out of those files while the owner is working. Use the parent for requirement decisions, integration, and verification of returned evidence rather than duplicating the implementation.
-- After every iteration, update the plan's status, progress log, decision log, completion contract, and current next action. Update it again before a pause, handoff, or context compaction.
+- Keep progress, decisions, evidence, completion criteria, and the next action current in the plan after meaningful iterations and before a pause, handoff, or compaction. Avoid repeating unchanged entries.
 - Resolve safe, reversible, in-scope concerns yourself. Reuse existing authorization, including explicitly requested delivery. Prepare a concrete reviewable result before asking about an unresolved material decision or an action outside that authority.
-- After implementation, inspect the actual diff and evidence, perform remaining integration checks, and obtain the independent review before acceptance. Give the reviewer requirements and raw evidence so it can challenge the plan itself. Pin review evidence to the reviewed input identity and invalidate it after relevant changes.
+- Continue until the requested outcome is complete: inspect the actual diff and evidence, perform remaining integration checks and any requested runtime inspection, and obtain the required review before acceptance. Give the reviewer requirements and raw evidence so it can challenge the plan itself. Pin review evidence to the reviewed input identity and invalidate it after relevant changes.
 - If review finds real issues, fix or refactor narrowly and re-run affected checks. Stop after three failed similar rounds.
 - Commit, push, or open a PR only when explicitly requested or the current user request includes that delivery.
 

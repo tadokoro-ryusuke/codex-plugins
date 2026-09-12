@@ -1,6 +1,6 @@
 ---
 name: dev-review
-description: "Dev-core code review for working trees, branches, PRs, plans, or files. Use for review, PR review, second opinion, risk assessment, security, tests, architecture, and maintainability."
+description: "Review code or development plans when an independent assessment of correctness and risk is needed."
 ---
 
 # Dev Review
@@ -9,7 +9,7 @@ Use this skill when the user wants dev-core review criteria, not just a generic 
 
 ## Workflow
 
-1. Read `../dev-workflow/references/orchestration.md`.
+1. Read `../dev-workflow/references/orchestration.md` only when coordinating a multi-step plan or handoff; a focused task can use the matching reference below directly.
 2. Read the Code Review section in `../dev-workflow/references/review-refactor-verify.md`.
 3. Gather the target: working tree, branch, PR, file, plan, or diff.
 4. Review independently. Do not trust prior implementation claims.

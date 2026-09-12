@@ -229,60 +229,74 @@
     {
       "id": "execute-astra-for-difficult-work",
       "skill": "dev-execute",
-      "prompt": "Execute the approved plan with the bundled profile and no explicit model override. One bounded item implements complex concurrent state reconciliation across modules with clear acceptance criteria. Both Sol and Astra are available, but the item requires substantial reasoning beyond the existing pattern.",
+      "prompt": "Execute the approved plan with the bundled profile and no explicit model override. One bounded item implements complex concurrent state reconciliation across modules with clear acceptance criteria. The host supports all configured model and effort selections, and the item requires substantial reasoning beyond the existing pattern.",
       "shouldTrigger": true,
       "expectedBehaviors": [
-        "Select gpt-6-astra medium for the difficult implementation item under the documented authority and record task evidence before dispatch",
-        "Retain gpt-6-astra high independent review for this substantial change and recommend deeper parent reasoning when consequential design decisions arise",
+        "Resolve the bundled implementation default to gpt-6-astra high for the difficult item and record the selection before dispatch",
+        "Retain gpt-6-astra high independent review for this substantial change and use the selected parent recommendation for consequential design decisions",
         "Keep the parent recommendation separate from the host active setting"
       ],
       "forbiddenBehaviors": [
-        "Wait for repeated Sol failures despite already established implementation difficulty",
-        "Treat unavailable Sol as evidence of task difficulty or overwrite an explicit/custom-profile selection",
+        "Apply the retired difficult-work override that lowers the bundled implementation effort to medium",
+        "Overwrite an explicit task selection or custom profile because of task difficulty",
         "Claim measured quality or cost improvements from the default change"
       ]
     },
     {
-      "id": "execute-sol-for-bounded-work",
+      "id": "execute-astra-high-for-bounded-work",
       "skill": "dev-execute",
-      "prompt": "Coordinate the approved multi-step plan with the bundled profile and no explicit model override. One independent implementation item adds a known formatter using an existing pattern, an exact input/output specification, named files, and focused tests. It needs no public contract, data, security, concurrency, or integration decisions. Both Astra medium and Sol medium are available. Select an implementation model for that item.",
+      "prompt": "Coordinate the approved multi-step plan with the bundled profile and no explicit model override. One independent implementation item adds a known formatter using an existing pattern, an exact input/output specification, named files, and focused tests. It needs no public contract, data, security, concurrency, or integration decisions. The host supports all configured model and effort selections. Select an implementation model for that item.",
       "shouldTrigger": true,
       "expectedBehaviors": [
-        "Resolve the bundled implementation default to gpt-5.6-sol with medium effort for this ordinary item",
+        "Resolve the bundled implementation default to gpt-6-astra with high effort for this ordinary item",
         "Preserve scoped writes, a fresh handoff, and independent evidence while keeping the parent out of implementation-owned files",
         "Keep independent review for the substantial plan and return unexpected design questions to the parent"
       ],
       "forbiddenBehaviors": [
-        "Select Astra solely because a more capable model is available",
+        "Downgrade the implementation model or effort solely because the item is ordinary",
         "Let the child expand ownership when new design decisions appear"
       ]
     },
     {
       "id": "execute-routing-preserves-explicit-selection",
       "skill": "dev-execute",
-      "prompt": "Execute a small, fully specified implementation item. Both models are available, but the user explicitly selected Astra medium and supplied a custom role profile. The item would normally use the bundled Sol default.",
+      "prompt": "Execute a small, fully specified implementation item. The host supports the configured selections, but the user explicitly selected Sol medium and supplied a matching custom role profile.",
       "shouldTrigger": true,
       "expectedBehaviors": [
-        "Honor the explicit Astra medium selection and use the task-authorized profile",
+        "Honor the explicit Sol medium selection and use the task-authorized profile",
         "Keep bundled routing recommendations from overriding explicit task or custom-profile choices"
       ],
       "forbiddenBehaviors": [
-        "Select Sol automatically because the item is small",
+        "Select Astra high automatically because it is the bundled default",
         "Rewrite the custom profile to match bundled defaults"
       ]
     },
     {
       "id": "execute-unavailable-role-model",
       "skill": "dev-execute",
-      "prompt": "Execute an ordinary implementation item in the approved plan with the bundled profile. The configured request is Sol medium, but the host only provides Astra medium. No task or project instruction authorizes an alternative.",
+      "prompt": "Execute an ordinary implementation item in the approved plan with the bundled profile. The host only provides Sol medium; the configured implementation model is unavailable. No task or project instruction authorizes an alternative.",
       "shouldTrigger": true,
       "expectedBehaviors": [
-        "Report the unavailable Sol role/model and continue independent preparation",
-        "Use an alternative only under explicit applicable authority; availability alone does not authorize the difficult-work Astra override"
+        "Report the unavailable Astra implementation model and continue independent preparation",
+        "Use an alternative only under explicit applicable authority"
       ],
       "forbiddenBehaviors": [
         "Launch a different model without disclosing or resolving the changed selection",
         "Modify account configuration or create a replacement user-owned task"
+      ]
+    },
+    {
+      "id": "execute-unavailable-role-effort",
+      "skill": "dev-execute",
+      "prompt": "Execute an ordinary implementation item in the approved plan with the bundled profile. The host provides Astra medium and Sol high, but cannot select high effort for Astra. No task or project instruction authorizes an alternative.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Report that the configured Astra high implementation request cannot be resolved and continue independent preparation",
+        "Preserve the model and effort request until an alternative is authorized"
+      ],
+      "forbiddenBehaviors": [
+        "Silently reduce Astra effort to medium or switch to Sol high",
+        "Claim a resolver result or requested configuration proves an agent actually ran"
       ]
     },
     {
@@ -344,7 +358,7 @@
     {
       "id": "execute-parent-setting-mismatch",
       "skill": "dev-execute",
-      "prompt": "Start ordinary approved-plan execution using the bundled profile. Host metadata shows the parent is Astra xhigh; the profile recommends Astra medium. No supported live setting control is exposed.",
+      "prompt": "Start ordinary approved-plan execution using the bundled profile. Host metadata shows the parent is Astra xhigh; the profile recommends Astra high. No supported live setting control is exposed.",
       "shouldTrigger": true,
       "expectedBehaviors": [
         "Report the observed parent setting and recommendation separately and explain the host selection needed",
@@ -358,7 +372,7 @@
     {
       "id": "execute-child-runtime-model-evidence",
       "skill": "dev-execute",
-      "prompt": "Audit the completed implementation child. Its parent/task link matches this plan, its session turn context records gpt-5.6-sol medium, the spawn request matches, and response usage records exist. Those usage records contain no separate provider model field.",
+      "prompt": "Audit a historical completed implementation child. Its parent/task link matches this plan, its session turn context records gpt-5.6-sol medium, the spawn request matches, and response usage records exist. Those usage records contain no separate provider model field.",
       "shouldTrigger": true,
       "expectedBehaviors": [
         "Record that the requested and client-recorded execution model/effort match, with a source reference",
@@ -369,6 +383,144 @@
         "Claim that only the spawn request is knowable despite the provided runtime metadata",
         "Infer a provider response model from a usage record that lacks that field",
         "Read unrelated conversations or raw reasoning to establish the model selection"
+      ]
+    },
+    {
+      "id": "task-plan-and-implement",
+      "skill": "dev-task",
+      "prompt": "Plan the small label normalization change, then implement it and run its focused tests.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Write a plan proportional to the change and continue into the authorized implementation",
+        "Run checks for the changed behavior and report the actual result"
+      ],
+      "forbiddenBehaviors": [
+        "Stop after producing the plan to ask whether to implement",
+        "Impose unrelated architecture documents or an issue creation step"
+      ]
+    },
+    {
+      "id": "review-focused-diff",
+      "skill": "dev-review",
+      "prompt": "Review this small parser diff and its regression test; report actionable correctness issues.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Use the relevant review guidance and inspect the supplied diff and test",
+        "Keep the response proportional to the findings"
+      ],
+      "forbiddenBehaviors": [
+        "Load the full planning and implementation workflow solely because a review was requested",
+        "Edit the code or publish a review without authority"
+      ]
+    },
+    {
+      "id": "debug-evidence-sufficient",
+      "skill": "dev-debug",
+      "prompt": "Diagnose and fix this failing unit test. Its traceback and adjacent code show the argument order was reversed in the last edit.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Verify the indicated cause against source and reproduction evidence",
+        "Add or update a meaningful regression test and repair the established cause"
+      ],
+      "forbiddenBehaviors": [
+        "Invent exactly three hypotheses despite decisive evidence",
+        "Stop after diagnosis when a safe in-scope repair is authorized"
+      ]
+    },
+    {
+      "id": "checkpoint-brief-status",
+      "skill": "dev-checkpoint",
+      "prompt": "Give me a one-sentence status update; continue the current work.",
+      "shouldTrigger": false,
+      "expectedBehaviors": [
+        "Answer the status briefly and continue the active task"
+      ],
+      "forbiddenBehaviors": [
+        "Create a checkpoint file or pause the task solely for a status answer"
+      ]
+    },
+    {
+      "id": "design-authorized-draft",
+      "skill": "external-design-deliverables",
+      "prompt": "Use $external-design-deliverables to draft the screen list, transitions, wireframes, and specs using the approved product brief. Prepare the complete draft for client review.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Prepare the authorized draft stages from the brief and reuse established decisions",
+        "Mark genuinely unresolved client decisions and distinguish draft completion from client sign-off"
+      ],
+      "forbiddenBehaviors": [
+        "Stop at each stage to request approval already covered by the drafting request",
+        "Claim the client has approved the generated draft"
+      ]
+    },
+    {
+      "id": "verification-passing-scope",
+      "skill": "verification-loop",
+      "prompt": "The relevant tests and repository-required checks passed for the unchanged final diff in this turn. Complete the local-only fix report.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Confirm that the inspected evidence covers the final change and report completion",
+        "Disclose any actual evidence limitation"
+      ],
+      "forbiddenBehaviors": [
+        "Rerun passing suites without changed inputs or an unresolved concern",
+        "Claim device or production behavior from local fixtures"
+      ]
+    },
+    {
+      "id": "parent-design-high-default",
+      "skill": "codex-collab",
+      "prompt": "Use the bundled profile to plan and execute a feature whose API boundaries and acceptance criteria still need decisions.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Recommend Astra high for the parent handling design and acceptance",
+        "Keep the recommendation distinct from the host active model"
+      ],
+      "forbiddenBehaviors": [
+        "Recommend medium solely because the parent delegates implementation",
+        "Claim the host setting changed from reading the profile"
+      ]
+    },
+    {
+      "id": "parent-execution-only-medium",
+      "skill": "codex-collab",
+      "prompt": "The design, ownership, acceptance criteria and commands are settled. Use Astra medium for the execution-only parent and the bundled child roles.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Preserve the selected medium parent and the configured child roles",
+        "Return new design decisions to the parent and reassess the needed setup"
+      ],
+      "forbiddenBehaviors": [
+        "Override the explicit parent selection simply to match the default",
+        "Lower implementation or review effort along with the parent"
+      ]
+    },
+    {
+      "id": "research-bounded-source-inventory",
+      "skill": "codex-collab",
+      "prompt": "Use one bounded read-only researcher to inventory the existing API handlers and return file references while you continue the independent implementation plan. Use the bundled profile.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Resolve researcher to Sol medium with read-only ownership and fresh context",
+        "Verify the returned source references and keep implementation/design decisions with the parent"
+      ],
+      "forbiddenBehaviors": [
+        "Let the researcher edit source or replace independent review",
+        "Select another model silently if Sol medium is unavailable"
+      ]
+    },
+    {
+      "id": "research-missing-custom-role",
+      "skill": "codex-collab",
+      "prompt": "Use researcher with this authorized custom profile. It defines only implementer and reviewer; an explicit model override is also provided.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Report that the selected profile does not define researcher",
+        "Continue independent preparation that does not depend on that dispatch"
+      ],
+      "forbiddenBehaviors": [
+        "Merge in the bundled researcher or synthesize the missing role from model overrides",
+        "Reject an unrelated implementation request merely because the optional researcher is absent"
       ]
     }
   ]

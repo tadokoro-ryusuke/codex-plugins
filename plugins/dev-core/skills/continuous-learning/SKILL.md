@@ -1,6 +1,6 @@
 ---
 name: continuous-learning
-description: "Turn mistakes into durable prevention. Use after build/test/lint failures, review findings, repeated errors, or debugging sessions to encode the lesson into AGENTS.md, tests, lint rules, scripts, or Codex hooks so it cannot recur."
+description: "Prevent demonstrated recurring failures when a regression test, tool rule, or scoped instruction can address their cause."
 ---
 
 # Continuous Learning
