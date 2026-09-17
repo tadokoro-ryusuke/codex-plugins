@@ -45,7 +45,9 @@ Do not accept implementation reports at face value:
 - If tests are claimed, inspect that tests exist and assert the relevant behavior.
 - If typecheck or lint is claimed, still inspect the changed code for unsafe casts, ignored errors, and convention drift.
 - If a change is described as "refactor only", inspect the diff for external behavior changes.
-- If verification was not run in the current turn, report it as missing evidence.
+- Inspect the check artifacts and their input/environment identity. Apply the
+  reuse rules in `../../verification-loop/SKILL.md`; label prior results as reused,
+  and report missing or stale evidence instead of assuming success.
 
 ### Approval Gate
 

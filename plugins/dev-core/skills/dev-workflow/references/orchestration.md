@@ -42,16 +42,23 @@ and it adds useful parallel work or independent judgment. Avoid delegation whose
 coordination overhead exceeds its benefit, overlapping writers, and assignments
 that block all useful parent work.
 
-For substantial planned execution, use the role profile and handoff contract in
-`../../codex-collab/references/planned-execution.md`. That workflow authorizes
-implementation and independent review roles with specific models. For other
-work, inherit the configured model unless an applicable instruction selects an
-override. A child performs its assigned role without restarting the parent
-orchestration or spawning another execution chain.
+Keep sequential or tightly coupled implementation with the parent even when the
+plan is large. Delegate when independent progress, specialized evidence, or
+context isolation offers a concrete benefit. Prefer direct tools for deterministic
+work; do not add an agent just to run one command. Explicit delegation requests
+take precedence, subject to actual host capabilities and safe ownership.
 
-Give each assignment its goal, raw input paths, allowed writes, dependencies,
-acceptance evidence, and return conditions. Supply only task-relevant context;
-give reviewers requirements and raw artifacts without a preferred verdict.
+For delegated planned execution or its independent review, use the role profile
+and handoff contract in `../../codex-collab/references/planned-execution.md`.
+Resolve only selected roles; a profile does not require spawning every role.
+For other work, inherit the configured model unless an applicable instruction
+selects an override. A child performs its assigned role without restarting the
+parent orchestration or spawning another execution chain.
+
+Give each assignment its goal, expected benefit, raw input paths, allowed writes,
+dependencies, acceptance evidence, effort bounds, and return conditions. Supply
+only task-relevant context; give reviewers requirements and raw artifacts without
+a preferred verdict.
 Continue independent work while the child runs, then inspect its actual diff,
 checks, and findings before relying on its report.
 
@@ -70,9 +77,10 @@ and record the migration. Ask only if no safe observable outcome can be derived.
 - Update progress, decisions, blockers, evidence, and the next action after
   meaningful iterations and before handoff or compaction. Do not copy unchanged
   logs into every update.
-- On resume, recheck branch, HEAD, working diff, relevant inputs, and available
-  tools. Keep old results as history and invalidate affected evidence after
-  code, fixtures, dependencies, or configuration change.
+- On resume, recheck branch, HEAD, working diff, relevant inputs, environment,
+  and available tools. Inspect earlier check artifacts before reusing them under
+  `../../verification-loop/SKILL.md`; invalidate affected evidence after relevant
+  code, fixtures, dependencies, configuration, or environment changes.
 - Record commands, working directory, input identity, outcomes, and useful
   artifact paths. Distinguish source, local runtime, device, and deployed
   evidence; keep secrets and customer data out of durable records.
@@ -84,11 +92,18 @@ Use `../../verification-loop/SKILL.md` when choosing checks, and the matching
 section of `review-refactor-verify.md` for review or refactoring. Run focused
 checks and broaden when changed shared contracts or unresolved risks justify it.
 
-For non-trivial changes, review before completion. For substantial planned work,
-obtain the independent review specified by the execution contract. Verify
-findings against the actual inputs; resolve P0/P1 findings and fix or disclose
-remaining concerns. Re-run affected checks after a fix; invalidate relevant
-review evidence when the reviewed inputs change.
+For non-trivial changes, review before completion. Decide review independence
+separately from implementation ownership. Require a fresh read-only reviewer for
+changes to security/permissions, persistent data or migrations, concurrency,
+consequential public contracts, or a user/project requirement. Also use independent
+review when unresolved cross-module risk justifies a fresh assessment. For other
+changes, proportional self-review can suffice; line count or plan size alone is
+not a review gate. Record the reason and evidence.
+
+An unavailable required reviewer leaves acceptance pending; continue independent
+authorized work and report the gap. Verify findings against actual inputs; resolve
+P0/P1 findings and fix or disclose remaining concerns. Re-run affected checks after
+a fix; invalidate relevant review evidence when the reviewed inputs change.
 
 ## Decision and stop boundaries
 

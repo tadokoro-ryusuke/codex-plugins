@@ -65,7 +65,7 @@ Use narrow skills for daily work; `dev-workflow` provides shared orchestration.
 | --- | --- |
 | `$dev-grill` | Pressure-test a plan or decision one material question at a time; explicit invocation only. |
 | `$dev-task` | Turn an idea into a design plan, acceptance criteria, BDD scenarios, and TDD iterations (template bundled). |
-| `$dev-execute` | Coordinate an approved plan with role-specific implementation and independent review, TDD, and evidence gates. |
+| `$dev-execute` | Execute an approved plan with proportional delegation, risk-based review, TDD, and evidence gates. |
 | `$dev-debug` | Investigate errors from root cause before fixing. |
 | `$dev-tdd` | Run a focused test-first cycle for one behavior or regression. |
 | `$dev-review` | Review with dev-core criteria: behavior, security, tests, architecture, maintainability, conventions. |
@@ -81,8 +81,13 @@ Reference skills `$best-practices`, `$backend-patterns`, and `$frontend-patterns
 
 `dev-task` writes durable, default-fail completion contracts under `docs/plans/task-<slug>.md`. `dev-execute` keeps progress, decisions, evidence, and the next action in that same plan so fresh threads can resume without reconstructing state. `codex-collab` ships ready-made custom agent roles (`code-reviewer`, `security-auditor`) you can copy into `.codex/agents/`.
 
-For substantial planned work, `dev-execute` keeps the parent coordinating and
-delegates implementation and a separate review. Default model/effort assignments
+`dev-execute` chooses implementation ownership by independence and benefit, not
+plan size. Sequential or tightly coupled work stays with the parent; bounded
+delegation is useful for independent progress, specialized evidence, or context
+isolation. Review is a separate decision: consequential public contracts,
+security/permissions, persistent data, concurrency, and explicit project/user
+gates require a fresh reviewer. Other work uses proportional review.
+Default model/effort assignments for selected child roles
 live in one [execution profile](plugins/dev-core/skills/codex-collab/assets/execution-profile.json).
 The bundled defaults are Astra high for the parent, implementer, and independent
 reviewer, with Sol medium for optional read-only research. Use research for bounded
@@ -95,13 +100,20 @@ and effort settings, without silently falling back to another model.
 The [execution contract](plugins/dev-core/skills/codex-collab/references/planned-execution.md)
 defines bounded writes, parent decisions, fresh handoffs, review independence,
 and evidence. Use the bundled Astra high implementation default for ordinary
-and difficult work. Preserve explicit task selections and custom profiles, and
+and difficult delegated work. Preserve explicit task selections and custom profiles, and
 record authorized overrides before dispatch. Check the actual parent
 setting separately: a profile recommendation cannot change the running task.
 Native tools accepting model/effort arguments do not require installing custom
 role files. Read-only task instructions and role names alone
-do not establish an enforced sandbox. Small steps can stay with the parent when
-delegation would add unnecessary overhead; explicit user preferences take priority.
+do not establish an enforced sandbox. Resolve only roles actually selected. When
+optional delegation is unavailable, disclose the limitation and continue suitable
+work in the parent. Explicit role/model requirements and required independent
+review remain pending until satisfied; never silently substitute another model.
+
+Reuse check results only after inspecting raw evidence and confirming relevant
+inputs and environment still match, when project rules permit it. Label reused
+results as prior executions. Stop repeated similar fixes on the same failing
+path after three attempts, while continuing independent authorized work.
 
 ## HOTL Engineering
 
@@ -129,13 +141,25 @@ behavior with fake toolchains and target responses. CI runs both layers plus
 hook tests. None of these checks executes the skill scenarios with a model or
 establishes hosted workflow/cloud behavior.
 
-To exercise role-based execution with actual agents, follow the
+To exercise delegation decisions and role-based execution with actual agents, follow the
 [native evaluation procedure](plugins/dev-core/skills/codex-collab/references/execution-evaluation.md).
 Its helper prepares a disposable repository and grades behavior independently of
 candidate-written tests. The helper itself does not call a model; native dispatch,
-effective model metadata, and observed outcomes are recorded separately.
+effective model metadata, and observed outcomes are recorded separately. The
+procedure also defines matched parent-only, parent-with-review, and delegated
+comparisons. Required-review cases exclude the parent-only arm. A schema pass
+or one native smoke does not establish a quality, cost, or latency advantage.
 
 ### Source update migration
+
+- `dev-core` 5.4.0 (2026-09-17): choose delegation by independent work and expected
+  benefit, and decide review separately by risk. Preserve the role model defaults
+  and strict dispatch validation; let unavailable optional delegation fall back
+  to suitable parent work without waiving required review or explicit selections.
+  Align SessionStart and skills on proportional checks, verified evidence reuse,
+  and same-path failure limits. Add cancellation/effort bounds and comparative
+  evaluation cases. See the [implementation record](docs/plans/task-adaptive-delegation.md)
+  for checks, behavior observations, and activation status.
 
 - `dev-core` 5.3.0 (2026-09-12): recommend Astra high for the parent and add an
   optional read-only Sol medium researcher. Keep implementation/review at Astra

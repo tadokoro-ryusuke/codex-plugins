@@ -7,8 +7,8 @@ description: "Delegate bounded implementation, review, or investigation when col
 
 Coordinate independent reasoning inside Codex: reviews that don't trust the implementer, rescue when an approach is looping, and explicit parallel subagent work.
 
-For substantial approved-plan execution, read
-`references/planned-execution.md`. Resolve implementation/review settings from
+For delegated planned execution or its independent review, read
+`references/planned-execution.md`. Choose useful roles before resolving settings from
 `assets/execution-profile.json` with `scripts/resolve_execution_role.py`; this
 defines defaults for that workflow, not for every collaboration request.
 For bounded dev-core source lookup or log classification, the optional researcher
@@ -19,7 +19,7 @@ For a native-agent evaluation of that workflow, read
 
 ## Principles
 
-1. Keep the main thread focused on requirements, decisions, and final synthesis.
+1. Keep the parent responsible for requirements, decisions, integration, and final synthesis; let it implement when delegation has no concrete benefit.
 2. Use independent review to challenge your own implementation claims.
 3. Treat every agent result as untrusted until verified against files, diffs, logs, or command output.
 4. Stop after three failed attempts at the same fix path. Report the attempts and switch to a fresh diagnosis or ask for user direction.
@@ -56,7 +56,7 @@ Use when the same issue has failed three times, the current approach is looping,
 
 Follow the delegation contract in
 `../dev-workflow/references/orchestration.md`: scope, raw evidence, ownership,
-completion criteria, and stop condition. Specify shared resources as well as file
+completion criteria, expected benefit, effort bounds, and stop condition. Specify shared resources as well as file
 ownership. Prefer independent exploration, test runs, triage, and review; parallel
 edits need disjoint ownership and resources. Respect the host's role, concurrency,
 model, and sandbox limits.

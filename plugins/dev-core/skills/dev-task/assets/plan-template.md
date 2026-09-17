@@ -42,8 +42,10 @@ What is deliberately out of scope.
 
 Record key decisions, affected modules, data flow, and why this approach fits.
 Reference concrete files (`path:line`) discovered while inspecting the repo.
-For authorized delegation, name each bounded task's inputs, ownership, shared
-resources, required return evidence, and stop condition. Omit for single-agent work.
+Choose implementation ownership by independence and expected benefit, not size.
+Record review needs separately. For authorized delegation, name each bounded
+task's benefit, inputs, ownership, shared resources, return evidence, effort
+bounds, and stop condition. Omit the ledger for parent-only work.
 
 For role-based execution, reference the selected collaboration profile rather
 than copying its model defaults. Record the recommended parent setting separately
@@ -51,12 +53,13 @@ from any runtime-observed model; a plan cannot change the current host model.
 
 ## Delegation Ledger (When Used)
 
-| Work item | Role / agent ID | Requested model / effort and selection source | Observed model / effort | Input identity / allowed writes / shared resources | Status / return evidence |
+| Work item / benefit / bounds | Role / agent ID | Requested model / effort and selection source | Observed model / effort | Input identity / allowed writes / shared resources | Status / return evidence |
 | --- | --- | --- | --- | --- | --- |
-| <bounded item> | <role / ID after dispatch> | <resolved settings / profile or explicit override> | <runtime metadata or unverified> | <revision/diff and ownership> | pending |
+| <item / why delegate / return condition> | <role / ID after dispatch> | <resolved settings / profile or explicit override> | <runtime metadata or unverified> | <revision/diff and ownership> | pending |
 
 Keep overall acceptance under parent ownership. Include a return condition for
-each work item and transfer ownership before another agent edits its files.
+each work item. Confirm a cancelled writer has stopped and inspect partial work
+before transferring ownership. Budget exhaustion leaves work incomplete.
 
 ## Completion Contract
 

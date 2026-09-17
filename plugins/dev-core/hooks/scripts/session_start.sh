@@ -48,11 +48,11 @@ collect_context() {
 
   cat <<'EOF'
 [dev-core] Session discipline:
-- Iron Law: no production code without a test; never claim a check passed without running it this turn.
-- No rationalizing skipped checks ("small change", "passed before").
+- Use test-first for executable behavior changes and regressions; match other checks to risk and scope, and honor required project gates.
+- Inspect evidence now. Reuse prior results only when relevant inputs and environment still match and project rules permit; identify prior execution accurately and invalidate affected evidence after changes.
 - Independently verify subagent claims before relying on them.
 - Keep plan progress, decisions, evidence, and the current next action durable across context resets.
-- Three Strikes: after 3 failed fix attempts, stop and report to the user.
+- Three Strikes: after 3 similar unsuccessful fixes on the same failing path, stop that path, diagnose, and report; continue independent authorized work. Preserve attempt history across agent changes.
 EOF
 }
 
