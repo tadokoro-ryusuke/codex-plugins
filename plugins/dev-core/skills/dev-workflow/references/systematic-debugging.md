@@ -41,10 +41,12 @@ Form plausible hypotheses from the evidence. Start with the strongest explanatio
 
 ## Three Strikes Rule
 
-After three failed fix attempts:
+After three similar failed fixes on the same failing path:
 
-1. Stop.
+1. Stop that path; continue independent authorized work.
 2. List each attempt and why it failed.
 3. Explain the suspected misunderstanding.
 4. Switch to `codex-collab` rescue workflow or ask for user direction.
 
+Preserve the attempt history across agent or owner changes. Separate failures
+with different causes and expected test-first failures from repeated failed fixes.

@@ -1,11 +1,30 @@
-# Planned Execution With Role-Specific Models
+# Planned Execution and Delegation
 
-Use this contract when `dev-execute` coordinates substantial approved-plan work.
+Use this contract when planned execution benefits from delegation or needs
+independent review.
 Honor explicit user instructions over these defaults. Keep narrow standalone
 tasks outside the full execution workflow. Use the optional research role only
 for the bounded information-gathering work described below.
 
-## Resolve roles before dispatch
+## Choose ownership and review before resolving roles
+
+Keep sequential or tightly coupled implementation with the parent regardless of
+plan size. Delegate only when independent progress, specialized evidence, or
+context isolation offers a concrete benefit beyond handoff, waiting, integration,
+and verification costs. A role name or a runnable test alone is not that benefit.
+Honor explicit delegation requests within host capabilities and safe ownership.
+
+Choose the smallest useful arrangement: parent implementation and self-review,
+parent implementation with independent review, or bounded delegated work with
+parent integration. Select review separately using the gate in
+`../../dev-workflow/references/orchestration.md`. Preserve required independent
+review even when the parent implements; do not require an implementer child just
+to obtain a reviewer. Use tools directly for deterministic work.
+
+Record the benefit and boundaries briefly in the existing plan; do not spawn a
+router or produce a separate orchestration plan just to make this choice.
+
+## Resolve selected roles before dispatch
 
 Read `../assets/execution-profile.json` as the single source of default model and
 reasoning settings. The parent recommendation guides task setup; the host owns
@@ -13,11 +32,12 @@ the active parent model. Do not pretend to switch it, create a replacement user
 task, or infer its effective setting from the recommendation. Record the active
 setting only when the host exposes it; otherwise label it unknown.
 
-Check the active parent setting against the recommendation at execution setup.
+Check the active parent setting against the recommendation when setting up roles.
 Report a mismatch once; a profile edit does not change the running task. Use a
 supported host setting control only under applicable user authority. If none is
-available, explain how the user can select the setting and continue independent
-authorized preparation; do not edit internal runtime state to simulate a change.
+available, explain how the user can select the setting. A bundled recommendation
+does not block suitable work in the existing parent; preserve explicit task
+requirements. Do not edit internal runtime state to simulate a change.
 
 Use a task-authorized profile path when one is supplied; otherwise use the bundled
 profile. Apply an explicit model/effort override for the relevant role when the
@@ -25,17 +45,9 @@ user or applicable project instruction requests it. Preserve custom profiles and
 explicit selections. Do not install models or change personal configuration as
 part of resolution.
 
-### Match the execution shape to the work
-
-Handle a small self-contained change directly when delegation adds more
-coordination than useful work, unless explicitly requested otherwise. Do not
-spawn a coordinator, implementer, and reviewer merely to edit a simple setting.
-Preserve relevant tests and a proportional review; use the separate reviewer
-for substantial planned changes under the existing execution gate.
-
 Use the selected profile's implementation default for both ordinary and difficult
-planned work. Complexity determines the handoff, scope, and checks; it does not
-silently change the model or effort. Establish explicit acceptance criteria,
+work assigned to a child. Complexity determines the handoff, scope, and checks;
+it does not silently change the model or effort. Establish explicit acceptance criteria,
 bounded ownership, and independently verifiable outcomes. Return unplanned public
 contract or scope decisions to the parent before implementation.
 
@@ -46,7 +58,7 @@ design, ownership, and acceptance evidence are specified. Record that selection
 and preserve explicit task settings; a recommendation does not change the live
 host setting. Reassess when new design or consequential acceptance decisions arise.
 
-Retain the selected profile's independent reviewer for substantial work. Apply
+Use the selected profile's reviewer when independent review is selected. Apply
 changed role selections only under explicit task/project authority and record
 their source in the dispatch ledger. Use original requirements and fresh review
 context; a different reviewer model is not itself evidence of independence.
@@ -82,9 +94,9 @@ and selection controls actually exposed by the current host:
 
 Do not treat a model catalog or an example capability file as account availability.
 If the host cannot establish these capabilities, report the unavailable evidence
-and continue preparation that does not depend on dispatch.
+and apply the unavailable-dispatch rules below.
 
-Resolve each role from the collaboration skill directory:
+Resolve only selected roles from the collaboration skill directory. For example:
 
 ```bash
 python3 scripts/resolve_execution_role.py --role implementer --capabilities "$capabilities_file"
@@ -92,8 +104,8 @@ python3 scripts/resolve_execution_role.py --role reviewer --capabilities "$capab
 ```
 
 Use `--profile` for the selected profile and both `--model` and `--effort` for an
-explicit override. Exit `2` means the request cannot be resolved; do not silently
-substitute the parent model or launch without the specified effort.
+explicit override. Exit `2` means that dispatch request cannot be resolved; do not
+silently launch another model or omit the specified effort.
 
 Translate the returned model and reasoning settings into the host's actual spawn
 arguments. Use a fresh agent context plus a sufficient handoff. On a host exposing
@@ -104,6 +116,20 @@ arguments on other hosts. Recheck capabilities after a host/session change.
 The resolver does not launch an agent. Its `write_policy` is an ownership
 instruction, not a sandbox setting. Use a read-only sandbox for review when the
 host offers one; otherwise report read-only as an instruction-level boundary.
+
+### Unavailable dispatch
+
+Distinguish a bundled recommendation from a user/project-required model, role,
+or custom profile. If optional delegation cannot run, disclose the limitation
+and keep suitable implementation or research with the existing parent. Do not
+resolve unused roles or block parent work on their availability. This changes
+ownership, not the active parent model, and does not establish role execution.
+
+Keep explicit model/role requirements and required independent review pending
+when unavailable. Continue unaffected work and report the exact gap; do not
+replace a custom profile, synthesize a missing role, self-review in place of a
+required reviewer, or claim completion. Obtain applicable authority before
+changing a required selection. The resolver remains strict for every dispatch.
 
 ## Parent responsibilities
 
@@ -131,11 +157,13 @@ Give the implementation agent:
 2. The checkout/branch and input revision or diff identity; identify existing
    changes that belong to other work.
 3. An explicit allowed write set, dependencies, and shared-resource ownership.
-4. Acceptance criteria, relevant project commands, and evidence to return.
-5. Conditions for returning to the parent rather than guessing or expanding scope.
+4. Acceptance criteria, relevant project commands, and concise evidence to return.
+5. Expected benefit, effort bounds, and conditions for returning to the parent
+   rather than guessing or expanding scope.
 
-Tell the agent to implement with TDD and return the changed files, tests and
-commands/results, input/output identity, remaining concerns, and one of
+Tell the agent to use TDD for executable behavior or regressions and applicable
+checks for other changes. Require the changed files, tests and commands/results,
+input/output identity, remaining concerns, and one of
 `completed`, `needs-parent`, or `blocked`. Let it choose routine implementation
 details within the contract. Have it update only its assigned plan section when
 that write is explicitly included; keep the overall plan under parent ownership.
@@ -143,6 +171,14 @@ that write is explicitly included; keep the overall plan under parent ownership.
 Do not let an implementation child recursively invoke the full execution
 workflow, spawn another implementation/review chain, commit, or publish under
 authority absent from its handoff.
+
+Use bounds appropriate to the work: a finite source set, a time/tool budget, or
+a no-new-evidence stop condition. State numeric limits only when meaningful;
+claim enforced token limits only when the host can measure and enforce them.
+Stop redundant or superseded assignments through supported controls, confirm
+that writing has stopped, inspect partial results, and transfer ownership before
+another writer continues. Record remaining work after a limit; budget exhaustion
+is not acceptance. Avoid repeated status polling without new information.
 
 ## Return decisions to the parent
 
@@ -159,8 +195,9 @@ that remains outside it.
 
 ## Independent review and acceptance
 
-Once the candidate is stable, give a separate reviewer the original requirements,
-relevant plan, diff identity, source/tests, and raw check artifacts. Let it
+When independent review is selected and the candidate is stable, give a separate
+reviewer the original requirements, relevant plan, diff identity, source/tests,
+and raw check artifacts. Let it
 challenge the plan's assumptions as well as the code. Do not provide an expected
 verdict, tell it the implementation is correct, or use the implementer's running
 context as the review context.
@@ -173,8 +210,9 @@ capability does not replace evidence.
 
 ## Record what actually happened
 
-Keep a compact dispatch ledger in the plan: work item, role, requested model and
-effort, source of that selection, agent ID, input identity, ownership, status,
+Keep a compact dispatch ledger in the plan: work item, expected benefit, bounds,
+role, requested model and effort, source of that selection, agent ID, input
+identity, ownership, status,
 and returned artifacts. Record effective model/effort separately only when the
 runtime reports them. A resolver result, echoed prompt, or accepted spawn request
 proves the requested configuration, not backend execution identity.

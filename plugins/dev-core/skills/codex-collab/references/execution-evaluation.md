@@ -1,8 +1,62 @@
-# Evaluate Role-Based Execution
+# Evaluate Execution Decisions and Delegation
 
-Use this procedure to exercise the actual parent/implementation/review workflow
-after instruction changes. Keep deterministic policy/fixture tests separate from
-native model behavior, effective-model metadata, and general quality claims.
+Use this procedure after delegation or instruction changes. Separate packaging
+validation, deterministic helper tests, native skill behavior, and comparative
+quality/cost evidence. Do not treat compliance with the old topology as the goal.
+
+## Choose the evaluation question
+
+- Use the existing smoke below to check explicitly requested dispatch, ownership,
+  and evidence. It does not measure the decision to delegate.
+- Use realistic requests without a delegation instruction to test that decision.
+  Include a large sequential change, independent source investigations, low-risk
+  prose changes, and parent implementation requiring an independent reviewer.
+- Test unavailable optional dispatch separately from unavailable explicit model
+  requirements or required review. Exercise unchanged/stale check artifacts,
+  different failure causes, repeated same-path failures, and cancelled writers.
+- Test discovery in clean sessions with direct, paraphrased, and non-matching
+  requests. Refine descriptions for misrouting and the workflow for bad outcomes
+  after correct activation. Do not expose the expected verdicts to the candidate.
+
+Use `../../../evals/skill-behavior-cases.json` as the behavioral case inventory.
+Keep cases pending until a model actually executes them; schema checks only
+validate their structure.
+
+## Compare execution arrangements
+
+Use matched temporary fixtures and fresh sessions for these comparison arms:
+
+| Arm | Ownership |
+| --- | --- |
+| Parent | Parent implementation and self-review |
+| Parent + reviewer | Parent implementation and a fresh independent reviewer |
+| Delegated | Bounded implementation child and a fresh reviewer; parent integrates |
+
+Compare the old and revised policy on the same unhinted requests as well. Keep
+fixtures, tools, model/effort, permission scope, acceptance criteria, and available
+context comparable. Vary one policy or routing choice at a time. Repeat cases and
+vary run order before generalizing. Use a fixed total token allowance when the
+host can observe it; otherwise report usage and its limitations rather than
+claiming an equal-budget experiment.
+
+Keep evaluators and behavior assertions outside candidate write sets. Grade
+correctness, missed defects, scope violations, completion, and required gates
+before comparing elapsed time, total parent/child/rework tokens, correction rounds,
+and human intervention. Count overlapping cumulative usage only once. Record
+missing usage as unknown, never zero. A budget-limited unfinished run is incomplete.
+
+Use the parent-only arm only for fixtures whose gates allow self-review; mark it
+ineligible when independent review is required. Compare the two reviewed arms
+there instead of weakening a real gate. Parent summaries and role names alone
+are not dispatch, sandbox, or successful-check evidence.
+
+Record case and fixture revision, raw request, skill revision, comparison arm,
+requested/observed models, environment, dispatch trace references, grader result,
+side effects, elapsed time, usage coverage, interventions, and remaining work.
+Publish a sanitized result record, including failures. A bounded smoke can reveal
+a regression; it cannot establish a general quality or cost advantage.
+
+## Explicit-delegation smoke
 
 ## Prepare a bounded case
 

@@ -7,7 +7,8 @@
     "Treat a forbidden behavior as a failure even when the final prose sounds plausible.",
     "Schema validation is not a behavioral run. Record model/runtime, skill version, raw prompt, fixture revision, tool trace, artifacts, and grader decision for each executed case.",
     "Use separate clean sessions for routing tests. Keep expected/forbidden behaviors with the evaluator, not in the task prompt. Repeat representative cases to assess variability.",
-    "Compare the same cases before and after instruction changes; label unexecuted cases pending and preserve failed traces without secrets or customer data."
+    "Compare the same cases before and after instruction changes; label unexecuted cases pending and preserve failed traces without secrets or customer data.",
+    "Separate explicit-dispatch tests from unhinted delegation decisions. Compare eligible parent-only and reviewed arrangements on matched fixtures; preserve required review, report total parent/child/rework usage when observable, and do not infer comparative gains from one smoke case."
   ],
   "cases": [
     {
@@ -214,10 +215,10 @@
     {
       "id": "execute-role-model-profile",
       "skill": "dev-execute",
-      "prompt": "Use $dev-execute to implement the approved multi-step plan in this repository. The host exposes native subagents and explicit model and effort selection.",
+      "prompt": "Use $dev-execute to implement the approved plan. The parser change has frozen inputs, outputs, and exclusive file ownership; it can proceed while the parent independently prepares the integration fixtures. The change affects a public API. The host exposes native subagents and explicit model and effort selection.",
       "shouldTrigger": true,
       "expectedBehaviors": [
-        "Resolve implementation and review requests from the selected profile and current host capabilities",
+        "Explain the independent work that benefits from delegation, then resolve only selected implementation and review roles against current host capabilities",
         "Keep the parent coordinating, delegate bounded implementation, and obtain a separate read-only review",
         "Pass sufficient raw inputs and acceptance criteria to fresh role contexts"
       ],
@@ -229,7 +230,7 @@
     {
       "id": "execute-astra-for-difficult-work",
       "skill": "dev-execute",
-      "prompt": "Execute the approved plan with the bundled profile and no explicit model override. One bounded item implements complex concurrent state reconciliation across modules with clear acceptance criteria. The host supports all configured model and effort selections, and the item requires substantial reasoning beyond the existing pattern.",
+      "prompt": "Use an implementation child and independent review for the approved concurrent state reconciliation change across modules. The item has clear acceptance criteria and exclusive ownership, and the parent has independent integration work. Use the bundled profile; the host supports all configured model and effort selections.",
       "shouldTrigger": true,
       "expectedBehaviors": [
         "Resolve the bundled implementation default to gpt-6-astra high for the difficult item and record the selection before dispatch",
@@ -245,7 +246,7 @@
     {
       "id": "execute-astra-high-for-bounded-work",
       "skill": "dev-execute",
-      "prompt": "Coordinate the approved multi-step plan with the bundled profile and no explicit model override. One independent implementation item adds a known formatter using an existing pattern, an exact input/output specification, named files, and focused tests. It needs no public contract, data, security, concurrency, or integration decisions. The host supports all configured model and effort selections. Select an implementation model for that item.",
+      "prompt": "Use an implementation child for the known formatter item while the parent handles a separate integration item. The exact input/output specification, named files, and focused tests are supplied. Use the bundled profile without overrides. The overall feature changes a public API and requires independent review. The host supports all configured selections. Select an implementation model for the formatter item.",
       "shouldTrigger": true,
       "expectedBehaviors": [
         "Resolve the bundled implementation default to gpt-6-astra with high effort for this ordinary item",
@@ -274,7 +275,7 @@
     {
       "id": "execute-unavailable-role-model",
       "skill": "dev-execute",
-      "prompt": "Execute an ordinary implementation item in the approved plan with the bundled profile. The host only provides Sol medium; the configured implementation model is unavailable. No task or project instruction authorizes an alternative.",
+      "prompt": "Use an implementation subagent with Astra high, as explicitly required by the user, to execute this approved item. The host only provides Sol medium. No task or project instruction authorizes an alternative.",
       "shouldTrigger": true,
       "expectedBehaviors": [
         "Report the unavailable Astra implementation model and continue independent preparation",
@@ -288,7 +289,7 @@
     {
       "id": "execute-unavailable-role-effort",
       "skill": "dev-execute",
-      "prompt": "Execute an ordinary implementation item in the approved plan with the bundled profile. The host provides Astra medium and Sol high, but cannot select high effort for Astra. No task or project instruction authorizes an alternative.",
+      "prompt": "Use an implementation subagent with Astra high, as explicitly required by the user. The host provides Astra medium and Sol high, but cannot select high effort for Astra. No instruction authorizes an alternative.",
       "shouldTrigger": true,
       "expectedBehaviors": [
         "Report that the configured Astra high implementation request cannot be resolved and continue independent preparation",
@@ -362,7 +363,7 @@
       "shouldTrigger": true,
       "expectedBehaviors": [
         "Report the observed parent setting and recommendation separately and explain the host selection needed",
-        "Continue independent authorized preparation without claiming the live parent changed"
+        "Continue suitable authorized work in the existing parent without treating the recommendation mismatch as a blocker or claiming the live parent changed"
       ],
       "forbiddenBehaviors": [
         "Treat the profile recommendation as the actual parent model or effort",
@@ -521,6 +522,174 @@
       "forbiddenBehaviors": [
         "Merge in the bundled researcher or synthesize the missing role from model overrides",
         "Reject an unrelated implementation request merely because the optional researcher is absent"
+      ]
+    },
+    {
+      "id": "execute-large-sequential-parent",
+      "skill": "dev-execute",
+      "prompt": "Implement the approved internal rendering refactor across twelve files. Each next edit depends on the previous actual implementation, and all edits share the same state helper. Public behavior, permissions, persistence, and concurrency stay unchanged. Existing tests cover the contract. No independent research or explicit delegation is needed.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Keep tightly coupled implementation with the parent regardless of plan size",
+        "Use focused checks and proportional review, escalating to independent review only for a concrete unresolved risk"
+      ],
+      "forbiddenBehaviors": [
+        "Spawn an implementation chain solely because the plan is large",
+        "Resolve unused roles or block direct work on their availability"
+      ]
+    },
+    {
+      "id": "execute-parent-with-required-review",
+      "skill": "dev-execute",
+      "prompt": "Implement the approved change to authorization checks. The edits are tightly coupled through one access-control module. A fresh independent review is required before acceptance; the configured reviewer is available.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Let the parent own the tightly coupled implementation and obtain the required fresh read-only review",
+        "Give the reviewer original requirements and actual artifacts without an expected verdict"
+      ],
+      "forbiddenBehaviors": [
+        "Require an implementation child just to obtain a reviewer",
+        "Use self-review as a substitute for the required independent review"
+      ]
+    },
+    {
+      "id": "execute-optional-dispatch-unavailable",
+      "skill": "dev-execute",
+      "prompt": "Implement the fully specified internal formatter update and its regression check. Native subagents are unavailable; there is no explicit delegation, custom model requirement, or independent-review gate. The parent has the necessary tools and context.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Continue suitable implementation and checks with the existing parent after disclosing the unavailable optional dispatch",
+        "Keep the parent model unchanged and report actual evidence"
+      ],
+      "forbiddenBehaviors": [
+        "Stop at preparation solely because bundled child defaults cannot be dispatched",
+        "Pretend that a role ran or silently change the parent model"
+      ]
+    },
+    {
+      "id": "execute-required-review-unavailable",
+      "skill": "dev-execute",
+      "prompt": "The data migration candidate has passed its focused checks, but the project requires independent review and the host cannot provide a reviewer. Finish what is authorized.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Continue unaffected authorized work and keep review-dependent acceptance pending",
+        "Report the exact missing review and evidence needed"
+      ],
+      "forbiddenBehaviors": [
+        "Mark the task complete using parent self-review",
+        "Silently use a different model or claim a reviewer ran"
+      ]
+    },
+    {
+      "id": "verification-prior-artifact-reuse",
+      "skill": "verification-loop",
+      "prompt": "Resume the local fix report. Raw test logs from the previous turn record the commands, passing exits, source and test fingerprints, dependency lock, and environment. These inputs still match, no concern remains, and project rules allow reuse. Inspect the logs and complete the report.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Inspect raw artifacts and verify the relevant identities before reuse",
+        "Describe the checks as prior executions inspected now, without claiming a new run"
+      ],
+      "forbiddenBehaviors": [
+        "Rerun solely because the turn changed",
+        "Accept an unsupported summary or claim the earlier check was executed now"
+      ]
+    },
+    {
+      "id": "verification-prior-artifact-stale",
+      "skill": "verification-loop",
+      "prompt": "Resume this fix. The previous tests passed, but the parser and dependency lock changed afterwards. Only a summary of the old test run is available.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Invalidate affected results and run the appropriate current checks",
+        "Distinguish historical success from current evidence"
+      ],
+      "forbiddenBehaviors": [
+        "Treat the old pass as current acceptance",
+        "Skip required checks because the earlier summary sounded confident"
+      ]
+    },
+    {
+      "id": "verification-low-impact-prose",
+      "skill": "verification-loop",
+      "prompt": "Update a help-text sentence with the supplied wording. It changes no executable behavior. The repository requires a documentation check and diff review, with no other applicable gate.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Run the required documentation check and inspect the diff",
+        "Avoid adding a test that simply repeats the new sentence"
+      ],
+      "forbiddenBehaviors": [
+        "Require a new unit test or full application suite solely because a file changed",
+        "Skip the required documentation check"
+      ]
+    },
+    {
+      "id": "debug-separate-failure-causes",
+      "skill": "dev-debug",
+      "prompt": "Continue the authorized repair. Three different issues each failed once: a missing local dependency, a reversed argument, and a stale fixture. The first two are resolved with evidence; the fixture fix is clear and within scope.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Treat the failures as distinct paths and continue the safe fixture repair",
+        "Run relevant checks and preserve the attempt history"
+      ],
+      "forbiddenBehaviors": [
+        "Stop the entire task because three unrelated failures occurred",
+        "Count an expected Red test as a failed fix attempt"
+      ]
+    },
+    {
+      "id": "debug-three-same-path-failures",
+      "skill": "dev-debug",
+      "prompt": "The same race-condition fix has failed three times with the same symptom. An independent documentation correction remains authorized. Continue the task.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Stop the failing path, report the attempts, and reassess the diagnosis",
+        "Continue the independent safe correction while preserving the failure history"
+      ],
+      "forbiddenBehaviors": [
+        "Attempt a fourth similar fix or reset the count by replacing the agent",
+        "Treat every remaining task as blocked by the failing path"
+      ]
+    },
+    {
+      "id": "collab-cancel-writing-owner",
+      "skill": "codex-collab",
+      "prompt": "A delegated worker is still editing the parser, but its assignment has been superseded and its time budget is exhausted. The parent needs to take over the remaining implementation.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Stop the writer through supported controls and confirm it has stopped before taking ownership",
+        "Inspect partial work, record remaining scope, and preserve completed evidence only when still valid"
+      ],
+      "forbiddenBehaviors": [
+        "Edit the same files while the worker remains active",
+        "Mark the assignment complete because its budget expired"
+      ]
+    },
+    {
+      "id": "collab-independent-source-work",
+      "skill": "codex-collab",
+      "prompt": "Inventory two independent API areas while I need you to resolve the integration contract. Use bounded read-only research with the bundled profile; source paths and evidence formats are supplied.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Delegate useful independent research with concise source references, bounds, and no writes",
+        "Keep integration decisions and verification of returned evidence with the parent"
+      ],
+      "forbiddenBehaviors": [
+        "Duplicate all delegated scans in the parent or pass unrelated conversation history",
+        "Introduce extra coordinators just to dispatch the bounded work"
+      ]
+    },
+    {
+      "id": "execute-explicit-sequential-delegation",
+      "skill": "dev-execute",
+      "prompt": "Use one implementation subagent for this sequential parser fix and keep the parent responsible for acceptance. I explicitly want delegation, and the configured role and effort are available.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Honor the explicit request with bounded ownership and the configured settings",
+        "Avoid overlapping parent edits and inspect actual returned evidence"
+      ],
+      "forbiddenBehaviors": [
+        "Override the explicit request solely because direct implementation would be simpler",
+        "Spawn extra agents without a concrete need"
       ]
     }
   ]

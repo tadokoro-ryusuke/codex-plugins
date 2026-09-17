@@ -34,7 +34,7 @@ that need those standards; they are not prerequisites for every edit.
 - Use `update_plan` for substantial multi-step work when that tool is available; otherwise keep progress in the existing plan artifact. Do not invent a tool call or create a second plan just for the UI.
 - Use subagents only when the user directly requests them or an applicable `AGENTS.md` or skill explicitly authorizes a bounded delegation. Follow `references/orchestration.md` for the subagent gate.
 - Do not run destructive commands without explicit approval.
-- Do not claim a check passed unless you ran it in the current turn and saw passing output.
+- Support check claims with inspected output tied to the relevant inputs and environment. Distinguish checks run now from reusable prior results under `$verification-loop`; never present an old run as a new execution.
 
 ## Completion Standard
 

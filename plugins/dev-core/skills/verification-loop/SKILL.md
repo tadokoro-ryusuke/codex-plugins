@@ -59,10 +59,16 @@ services or resolve dependencies; respect the task's network constraints.
 
 ## Evidence-based completion
 
-Support new completion claims with output inspected in this turn and relevant
-to the final code. Record command, working directory, exit status, revision/diff
-identity, and artifact path. After a relevant edit, re-run the affected checks.
-Retain earlier results as history, not current proof.
+Support completion claims with output inspected now and relevant to the final
+code. Record command, working directory, exit status, execution time,
+revision/diff identity, relevant environment, and artifact path.
+
+Reuse a prior result only when its raw artifact is available, the relevant source,
+tests, dependencies, configuration, and environment still match, and project
+rules permit reuse. Label it as a prior execution inspected now, not a new run.
+Run affected checks when those inputs changed, their identity cannot be verified,
+an unresolved concern remains, or a fresh run is required. Time-sensitive or live
+system checks need current observations. A summary saying "passed" is insufficient.
 
 - Build output proves that build in its environment.
 - A test proves the assertions it executes, not an unobserved integration.
