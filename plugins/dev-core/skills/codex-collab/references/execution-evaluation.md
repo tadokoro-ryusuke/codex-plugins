@@ -56,9 +56,31 @@ side effects, elapsed time, usage coverage, interventions, and remaining work.
 Publish a sanitized result record, including failures. A bounded smoke can reveal
 a regression; it cannot establish a general quality or cost advantage.
 
-## Explicit-delegation smoke
+## Compare model and effort selections
 
-## Prepare a bounded case
+After testing topology, hold parent/reviewer settings, review requirements, tools,
+fixtures, concurrency and speed mode fixed. Compare eligible implementation
+selections from the bundled profile: `routine`, `bounded`, role default, and
+`complex`. Include the prior implementation baseline through an explicit
+`--model gpt-6-astra --effort high` override; do not create a second default profile.
+Do not combine that override with a preset. Resolve every selection against the
+current host before starting; unavailable arms remain unexecuted.
+
+Use the two same-model preset pairs to isolate effort changes, and compare
+same-effort selections to isolate model changes where possible. Test frozen local
+fixes, cross-module implementations, unresolved-root-cause requests and consequential
+review cases separately. An ambiguous task tests return-to-parent behavior, not
+permission to force every selection to implement it. Use unhinted task requests
+for classification tests; keep expected preset names with the evaluator.
+
+Preserve explicit/custom-profile cases, including profiles without presets and
+unavailable requested efforts. Grade completion, regressions, scope and review
+before efficiency. Record parent supervision and correction work as well as child
+usage. Distinguish actual Codex credits, API charges and token estimates; do not
+derive subscription savings from public benchmark prices or per-token ratios.
+Repeat representative matched cases before claiming an optimal default.
+
+## Explicit-delegation smoke: prepare a bounded case
 
 From the collaboration skill directory, prepare a new temporary workspace:
 

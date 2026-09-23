@@ -89,19 +89,32 @@ security/permissions, persistent data, concurrency, and explicit project/user
 gates require a fresh reviewer. Other work uses proportional review.
 Default model/effort assignments for selected child roles
 live in one [execution profile](plugins/dev-core/skills/codex-collab/assets/execution-profile.json).
-The bundled defaults are Astra high for the parent, implementer, and independent
-reviewer, with Sol medium for optional read-only research. Use research for bounded
-source lookup or log classification; keep design and acceptance judgments with the
-parent. An execution-only parent may use Astra medium when the plan is settled.
+Use the bundled profile as follows after choosing whether delegation helps:
+
+| Work | Model / effort | Selection |
+| --- | --- | --- |
+| Parent design, integration and acceptance | GPT-6 Astra / high | Host recommendation |
+| General delegated implementation | GPT-6 Sol / medium | Implementer default |
+| Short mechanical edits with exact checks | GPT-6 Luna / high | `routine` preset |
+| Settled behavior, named files, local dependencies, independent checks | GPT-6 Luna / max | `bounded` preset |
+| Complex delegated implementation or bounded technical investigation | GPT-6 Sol / high | `complex` preset |
+| Required independent review | GPT-6 Astra / high | Reviewer default |
+| Bounded read-only source lookup or log classification | GPT-6 Luna / high | Researcher default |
+
+Keep ambiguous requirements, root-cause judgment and consequential design decisions
+with the parent. Return changed assumptions before widening a child's scope.
 The profile recommends the parent setting; choose that model in the task's host.
 The plugin resolves explicit child requests against the host's exposed models
 and effort settings, without silently falling back to another model.
 
 The [execution contract](plugins/dev-core/skills/codex-collab/references/planned-execution.md)
 defines bounded writes, parent decisions, fresh handoffs, review independence,
-and evidence. Use the bundled Astra high implementation default for ordinary
-and difficult delegated work. Preserve explicit task selections and custom profiles, and
-record authorized overrides before dispatch. Check the actual parent
+and evidence. It authorizes preset selection for bundled delegated implementation,
+including useful debug/TDD handoffs. Preserve explicit task selections and custom
+profiles: omit presets for explicit model/effort overrides, and select a custom
+profile's preset only when the user or project requests it. Legacy profiles remain
+valid without presets; missing roles or presets are never merged from the bundle.
+Record the selection reason before dispatch. Check the actual parent
 setting separately: a profile recommendation cannot change the running task.
 Native tools accepting model/effort arguments do not require installing custom
 role files. Read-only task instructions and role names alone
@@ -147,10 +160,19 @@ Its helper prepares a disposable repository and grades behavior independently of
 candidate-written tests. The helper itself does not call a model; native dispatch,
 effective model metadata, and observed outcomes are recorded separately. The
 procedure also defines matched parent-only, parent-with-review, and delegated
-comparisons. Required-review cases exclude the parent-only arm. A schema pass
+comparisons, plus model/effort comparisons against the prior Astra high baseline.
+Required-review cases exclude the parent-only arm. A schema pass
 or one native smoke does not establish a quality, cost, or latency advantage.
 
 ### Source update migration
+
+- `dev-core` 5.5.0 (2026-09-23): adopt Sol medium for general implementation,
+  Luna high for bounded research and routine edits, Luna max for settled bounded
+  implementation, and Sol high for complex implementation. Keep Astra high parent
+  and review recommendations. Add capability-checked implementation presets without
+  overriding custom profiles, explicit selections, scope or review gates. See the
+  [implementation record](docs/plans/task-sol-luna-routing.md) for validation,
+  native smoke evidence, comparative limits and installation state.
 
 - `dev-core` 5.4.0 (2026-09-17): choose delegation by independent work and expected
   benefit, and decide review separately by risk. Preserve the role model defaults

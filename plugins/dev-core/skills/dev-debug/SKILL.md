@@ -16,6 +16,12 @@ Use this skill to investigate before fixing.
 5. After confirming root cause, use `dev-tdd` style regression-first fixing when practical.
 6. Use `continuous-learning` when the failure pattern should become a durable guardrail.
 
+For a useful bounded investigation or fix handoff, this skill authorizes delegation
+under `../codex-collab/references/planned-execution.md`. Keep ambiguous root-cause
+judgment with the parent; select a bounded implementation preset only after the
+cause, behavior and ownership are settled. Do not turn standalone diagnosis into
+a mandatory agent chain or change the active parent model.
+
 ## Hard Rules
 
 - Do not patch before root cause is identified unless the user explicitly asks for exploratory changes.

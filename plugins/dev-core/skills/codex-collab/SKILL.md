@@ -7,10 +7,11 @@ description: "Delegate bounded implementation, review, or investigation when col
 
 Coordinate independent reasoning inside Codex: reviews that don't trust the implementer, rescue when an approach is looping, and explicit parallel subagent work.
 
-For delegated planned execution or its independent review, read
+For delegated planned execution, its independent review, or a bounded dev-debug/dev-tdd handoff, read
 `references/planned-execution.md`. Choose useful roles before resolving settings from
 `assets/execution-profile.json` with `scripts/resolve_execution_role.py`; this
-defines defaults for that workflow, not for every collaboration request.
+defines defaults and implementation presets for those handoffs. Classify the work
+using that contract before resolving a preset; preserve explicit/custom settings.
 For bounded dev-core source lookup or log classification, the optional researcher
 role is authorized under the "Optional bounded research" section of
 `references/planned-execution.md`; do not load the full execution workflow for it.
@@ -62,7 +63,8 @@ edits need disjoint ownership and resources. Respect the host's role, concurrenc
 model, and sandbox limits.
 
 Request concise findings plus command results or artifact references that the
-parent can verify. Use the profile for planned execution or its optional research role;
+parent can verify. Use the profile for planned execution, bounded dev-debug/dev-tdd
+handoffs, or the optional research role;
 otherwise inherit model settings unless an explicit instruction selects an
 override.
 

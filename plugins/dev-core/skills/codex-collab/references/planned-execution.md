@@ -1,7 +1,7 @@
 # Planned Execution and Delegation
 
 Use this contract when planned execution benefits from delegation or needs
-independent review.
+independent review, or when dev-debug/dev-tdd selects a bounded handoff.
 Honor explicit user instructions over these defaults. Keep narrow standalone
 tasks outside the full execution workflow. Use the optional research role only
 for the bounded information-gathering work described below.
@@ -45,23 +45,57 @@ user or applicable project instruction requests it. Preserve custom profiles and
 explicit selections. Do not install models or change personal configuration as
 part of resolution.
 
-Use the selected profile's implementation default for both ordinary and difficult
-work assigned to a child. Complexity determines the handoff, scope, and checks;
-it does not silently change the model or effort. Establish explicit acceptance criteria,
-bounded ownership, and independently verifiable outcomes. Return unplanned public
-contract or scope decisions to the parent before implementation.
-
 Use the selected profile's parent recommendation for requirements, design,
-integration, and acceptance decisions. For a parent dedicated to executing an
-already-settled plan, this workflow permits recommending Astra medium when scope,
-design, ownership, and acceptance evidence are specified. Record that selection
-and preserve explicit task settings; a recommendation does not change the live
-host setting. Reassess when new design or consequential acceptance decisions arise.
+integration, and acceptance decisions. Keep ambiguous requirements, architecture,
+and consequential scope decisions with the parent. A standalone skill invocation
+does not change the active model or require a child.
 
 Use the selected profile's reviewer when independent review is selected. Apply
 changed role selections only under explicit task/project authority and record
 their source in the dispatch ledger. Use original requirements and fresh review
 context; a different reviewer model is not itself evidence of independence.
+
+### Select an implementation preset
+
+Classify the work in the parent after choosing delegation. Do not create a router
+agent or use a resolver to infer difficulty. Keep all model/effort values in the
+profile; refer to these preset names in handoffs and record the selection reason.
+
+When using the bundled profile without an explicit role override, this contract
+authorizes selecting its implementation preset by these criteria:
+
+| Selection | Use when |
+| --- | --- |
+| `routine` | The edit is short, mechanical and low risk, with exact acceptance checks; delegate only if the ownership decision already justifies it. |
+| `bounded` | Behavior and interfaces are settled, allowed files and local dependencies are known, and independent checks can verify the result without new design decisions. |
+| Role default (no preset) | General implementation has a bounded outcome but requires ordinary code investigation or integration choices. |
+| `complex` | A delegated item requires substantial cross-module reasoning, competing technical hypotheses, or a complex implementation within parent-owned decisions. |
+
+Use `bounded` only when all its conditions hold. A small diff, one passing test,
+or a low file count does not establish them. For unresolved authorization,
+migration, concurrency or public-contract decisions, first return those decisions
+to the parent. After the parent settles them, choose a suitable implementation
+scope and retain required independent review. Keep ambiguous root-cause judgment
+with the parent; a complex child may gather and test bounded hypotheses.
+
+Preserve explicit task model/effort overrides by omitting `--preset`. For a custom
+profile, use its role default unless the user or project explicitly selects one
+of its presets. Do not infer opt-in from a matching preset name, copy bundled
+presets into a custom profile, or synthesize a missing selection. Legacy profiles
+without presets remain valid.
+
+Resolve the chosen selection before dispatch. The resolver accepts presets only
+for `implementer`, rejects combining them with `--model`/`--effort`, and inherits
+the role's write policy. Define optional `implementation_presets` as a mapping of
+non-empty names to objects containing only `model` and `reasoning_effort`; presets
+cannot expand ownership. Missing presets and unavailable settings are errors.
+
+When evidence invalidates a bounded assignment, stop that path and return the
+assumptions, failing evidence and attempt history to the parent. Re-scope first;
+do not silently raise effort, widen writes, or reset failure counts with another
+agent. The parent may select a different bundled preset for the revised scope
+under this contract; preserve explicit/custom requirements. Use a fresh agent
+and transfer ownership before changing model/effort.
 
 ### Optional bounded research
 
@@ -100,11 +134,12 @@ Resolve only selected roles from the collaboration skill directory. For example:
 
 ```bash
 python3 scripts/resolve_execution_role.py --role implementer --capabilities "$capabilities_file"
+python3 scripts/resolve_execution_role.py --role implementer --preset bounded --capabilities "$capabilities_file"
 python3 scripts/resolve_execution_role.py --role reviewer --capabilities "$capabilities_file"
 ```
 
 Use `--profile` for the selected profile and both `--model` and `--effort` for an
-explicit override. Exit `2` means that dispatch request cannot be resolved; do not
+explicit override; omit `--preset` when supplying that pair. Exit `2` means that dispatch request cannot be resolved; do not
 silently launch another model or omit the specified effort.
 
 Translate the returned model and reasoning settings into the host's actual spawn
@@ -160,6 +195,10 @@ Give the implementation agent:
 4. Acceptance criteria, relevant project commands, and concise evidence to return.
 5. Expected benefit, effort bounds, and conditions for returning to the parent
    rather than guessing or expanding scope.
+
+Include only the necessary interfaces, decisions and evidence in the handoff.
+Do not forward the parent's full history or a generic workflow manual merely
+because the parent has a larger context window.
 
 Tell the agent to use TDD for executable behavior or regressions and applicable
 checks for other changes. Require the changed files, tests and commands/results,

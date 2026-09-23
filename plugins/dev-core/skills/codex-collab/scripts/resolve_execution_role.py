@@ -32,9 +32,14 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("--role", choices=ROLE_NAMES, required=True)
     parser.add_argument("--capabilities", type=Path, required=True)
     parser.add_argument("--profile", type=Path, default=DEFAULT_PROFILE)
+    parser.add_argument("--preset")
     parser.add_argument("--model")
     parser.add_argument("--effort")
     arguments = parser.parse_args()
+    if arguments.preset is not None and arguments.role != "implementer":
+        parser.error("--preset requires implementer role")
+    if arguments.preset is not None and (arguments.model is not None or arguments.effort is not None):
+        parser.error("--preset cannot be combined with --model or --effort")
     if (arguments.model is None) != (arguments.effort is None):
         parser.error("--model and --effort must be provided together")
     return arguments
@@ -86,6 +91,23 @@ def validate_profile(value: Any) -> dict[str, Any]:
                 f"{role_name} write_policy must be "
                 f"{ROLE_WRITE_POLICIES[role_name]}"
             )
+
+    if "implementation_presets" in profile:
+        presets = require_object(profile["implementation_presets"],
+                                 "profile implementation presets")
+        for name, value in presets.items():
+            preset_name = require_nonempty_string(name, "implementation preset name")
+            preset = require_object(value, f"implementation preset {preset_name}")
+            expected = {"model", "reasoning_effort"}
+            if set(preset) != expected:
+                raise InputError(
+                    f"implementation preset {preset_name} must contain only "
+                    "model and reasoning_effort"
+                )
+            require_nonempty_string(preset["model"],
+                                    f"implementation preset {preset_name} model")
+            require_nonempty_string(preset["reasoning_effort"],
+                                    f"implementation preset {preset_name} reasoning_effort")
     return profile
 
 
@@ -120,12 +142,17 @@ def resolve(arguments: argparse.Namespace) -> dict[str, str]:
     if arguments.role not in profile["roles"]:
         raise InputError(f"profile does not define role: {arguments.role}")
     role = profile["roles"][arguments.role]
-    model = arguments.model if arguments.model is not None else role["model"]
-    effort = (
-        arguments.effort
-        if arguments.effort is not None
-        else role["reasoning_effort"]
-    )
+    selection = role
+    if arguments.preset is not None:
+        presets = profile.get("implementation_presets", {})
+        if arguments.preset not in presets:
+            raise InputError(
+                f"profile does not define implementation preset: {arguments.preset}"
+            )
+        selection = presets[arguments.preset]
+    model = arguments.model if arguments.model is not None else selection["model"]
+    effort = (arguments.effort if arguments.effort is not None
+              else selection["reasoning_effort"])
 
     if model not in capabilities:
         raise InputError(f"model is unavailable: {model}")

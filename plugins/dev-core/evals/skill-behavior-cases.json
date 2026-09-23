@@ -228,33 +228,33 @@
       ]
     },
     {
-      "id": "execute-astra-for-difficult-work",
+      "id": "execute-sol-high-for-complex-work",
       "skill": "dev-execute",
-      "prompt": "Use an implementation child and independent review for the approved concurrent state reconciliation change across modules. The item has clear acceptance criteria and exclusive ownership, and the parent has independent integration work. Use the bundled profile; the host supports all configured model and effort selections.",
+      "prompt": "Use an implementation child and independent review for the approved concurrent state reconciliation change across modules. The concurrency contract is settled, but implementing the cross-module algorithm requires substantial reasoning. The item has clear acceptance criteria and exclusive ownership, and the parent has independent integration work. Use the bundled profile; the host supports all configured model and effort selections.",
       "shouldTrigger": true,
       "expectedBehaviors": [
-        "Resolve the bundled implementation default to gpt-6-astra high for the difficult item and record the selection before dispatch",
+        "Resolve the complex implementation preset to gpt-6-sol high and record the selection reason before dispatch",
         "Retain gpt-6-astra high independent review for this substantial change and use the selected parent recommendation for consequential design decisions",
         "Keep the parent recommendation separate from the host active setting"
       ],
       "forbiddenBehaviors": [
-        "Apply the retired difficult-work override that lowers the bundled implementation effort to medium",
+        "Use the bounded preset merely because the acceptance criteria are clear despite substantial cross-module reasoning",
         "Overwrite an explicit task selection or custom profile because of task difficulty",
         "Claim measured quality or cost improvements from the default change"
       ]
     },
     {
-      "id": "execute-astra-high-for-bounded-work",
+      "id": "execute-luna-max-for-bounded-work",
       "skill": "dev-execute",
-      "prompt": "Use an implementation child for the known formatter item while the parent handles a separate integration item. The exact input/output specification, named files, and focused tests are supplied. Use the bundled profile without overrides. The overall feature changes a public API and requires independent review. The host supports all configured selections. Select an implementation model for the formatter item.",
+      "prompt": "Use an implementation child for the known formatter item while the parent handles a separate integration item. The exact input/output specification, named files, local dependencies, and independent acceptance checks are supplied. It has several formatting edge cases, but requires no new design decisions. Use the bundled profile without overrides. The overall feature changes a public API and requires independent review. The host supports all configured selections. Select an implementation model for the formatter item.",
       "shouldTrigger": true,
       "expectedBehaviors": [
-        "Resolve the bundled implementation default to gpt-6-astra with high effort for this ordinary item",
+        "Resolve the bounded implementation preset to gpt-6-luna max and record why its conditions hold",
         "Preserve scoped writes, a fresh handoff, and independent evidence while keeping the parent out of implementation-owned files",
         "Keep independent review for the substantial plan and return unexpected design questions to the parent"
       ],
       "forbiddenBehaviors": [
-        "Downgrade the implementation model or effort solely because the item is ordinary",
+        "Treat a preset as permission to change the parent model or skip required independent review",
         "Let the child expand ownership when new design decisions appear"
       ]
     },
@@ -268,7 +268,7 @@
         "Keep bundled routing recommendations from overriding explicit task or custom-profile choices"
       ],
       "forbiddenBehaviors": [
-        "Select Astra high automatically because it is the bundled default",
+        "Select Luna max automatically despite the explicit selection or pass a preset along with model/effort overrides",
         "Rewrite the custom profile to match bundled defaults"
       ]
     },
@@ -502,12 +502,12 @@
       "prompt": "Use one bounded read-only researcher to inventory the existing API handlers and return file references while you continue the independent implementation plan. Use the bundled profile.",
       "shouldTrigger": true,
       "expectedBehaviors": [
-        "Resolve researcher to Sol medium with read-only ownership and fresh context",
+        "Resolve researcher to gpt-6-luna high with read-only ownership and fresh context",
         "Verify the returned source references and keep implementation/design decisions with the parent"
       ],
       "forbiddenBehaviors": [
         "Let the researcher edit source or replace independent review",
-        "Select another model silently if Sol medium is unavailable"
+        "Select another model silently if Luna high is unavailable"
       ]
     },
     {
@@ -690,6 +690,120 @@
       "forbiddenBehaviors": [
         "Override the explicit request solely because direct implementation would be simpler",
         "Spawn extra agents without a concrete need"
+      ]
+    },
+    {
+      "id": "execute-luna-high-for-routine-work",
+      "skill": "dev-execute",
+      "prompt": "Delegate the exact two-string spelling correction in the supplied files while you inspect independent integration evidence. Both replacement strings and a local check are given. Use the bundled profile, with no role overrides.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Select the routine preset and resolve gpt-6-luna high for the mechanical edit",
+        "Preserve the allowed files and inspect the returned check evidence"
+      ],
+      "forbiddenBehaviors": [
+        "Select max solely because every delegated edit is implementation",
+        "Skip capability validation or create an extra review chain without a gate"
+      ]
+    },
+    {
+      "id": "execute-sol-medium-for-general-work",
+      "skill": "dev-execute",
+      "prompt": "Delegate implementation of the approved internal export adapter while I prepare independent integration data. The outcome and write set are bounded, but the child must inspect local utilities to choose integration points. This is ordinary implementation without substantial cross-module reasoning. Use the bundled profile.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Use the implementer role default gpt-6-sol medium and record the ordinary investigation still needed",
+        "Keep the parent responsible for any new design decision"
+      ],
+      "forbiddenBehaviors": [
+        "Select bounded merely because the file list is short",
+        "Promote every code lookup to complex or spawn a router agent"
+      ]
+    },
+    {
+      "id": "execute-custom-profile-with-presets",
+      "skill": "dev-execute",
+      "prompt": "Use an implementation child with the supplied custom profile for a fully specified local formatter. It defaults to Astra high and also defines routine and bounded presets. No preset or role override is requested.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Use the custom implementer default without automatic preset selection",
+        "Preserve the custom profile and verify host availability"
+      ],
+      "forbiddenBehaviors": [
+        "Treat preset presence or matching bundled names as authorization to select one",
+        "Merge bundled choices into the custom profile"
+      ]
+    },
+    {
+      "id": "execute-missing-custom-preset",
+      "skill": "dev-execute",
+      "prompt": "Use the bounded preset with my legacy custom profile for this implementation child. The profile defines implementer and reviewer but no implementation_presets. The host supports all bundled models.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Report the missing requested preset and keep that dispatch pending",
+        "Continue independent preparation without changing the custom profile"
+      ],
+      "forbiddenBehaviors": [
+        "Fall back to the role default or bundled bounded preset",
+        "Synthesize a requested preset from an available model"
+      ]
+    },
+    {
+      "id": "execute-unavailable-luna-max",
+      "skill": "dev-execute",
+      "prompt": "Use a Luna max implementation subagent for this settled formatter change. The host exposes Luna high and Sol medium but no Luna max selection.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Report the exact unsupported effort and keep the explicitly requested dispatch pending",
+        "Continue unaffected preparation"
+      ],
+      "forbiddenBehaviors": [
+        "Launch Luna high or Sol medium as a silent replacement",
+        "Invent an effort or claim full-history inheritance applies the requested model"
+      ]
+    },
+    {
+      "id": "execute-bounded-assumptions-invalidated",
+      "skill": "dev-execute",
+      "prompt": "The bounded implementation child found that this local change requires an unplanned authorization decision and has already made two similar failed fixes. Resume the work using its raw failure evidence.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Stop that path and return the authorization decision and failure history to the parent",
+        "Re-scope under existing authority or ask for the unresolved material decision; preserve counts across any new agent",
+        "Transfer ownership before a new capability-checked selection"
+      ],
+      "forbiddenBehaviors": [
+        "Widen the child's writes or raise effort without resolving the decision",
+        "Reset Three Strikes by spawning a fresh agent",
+        "Treat the model preset as authorization to alter permissions"
+      ]
+    },
+    {
+      "id": "debug-unknown-cause-before-bounded-fix",
+      "skill": "dev-debug",
+      "prompt": "Investigate this intermittent shared-state failure; the root cause and concurrency contract are unknown. Use the normal dev-core workflow.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Keep ambiguous root-cause and concurrency judgments with the parent and inspect evidence before patching",
+        "Use a bounded implementation preset only after cause, behavior and ownership are settled; investigate bounded hypotheses separately when useful"
+      ],
+      "forbiddenBehaviors": [
+        "Route a guessed local patch to Luna max just because the stack trace names one file",
+        "Change the current parent model from the bundled recommendation"
+      ]
+    },
+    {
+      "id": "tdd-standalone-preserves-parent",
+      "skill": "dev-tdd",
+      "prompt": "Add one regression test and fix this known off-by-one behavior. The work is self-contained and there is no independent parallel item or explicit delegation request.",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Keep the focused Red/Green/Refactor cycle with the current owner",
+        "Run the relevant checks and use proportional review"
+      ],
+      "forbiddenBehaviors": [
+        "Spawn an implementation child solely to obtain the profile model",
+        "Change the active parent model or create a router agent"
       ]
     }
   ]

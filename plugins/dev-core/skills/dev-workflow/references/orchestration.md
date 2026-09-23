@@ -48,9 +48,12 @@ context isolation offers a concrete benefit. Prefer direct tools for determinist
 work; do not add an agent just to run one command. Explicit delegation requests
 take precedence, subject to actual host capabilities and safe ownership.
 
-For delegated planned execution or its independent review, use the role profile
+For delegated planned execution, its independent review, or bounded dev-debug/dev-tdd handoffs, use the role profile
 and handoff contract in `../../codex-collab/references/planned-execution.md`.
 Resolve only selected roles; a profile does not require spawning every role.
+Choose implementation presets by that contract after deciding ownership. Preserve
+explicit/custom selections, parent decisions and required review. A preset changes
+the child request; it cannot change the running parent or grant wider writes.
 For other work, inherit the configured model unless an applicable instruction
 selects an override. A child performs its assigned role without restarting the
 parent orchestration or spawning another execution chain.
