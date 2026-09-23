@@ -26,11 +26,11 @@ These are evaluation specifications, not a record of successful model executions
 
 **Observe:** Preserve the approved visual grammar and working trial, improve promise-to-demo continuity where needed, and verify the existing route after edits.
 
-**Fail if:** Impose Stride's orange palette, prohibit gradients or rounded controls without a product-specific reason, replace the app with static HTML unnecessarily, or downgrade a working trial to a prelaunch waitlist.
+**Fail if:** Impose the white/ink/orange palette of Case 1 or the bundled prelaunch prototype, prohibit gradients or rounded controls without a product-specific reason, replace the app with static HTML unnecessarily, or downgrade a working trial to a prelaunch waitlist.
 
 ## Case 4: localize the whole experience
 
-**Prompt:** Add a Japanese version of this English LP. It contains a demo with tabs and a source dialog, an FAQ, a downloadable sample, and a proposed price of about USD 19. Keep the product claims unchanged.
+**Prompt:** Add a Japanese version of this English LP. It contains a demo with tabs and a source dialog, an FAQ, a downloadable sample, and a provisional USD price. Keep the product claims unchanged.
 
 **Observe:** Adapt the copy naturally, translate hidden interaction text and accessible names as well as visible headings, provide a matching sample, preserve the currency and provisional status, and inspect both language paths at narrow widths. Verify keyboard/focus behavior for changed interactive components.
 

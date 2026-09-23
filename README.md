@@ -43,10 +43,11 @@ Note: `dev-core` bundles hooks (destructive-command blocking, session-start proj
 - [`$global-landing-design`](plugins/indie-product-marketing/skills/global-landing-design/SKILL.md): research references, design or build an international product LP, and localize or review an existing page.
 
 The landing-page skill bundles dated observations of SPREAD, Circleback,
-Inkdrop, Granola, Things, Mobbin, UI Pocket, and the Stride prototype. It
-connects audience and buying motion to product proof, visual direction,
-working CTAs, mobile layout, localization, and verification. It does not
-prescribe one palette or treat a polished page as validated demand.
+Inkdrop, Granola, Things, Mobbin, UI Pocket, and a prelaunch desktop
+productivity prototype. It connects audience and buying motion to product
+proof, visual direction, working CTAs, mobile layout, localization, and
+verification. It does not prescribe one palette or treat a polished page as
+validated demand.
 
 Example after loading the updated plugin:
 
@@ -165,6 +166,12 @@ Required-review cases exclude the parent-only arm. A schema pass
 or one native smoke does not establish a quality, cost, or latency advantage.
 
 ### Source update migration
+
+- `indie-product-marketing` 0.3.1 (2026-09-23): replace a private product name,
+  its provisional price, and a private repository path with generic
+  descriptions. Bundled references and assets refer to skills by name, so the
+  text reads the same on any host; SKILL.md entrypoints keep native `$skill`
+  invocation. Guidance and behavior cases are otherwise unchanged. See the [update record](docs/plans/task-indie-generalize.md).
 
 - `dev-core` 5.5.0 (2026-09-23): adopt Sol medium for general implementation,
   Luna high for bounded research and routine edits, Luna max for settled bounded

@@ -120,7 +120,7 @@ Startup-failure research repeatedly identifies absent or weak market need among 
 - Label every signal by what it actually measures.
 - Use hard gates before weighted scores.
 - Select a cheap disconfirmation test, not merely a promotional asset.
-- Hand a selected opportunity to `$indie-product-marketing`; do not keep generating indefinitely.
+- Hand a selected opportunity to the indie-product-marketing skill; do not keep generating indefinitely.
 
 ## 6. Source register
 
