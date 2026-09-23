@@ -147,5 +147,59 @@ class EvalGateTests(unittest.TestCase):
                         self.runner.eval_l2(client, self.cases()[0], {}, "rubric", {})
 
 
+class JudgeSamplingTests(unittest.TestCase):
+    """Send temperature only when configured and the judge model family accepts it."""
+
+    ACCEPTING = ("apac.anthropic.claude-sonnet-4-5-20250929-v1:0",
+                 "anthropic.claude-3-5-sonnet-20240620-v1:0",
+                 "anthropic.claude-haiku-4-5-20251001-v1:0",
+                 "anthropic.claude-opus-4-20250514-v1:0",
+                 "anthropic.claude-opus-4-6-v1")
+    REJECTING = ("anthropic.claude-opus-4-7",
+                 "anthropic.claude-sonnet-5",
+                 "anthropic.claude-sonnet-4-10",
+                 "arn:aws:bedrock:ap-northeast-1:000000000000:application-inference-profile/fixture")
+
+    @classmethod
+    def setUpClass(cls):
+        fake_sdk = types.ModuleType("anthropic")
+        fake_sdk.AnthropicBedrock = lambda **kwargs: None
+        spec = importlib.util.spec_from_file_location("hotl_evals_sampling", ASSETS / "evals/run_evals.py")
+        cls.runner = importlib.util.module_from_spec(spec)
+        with patch.dict(sys.modules, {"anthropic": fake_sdk, "hotl_evals_sampling": cls.runner}):
+            spec.loader.exec_module(cls.runner)
+
+    def judge_params(self, model, cfg):
+        vote = json.dumps({axis: {"score": 5, "reason": "fixture"} for axis in self.runner.AXES})
+        message = types.SimpleNamespace(content=[types.SimpleNamespace(type="text", text=vote)])
+        create = Mock(return_value=message)
+        client = types.SimpleNamespace(messages=types.SimpleNamespace(create=create))
+        case = {"id": "fixture", "category": "answer", "query": "fixture"}
+        with patch.object(self.runner, "JUDGE_MODEL", model):
+            self.runner.eval_l2(client, case, {}, "rubric", cfg)
+        self.assertEqual(create.call_count, cfg.get("votes", 3))
+        return create.call_args.kwargs
+
+    def test_allowlist_matches_documented_model_families(self):
+        for model in self.ACCEPTING:
+            with self.subTest(model=model):
+                self.assertTrue(self.runner.judge_accepts_sampling(model))
+        for model in self.REJECTING:
+            with self.subTest(model=model):
+                self.assertFalse(self.runner.judge_accepts_sampling(model))
+
+    def test_temperature_is_sent_only_to_accepting_models(self):
+        params = self.judge_params(self.ACCEPTING[0], {"temperature": 0})
+        self.assertEqual(params["temperature"], 0.0)
+        for model in self.REJECTING:
+            with self.subTest(model=model):
+                self.assertNotIn("temperature", self.judge_params(model, {"temperature": 0}))
+
+    def test_temperature_is_omitted_when_not_configured(self):
+        params = self.judge_params(self.ACCEPTING[0], {})
+        self.assertNotIn("temperature", params)
+        self.assertIn("max_tokens", params)
+
+
 if __name__ == "__main__":
     unittest.main()

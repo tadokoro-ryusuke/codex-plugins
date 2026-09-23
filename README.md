@@ -166,6 +166,10 @@ or one native smoke does not establish a quality, cost, or latency advantage.
 
 ### Source update migration
 
+- `hotl-engineering` 2.0.2 (2026-09-23): the eval runner sends judge `temperature`
+  only to model families that accept it (current-generation models reject it), and
+  gate calibration promotes on representative results rather than elapsed days
+  without weakening already-enforced gates. Adapted back from cc-plugins.
 - `dev-core` 5.5.0 (2026-09-23): adopt Sol medium for general implementation,
   Luna high for bounded research and routine edits, Luna max for settled bounded
   implementation, and Sol high for complex implementation. Keep Astra high parent
