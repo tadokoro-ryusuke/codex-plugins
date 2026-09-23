@@ -3,7 +3,7 @@
 run_evals.py — Eval harness for the retrieval QA agent
 
 L1: Deterministic checks (recall@5, MRR, must_not, refusal)
-L2: LLM-as-judge (Bedrock Tokyo / temperature 0 / median of 3 votes)
+L2: LLM-as-judge (Bedrock Tokyo / temperature 0 only for models that accept it / median of 3 votes)
 Gate decision: thresholds.json + baseline comparison → exit code
 
 Usage:
@@ -39,6 +39,18 @@ JUDGE_MODEL = os.environ.get(
 )
 RUBRIC_PATH = Path(__file__).parent / "judge_rubric.md"
 AXES = ("correctness", "faithfulness", "completeness")
+
+# Judge model families that accept temperature (Claude 3, Haiku 4.5, Sonnet/Opus 4.6
+# and earlier). Opus 4.7+, Sonnet 5+, and other newer models reject temperature with
+# a 400, so unknown or newer models never receive it. max_tokens is required by the
+# Messages API and is always sent.
+_SAMPLING_MODEL_RE = re.compile(
+    r"claude-(?:3-|haiku-4-5|(?:sonnet|opus)-4-(?:[0-6](?![0-9])|[0-9]{8}))"
+)
+
+
+def judge_accepts_sampling(model: str) -> bool:
+    return _SAMPLING_MODEL_RE.search(model) is not None
 
 
 # ---------------------------------------------------------------------------
@@ -145,14 +157,17 @@ def eval_l2(
     vote_count = cfg.get("votes", 3)
     if type(vote_count) is not int or vote_count < 1:
         raise ValueError("judge votes must be a positive integer")
+    params: dict = {
+        "model": JUDGE_MODEL,
+        "max_tokens": int(cfg.get("max_tokens", 1024)),
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    # Send temperature only when configured and the judge model accepts it.
+    if "temperature" in cfg and judge_accepts_sampling(JUDGE_MODEL):
+        params["temperature"] = float(cfg["temperature"])
     for _ in range(vote_count):
         try:
-            msg = client.messages.create(
-                model=JUDGE_MODEL,
-                max_tokens=int(cfg.get("max_tokens", 1024)),
-                temperature=float(cfg.get("temperature", 0)),
-                messages=[{"role": "user", "content": prompt}],
-            )
+            msg = client.messages.create(**params)
         except Exception as e:  # noqa: BLE001 — do not stop the whole suite for a single judge vote failure
             print(f"  judge vote failed ({type(e).__name__})", file=sys.stderr)
             continue

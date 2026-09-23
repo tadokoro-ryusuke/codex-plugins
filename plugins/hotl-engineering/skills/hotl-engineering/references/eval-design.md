@@ -15,7 +15,7 @@ results deterministic. Schema validation alone is not a skill-behavior eval.
    validation, refusal detection. Run every time, on every case, at near-zero cost. Do not run L2 on
    cases that already failed L1
 2. **L2 LLM-as-judge**: Rubric scoring (three axes — accuracy, faithfulness, completeness — each scored
-   1-5). Use temperature 0 plus the median of 3 votes to suppress variance. Run the smoke subset on
+   1-5). Use temperature 0 (only for models that accept it; current-generation models reject it) plus the median of 3 votes to suppress variance. Run the smoke subset on
    PRs and the full set nightly
 3. **L3 human calibration**: Each month, stratified-sample 30 cases (weighted toward failures) and have
    a human score them with the same rubric. If the ±1-point agreement rate falls below 85%, revise the
