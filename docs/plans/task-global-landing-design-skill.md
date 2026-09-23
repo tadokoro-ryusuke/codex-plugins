@@ -2,7 +2,7 @@
 
 ## Request and scope
 
-Create a reusable international landing-page design skill in this marketplace from the Stride LP work and additional research of SPREAD and Circleback. Add it to the existing `indie-product-marketing` plugin. Preserve unrelated work and the Stride application's pending changes.
+Create a reusable international landing-page design skill in this marketplace from a prelaunch prototype's LP work and additional research of SPREAD and Circleback. Add it to the existing `indie-product-marketing` plugin. Preserve unrelated work and the prototype application's pending changes.
 
 ## Acceptance
 
@@ -18,19 +18,19 @@ Create a reusable international landing-page design skill in this marketplace fr
 
 - Extend `indie-product-marketing`; no duplicate marketplace entry or new plugin dependency is needed.
 - Use `global-landing-design` for the LP workflow and retain the existing marketing skill for broader acquisition and launch work.
-- Keep the package self-contained. Generalize the Stride design reasoning without requiring its palette, implementation stack, or local files.
+- Keep the package self-contained. Generalize the prototype's design reasoning without requiring its palette, implementation stack, or local files.
 - Treat public marketing screens as presentation evidence, not verification of product execution or conversion outcomes.
 - Preserve the base plugin version and refresh its development cachebuster with the official helper.
 - Deliver repository source in this task. Source validation does not establish that an installed cache or a current conversation loaded the new skill.
 
 ## Baseline
 
-On 2026-09-08, the target branch was `codex/cost-aware-execution` with seven pre-existing changed/untracked paths. The Stride checkout had 27. The repository plugin validator passed before edits. A temporary baseline captured file hashes and the dirty README contents so the requested additive edit can be distinguished from existing work.
+On 2026-09-08, the target branch was `codex/cost-aware-execution` with seven pre-existing changed/untracked paths. The prototype checkout had 27. The repository plugin validator passed before edits. A temporary baseline captured file hashes and the dirty README contents so the requested additive edit can be distinguished from existing work.
 
 ## Research evidence
 
 - Inspected [SPREAD](https://www.spread.ai/) and [Circleback](https://circleback.ai/) with public page text and desktop browser screenshots on 2026-09-08. Mobile product behavior, trial completion, and conversion performance were not verified.
-- Read the Stride research record dated 2026-09-07 for Inkdrop, Granola, Things, Mobbin, UI Pocket, and bilingual prototype decisions. Preserved the dates and original evidence limits in the bundled reference notes.
+- Read the prototype's research record dated 2026-09-07 for Inkdrop, Granola, Things, Mobbin, UI Pocket, and bilingual prototype decisions. Preserved the dates and original evidence limits in the bundled reference notes.
 - Read repository instructions and the system skill-creator and plugin-creator guidance before drafting.
 
 ## Verification
@@ -77,9 +77,9 @@ Request: read the user-supplied [Inkdrop design account](https://www.devas.life/
 - [x] Run current repository/official validators and reference checks; inspect the incremental diff.
 - [x] Refresh the installed plugin from the verified local marketplace and compare its cache with source.
 
-Keep the article attribution compact. The additional browser-boundary and input-ownership checks are engineering adaptations for this skill, not claims that the author tested those exact conditions. Do not turn the article's tools or personal aesthetic judgments into universal requirements. This request updates skill instructions, not Stride's landing-page implementation.
+Keep the article attribution compact. The additional browser-boundary and input-ownership checks are engineering adaptations for this skill, not claims that the author tested those exact conditions. Do not turn the article's tools or personal aesthetic judgments into universal requirements. This request updates skill instructions, not the prototype's landing-page implementation.
 
-The existing installed `indie-product-marketing@codex-plugins` was enabled at `0.2.0+codex.20260908014838`, sourced from this local repository. Preserve unrelated marketplace and Stride changes. No commit or push is in scope.
+The existing installed `indie-product-marketing@codex-plugins` was enabled at `0.2.0+codex.20260908014838`, sourced from this local repository. Preserve unrelated marketplace and prototype changes. No commit or push is in scope.
 
 ### Verification and next action
 
@@ -89,7 +89,7 @@ Executed on 2026-09-09:
 - Official skill and plugin validators, using isolated PyYAML 6.0.2: passed.
 - Five package-local links, including the new section anchor, resolved; UI metadata and Markdown whitespace checks passed. The entrypoint is 115 lines.
 - Reviewed the incremental seven-file diff and the two new behavior specifications. These extend the existing seven cases; none is claimed as an executed model evaluation.
-- Verified that 35 pre-existing files outside this bounded update remained byte-for-byte identical, including all pending Stride files and the marketplace README.
+- Verified that 35 pre-existing files outside this bounded update remained byte-for-byte identical, including all pending prototype files and the marketplace README.
 - The official version helper produced `0.2.0+codex.20260909053507`. `codex plugin add indie-product-marketing@codex-plugins` succeeded against the verified local source.
 - Verified identical source/cache file inventories and bytes for the installed plugin. A fresh plugin listing reported the new version as installed and enabled.
 

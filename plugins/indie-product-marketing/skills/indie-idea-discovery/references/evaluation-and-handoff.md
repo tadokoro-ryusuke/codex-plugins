@@ -204,4 +204,4 @@ Create `assets/validation-handoff.md` for each selected opportunity. Transfer:
 9. Pass, revise, and stop rules.
 10. Open questions and rejected interpretations.
 
-Then use `$indie-product-marketing` for demand validation, channel strategy, launch planning, instrumentation, and growth diagnosis. Discovery has succeeded when the next decision is clearer, even when the correct result is “do not build this.”
+Then use the indie-product-marketing skill for demand validation, channel strategy, launch planning, instrumentation, and growth diagnosis. Discovery has succeeded when the next decision is clearer, even when the correct result is “do not build this.”

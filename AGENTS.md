@@ -26,6 +26,7 @@ This repository is a Codex plugin marketplace source. Keep it Codex-native.
 ## Sibling Repository (cc-plugins)
 
 - [`tadokoro-ryusuke/cc-plugins`](https://github.com/tadokoro-ryusuke/cc-plugins) (local: `~/work/cc-plugins`) is the Claude Code counterpart. dev-core knowledge skills and hotl-engineering here are English adaptations of its Japanese originals — mirror improvements by adaptation, not mechanical copy.
+- `indie-product-marketing` is authored here: this repository is the source of truth for its domain knowledge (SKILL.md files, references, and assets). Adapt changes one way into Japanese in cc-plugins; cc-plugins owns only Claude Code–specific execution instructions (`references/claude-code-runtime.md`).
 - Codex snapshots plugins into its cache at install time. After changing a plugin, bump its version, reinstall (`codex plugin add <plugin>@codex-plugins`), and start a new thread to pick up the change.
 
 ## Codex Feature Notes
