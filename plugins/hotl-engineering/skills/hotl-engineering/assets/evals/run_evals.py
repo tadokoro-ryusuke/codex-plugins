@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import re
 import statistics
@@ -54,9 +55,17 @@ def ignored_sampling_keys(cfg: dict) -> list[str]:
 
 
 # 2.1.0 replaced the summed-score gate with a per-axis pass-rate gate. Stop on the old keys instead of ignoring them
-THRESHOLD_KEYS = ("must_pass_rate", "must_not_violations", "recall_at_5_drop_allowed",
-                  "judge_axis_pass_rate_floor", "judge_axis_pass_rate_drop_allowed")
+RATE_THRESHOLD_KEYS = ("must_pass_rate", "recall_at_5_drop_allowed",
+                       "judge_axis_pass_rate_floor", "judge_axis_pass_rate_drop_allowed")
+THRESHOLD_KEYS = (*RATE_THRESHOLD_KEYS, "must_not_violations")
 LEGACY_THRESHOLD_KEYS = ("judge_total_floor", "judge_total_drop_allowed")
+# Tolerance so a value exactly on the boundary (e.g. 0.9 vs 1.0 - 0.1) does not fail on floating-point error
+EPSILON = 1e-9
+
+
+def is_fraction(value) -> bool:
+    """Whether value is a finite number from 0 to 1. Reject bool, str, None, NaN, and infinity (they silently make comparisons false)"""
+    return type(value) in (int, float) and math.isfinite(value) and 0 <= value <= 1
 
 
 def validate_thresholds(thresholds: dict) -> None:
@@ -66,6 +75,12 @@ def validate_thresholds(thresholds: dict) -> None:
             "judge_axis_pass_rate_floor / judge_axis_pass_rate_drop_allowed (see ADJUST.md)")
     if missing := [key for key in THRESHOLD_KEYS if key not in thresholds]:
         raise ValueError(f"thresholds are missing {missing}")
+    for key in RATE_THRESHOLD_KEYS:
+        if not is_fraction(thresholds[key]):
+            raise ValueError(f"threshold {key} must be a finite number from 0 to 1, got {thresholds[key]!r}")
+    violations = thresholds["must_not_violations"]
+    if type(violations) is not int or violations < 0:
+        raise ValueError(f"threshold must_not_violations must be a non-negative integer, got {violations!r}")
 
 
 def judge_pass_score(cfg: dict) -> int:
@@ -84,6 +99,10 @@ def load_baseline(path: str, pass_score: int) -> dict:
         raise ValueError(
             "baseline has no per-axis judge pass rates (it was written before hotl 2.1.0, which "
             "gated on judge_total_mean): regenerate the baseline with this run_evals.py")
+    # A baseline with a missing axis (e.g. a failed run where no case reached the judge) drops that axis's regression check
+    if bad := {axis: rate for axis, rate in rates.items() if not is_fraction(rate)}:
+        raise ValueError(f"baseline judge pass rates must be finite numbers from 0 to 1, got {bad!r}: "
+                         "regenerate the baseline from a complete run")
     if baseline.get("judge_pass_score") != pass_score:
         raise ValueError(
             f"baseline was scored with judge pass_score {baseline.get('judge_pass_score')}, "
@@ -256,7 +275,7 @@ def gate(summary: dict, thresholds: dict, baseline: dict | None) -> tuple[bool, 
         failures.append("no case reached the judge")
     for axis in AXES:
         rate = rates[axis]
-        if rate is not None and rate < thresholds["judge_axis_pass_rate_floor"]:
+        if rate is not None and rate < thresholds["judge_axis_pass_rate_floor"] - EPSILON:
             failures.append(
                 f"judge {axis} pass rate {rate:.0%} < absolute floor {thresholds['judge_axis_pass_rate_floor']:.0%}"
             )
@@ -274,7 +293,7 @@ def gate(summary: dict, thresholds: dict, baseline: dict | None) -> tuple[bool, 
         drop = thresholds["judge_axis_pass_rate_drop_allowed"]
         for axis in AXES:
             rate, b_rate = rates[axis], baseline["judge_axis_pass_rate"][axis]
-            if rate is not None and b_rate is not None and rate < b_rate - drop:
+            if rate is not None and rate < b_rate - drop - EPSILON:
                 failures.append(
                     f"judge {axis} regression: pass rate {rate:.0%} < baseline {b_rate:.0%} - {drop:.0%}"
                 )

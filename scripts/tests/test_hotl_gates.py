@@ -228,6 +228,73 @@ class EvalGateTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "judge_total_floor"):
             self.run_evals(self.ordinary_cases(1), [{"answer": "ok"}], thresholds=legacy)
 
+    def baseline(self, **rates):
+        return {"recall_at_5_mean": None, "judge_pass_score": 4,
+                "judge_axis_pass_rate": {axis: rates.get(axis, 1.0) for axis in self.runner.AXES}}
+
+    def test_baseline_rates_must_be_finite_fractions(self):
+        # A null or NaN axis silently skips that axis's regression check. Stop before evaluating
+        for bad in (None, float("nan"), float("inf"), -0.1, 1.5, True, "1.0"):
+            with self.subTest(bad=bad), self.assertRaisesRegex(ValueError, "baseline"):
+                self.run_evals(self.ordinary_cases(1), [{"answer": "ok"}],
+                               baseline=self.baseline(faithfulness=bad))
+
+    def test_rate_thresholds_must_be_finite_fractions(self):
+        # A NaN floor or allowed drop makes every comparison false and opens the gate
+        for key in ("judge_axis_pass_rate_floor", "judge_axis_pass_rate_drop_allowed",
+                    "recall_at_5_drop_allowed", "must_pass_rate"):
+            for bad in (float("nan"), float("inf"), -0.1, 1.1, "0.8", True, None):
+                with self.subTest(key=key, bad=bad), self.assertRaisesRegex(ValueError, key):
+                    self.runner.validate_thresholds({**self.THRESHOLDS, key: bad})
+        for bad in (-1, 0.5, True, "0", float("nan")):
+            with self.subTest(must_not_violations=bad), self.assertRaisesRegex(ValueError, "must_not_violations"):
+                self.runner.validate_thresholds({**self.THRESHOLDS, "must_not_violations": bad})
+
+    def test_score_at_the_pass_line_passes_and_below_fails(self):
+        code, data = self.run_evals(self.ordinary_cases(2), [{"answer": "ok"}] * 2,
+                                    judge=[self.scores(correctness=4), self.scores(correctness=3.5)])
+        self.assertEqual([r["judge_pass"]["correctness"] for r in data["results"]], [True, False])
+        self.assertEqual(data["summary"]["judge_axis_pass_rate"]["correctness"], 0.5)
+
+    def test_pass_line_comes_from_the_judge_config(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "cases.jsonl").write_text(json.dumps(self.ordinary_cases(1)[0]))
+            (root / "thresholds.json").write_text(json.dumps({
+                "smoke": self.THRESHOLDS, "judge": {"votes": 3, "pass_score": 3}}))
+            args = ["evals", "--dataset", str(root / "cases.jsonl"), "--thresholds",
+                    str(root / "thresholds.json"), "--out", str(root / "out")]
+            with patch.object(sys, "argv", args), \
+                 patch.object(self.runner, "call_target", side_effect=[{"answer": "ok"}]), \
+                 patch.object(self.runner, "eval_l2", side_effect=[self.scores(completeness=3)]), \
+                 patch.object(self.runner, "JUDGE_MODEL", "fixture-judge-model"), \
+                 contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(self.runner.main(), 0)
+            data = json.loads((root / "out/results.json").read_text())
+        self.assertEqual(data["summary"]["judge_pass_score"], 3)
+        self.assertTrue(data["results"][0]["judge_pass"]["completeness"])
+
+    def test_even_vote_medians_are_compared_with_the_pass_line(self):
+        # With an even vote count the median can be x.5. 3.5 misses a pass line of 4; 4.5 meets it
+        for votes, expected in (([3, 4], False), ([4, 5], True)):
+            contents = [types.SimpleNamespace(content=[types.SimpleNamespace(type="text", text=json.dumps({
+                axis: {"score": score, "reason": "fixture"} for axis in self.runner.AXES}))]) for score in votes]
+            client = types.SimpleNamespace(messages=types.SimpleNamespace(create=Mock(side_effect=contents)))
+            judge = self.runner.eval_l2(client, self.cases()[0], {}, "rubric", {"votes": 2})
+            with self.subTest(votes=votes):
+                self.assertEqual(judge["correctness"]["score"] >= 4, expected)
+
+    def test_regression_uses_the_allowed_drop_on_every_axis(self):
+        # Keep the absolute floor (50%) satisfied and move only the drop from a 100% baseline. The allowed drop is 10 points
+        thresholds = {**self.THRESHOLDS, "judge_axis_pass_rate_drop_allowed": 0.1}
+        for axis in self.runner.AXES:
+            for failing, expected in ((0, 0), (1, 0), (2, 1)):  # failures out of 10: a 0%, 10% (boundary), and 20% drop
+                judges = [self.scores(**{axis: 2}) if i < failing else self.scores() for i in range(10)]
+                with self.subTest(axis=axis, failing=failing):
+                    code, _ = self.run_evals(self.ordinary_cases(10), [{"answer": "ok"}] * 10, judge=judges,
+                                             baseline=self.baseline(), thresholds=thresholds)
+                    self.assertEqual(code, expected)
+
     def test_shipped_thresholds_are_valid_for_every_suite(self):
         shipped = json.loads((ASSETS / "evals/thresholds.json").read_text())
         for suite in ("smoke", "full"):

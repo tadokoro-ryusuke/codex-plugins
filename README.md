@@ -189,7 +189,10 @@ or one native smoke does not establish a quality, cost, or latency advantage.
   `--baseline`. `run_evals.py` stops before evaluating on the legacy keys, or on a baseline
   without per-axis pass rates or scored at another pass line. Cases below the pass line on
   any axis are reported as failed with the axis name. L3 calibration now measures per-axis
-  agreement on binarized human and judge verdicts.
+  agreement on binarized human and judge verdicts. Rate thresholds (floors, allowed drops,
+  `must_pass_rate`) and the baseline's per-axis pass rates must be finite numbers from 0 to
+  1, and `must_not_violations` a non-negative integer; NaN, null, or out-of-range values
+  would silently make the comparison false and open the gate, so the run stops first.
 
   Every action in the templates and in this repository's CI moves to a major whose
   `action.yml` runs on Node 24 (GitHub removed Node 20 from hosted runners on 2026-09-23):
