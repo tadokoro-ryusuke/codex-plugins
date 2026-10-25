@@ -11,7 +11,15 @@ Place each check where it gives useful feedback before the risk it guards:
 Adapt stages to the existing delivery system; a fixed number of stages or minutes
 is not a requirement. Preserve required coverage and security gates. Investigate
 flakes before an authorized quarantine with an owner, expiry, tracked failure,
-and replacement coverage for critical paths; see `$test-design` if needed.
+and replacement coverage for critical paths; see `$test-design` if needed. Put the
+quarantine procedure (label, skip method, owner, expiry, return condition) in the
+pipeline template, and record runner-specific settings with their versions. For
+example, Playwright 1.62 added `retryStrategy: 'isolated'`, which runs retries one
+by one at the end of the suite to reduce interference; do not make it a blanket
+default. Playwright 1.63 added test locks, which serialize only tests sharing a lock
+name; try isolating state and data first, use a lock only for a resource that cannot
+be isolated, and never serialize the whole suite. Source:
+https://playwright.dev/docs/release-notes (checked 2026-10-26).
 
 Consolidate verification commands using the stack's existing scripts or task
 runner so local and CI behavior can be reproduced. Validate workflow behavior and

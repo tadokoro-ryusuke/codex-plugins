@@ -32,7 +32,9 @@ Review axes:
 
 - Behavior: correctness, edge cases, regression risk, and external contract changes.
 - Security: injection, authz/authn, secrets, SSRF, unsafe dependencies.
-- Tests: meaningful assertions, regression coverage, missing integration or E2E coverage.
+- Tests: meaningful assertions, regression coverage, missing integration or E2E
+  coverage, expected values derived independently of the implementation, and
+  test doubles per `../../best-practices/references/testing.md`.
 - Architecture: FSD, Clean Architecture, DDD, API boundaries, and dependency direction.
 - Quality: SOLID, DRY, complexity, error handling, type safety, naming.
 - Project convention: structure, naming, test style, docs, commit shape, scripts.
@@ -43,6 +45,10 @@ Review axes:
 Do not accept implementation reports at face value:
 
 - If tests are claimed, inspect that tests exist and assert the relevant behavior.
+- If passing tests are claimed, inspect the diff for deleted, skipped, or focused
+  tests, loosened expected values, and implementation special-casing of test
+  inputs. Accept such a change only with a specification basis; without one, do
+  not count the pass as evidence and report it as a finding.
 - If typecheck or lint is claimed, still inspect the changed code for unsafe casts, ignored errors, and convention drift.
 - If a change is described as "refactor only", inspect the diff for external behavior changes.
 - Inspect the check artifacts and their input/environment identity. Apply the

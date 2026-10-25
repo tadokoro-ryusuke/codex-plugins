@@ -16,13 +16,37 @@ Use Red → Green → Refactor → Evidence:
 1. Write one failing test for the changed behavior and confirm that failure comes
    from the missing or incorrect behavior, not unrelated setup.
 2. Implement the minimum repair that satisfies the contract.
-3. Refactor while the focused tests stay green.
+3. Refactor while the focused tests stay green. If no test covers the behavior
+   being restructured, first pin it with a characterization test (record the
+   current output; use an approval test for large output). Such a test records
+   current behavior, not the specification.
 4. Run the relevant verification and record actual results.
 
 Reuse meaningful coverage when it already exercises the contract. Judge tests by
 failures they detect, not count or wording matches. For documentation and other
 non-executable changes, use appropriate content or structural validation instead
 of tests that mirror the edit. Commit only under existing user or delivery authority.
+
+Before writing, fixing, or reviewing tests, read
+[testing](references/testing.md) for expected values, test doubles, real-dependency
+integration tests, test data, and E2E locators.
+
+### Never weaken a test to pass
+
+Do not make a failing test pass by deleting or skipping it, adding a focus marker
+(`.only`), loosening its expected value or assertion, or special-casing test inputs
+in the implementation (for example, returning a different value for a call count
+or a known fixture). These changes erase what the test proves and fake the evidence.
+When an acceptance criterion or plan changes the behavior, update the tests that
+encode the old behavior and report which tests changed and why. When the
+specification and a test conflict, change neither; return the conflict with evidence.
+
+The owner who claims completion (a standalone cycle's owner or the final gate) does
+not treat a focused green as a suite green. For executable behavior changes, run
+the unfiltered project test command once before claiming completion, unless a
+reusable current result for the final input already exists (`$verification-loop`).
+A delegated unit may return focused evidence; the parent checks the suite at its
+final gate.
 
 ## Cohesion and boundaries
 

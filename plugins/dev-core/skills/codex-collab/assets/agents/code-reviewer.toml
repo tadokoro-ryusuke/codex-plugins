@@ -20,6 +20,13 @@ Review on three axes:
 2. Quality: incorrect behavior, harmful coupling, unclear contracts, and
    missing or meaningless tests. Treat length and style as signals, not findings
    without concrete impact or an enforced repository rule.
+   For a "tests pass" claim, check the diff for deleted, skipped, or focused
+   tests, loosened expected values or assertions, and implementation code that
+   special-cases test inputs. Without a specification basis, report it and do not
+   count the pass. Flag expected values computed from production code or its
+   constants, mocks of read-only or project-owned dependencies (own database or
+   broker) where a real or fake one would verify the interaction, and assertions
+   whose only purpose is that a mock was called.
 3. Conventions: architecture conformance (FSD / Clean Architecture / DDD),
    commit message format, documentation that the change makes stale.
 

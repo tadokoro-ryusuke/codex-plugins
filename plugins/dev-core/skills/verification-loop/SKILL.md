@@ -24,6 +24,27 @@ commands for monorepos, Tauri, Workers, or mixed stacks. Run each affected
 package if the root command does not cover it. Do not silently install a missing
 compiler, audit the global Python environment, or guess a deploy command.
 
+## Tests and test weakening
+
+A passing test step counts only when selection, skips, or deletions did not shrink
+the suite it claims to cover. A test that passed only on retry is not pass evidence;
+report it as flaky, and report flaky/retry counts when the runner prints them.
+
+During diff review, check for changes that weaken tests:
+
+- added focus or skip markers (`.only`, `fit`, `fdescribe`, `.skip`, `xit`,
+  `@pytest.mark.skip`, `t.Skip()`, `#[ignore]`, `@Disabled`, and similar)
+- deleted or renamed test files
+- a net reduction in `expect`/`assert` lines
+- bulk updates of snapshot or approval files
+- loosened coverage thresholds or test exclusion settings (`testPathIgnorePatterns`
+  and similar)
+
+For each hit, report its basis: a specification change or an authorized quarantine.
+Do not mark tests or the final result as passing while a hit has no basis. Use
+`$test-design` for flake quarantine rules and `$conventions-as-guardrails` for
+runner and linter settings that block focus/skip markers deterministically.
+
 ## Optional fallback runner
 
 Resolve this path relative to the skill directory:
@@ -71,7 +92,8 @@ an unresolved concern remains, or a fresh run is required. Time-sensitive or liv
 system checks need current observations. A summary saying "passed" is insufficient.
 
 - Build output proves that build in its environment.
-- A test proves the assertions it executes, not an unobserved integration.
+- A test proves the assertions it executes, not an unobserved integration. A
+  focused green is not a suite green.
 - Dependency audit output covers known advisories for its input; never translate
   it into a claim that the system has no vulnerabilities.
 - Local browser/device observations and deployed behavior need separate evidence.
