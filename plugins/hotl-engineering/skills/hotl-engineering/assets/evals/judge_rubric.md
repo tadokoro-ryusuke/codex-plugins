@@ -1,7 +1,7 @@
 # LLM-as-Judge Scoring Rubric (Retrieval QA Agent)
 
 This file is embedded by run_evals.py into the judge prompt. Any revision must go through a PR, and
-a calibration record (evals/README.md §5) must be kept. **A change to the rubric itself is subject to eval-gate.**
+a calibration record (evals/calibration/; procedure in hotl-engineering's references/eval-design.md L3) must be kept. **A change to the rubric itself is subject to eval-gate.**
 
 ---
 

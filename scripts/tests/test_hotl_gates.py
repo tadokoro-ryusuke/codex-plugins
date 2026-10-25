@@ -78,18 +78,25 @@ class EvalGateTests(unittest.TestCase):
         with patch.dict(sys.modules, {"anthropic": fake_sdk, "hotl_evals": cls.runner}):
             spec.loader.exec_module(cls.runner)
 
-    def run_evals(self, cases, target, judge=None, revision=None, missing_baseline=False):
+    THRESHOLDS = {"must_pass_rate": 1, "must_not_violations": 0, "recall_at_5_drop_allowed": 0.05,
+                  "judge_axis_pass_rate_floor": 0.5, "judge_axis_pass_rate_drop_allowed": 0.1}
+
+    def run_evals(self, cases, target, judge=None, revision=None, missing_baseline=False,
+                  baseline=None, thresholds=None):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / "cases.jsonl").write_text("\n".join(json.dumps(c) for c in cases))
-            (root / "thresholds.json").write_text(json.dumps({"smoke": {
-                "must_pass_rate": 1, "must_not_violations": 0, "judge_total_floor": 10}}))
+            (root / "thresholds.json").write_text(json.dumps({
+                "smoke": thresholds or self.THRESHOLDS, "judge": {"votes": 3, "pass_score": 4}}))
             args = ["evals", "--dataset", str(root / "cases.jsonl"), "--thresholds",
                     str(root / "thresholds.json"), "--out", str(root / "out")]
             if revision:
                 args += ["--expected-revision", revision]
             if missing_baseline:
                 args += ["--baseline", str(root / "missing-baseline.json")]
+            if baseline is not None:
+                (root / "baseline.json").write_text(json.dumps({"summary": baseline}))
+                args += ["--baseline", str(root / "baseline.json")]
             scores = {axis: {"score": 5, "reason": "fixture"} for axis in self.runner.AXES}
             with patch.object(sys, "argv", args), patch.object(self.runner, "call_target", side_effect=target), \
                  patch.object(self.runner, "eval_l2", side_effect=judge, return_value=scores), \
@@ -161,6 +168,72 @@ class EvalGateTests(unittest.TestCase):
                 code, _ = self.run_evals(self.cases(), [{"answer": "ok", "revision": actual}] * 2,
                                          revision="candidate")
                 self.assertEqual(code, expected_code)
+
+    def scores(self, **axes):
+        return {axis: {"score": axes.get(axis, 5), "reason": "fixture"} for axis in self.runner.AXES}
+
+    def ordinary_cases(self, n):
+        return [{"id": f"case-{i}", "category": "answer", "query": "fixture", "suite": ["smoke"]}
+                for i in range(n)]
+
+    def test_each_axis_is_gated_separately_not_as_a_sum(self):
+        # Axes are never summed: even with a 12/15 total, block when one axis is below the pass line on every case
+        code, data = self.run_evals(self.ordinary_cases(2), [{"answer": "ok"}] * 2,
+                                    judge=[self.scores(completeness=2)] * 2)
+        self.assertEqual(code, 1)
+        rates = data["summary"]["judge_axis_pass_rate"]
+        self.assertEqual(rates, {"correctness": 1.0, "faithfulness": 1.0, "completeness": 0.0})
+        self.assertNotIn("judge_total_mean", data["summary"])
+
+    def test_case_below_the_pass_line_on_any_axis_is_listed_with_the_axis(self):
+        code, data = self.run_evals(self.ordinary_cases(2), [{"answer": "ok"}] * 2,
+                                    judge=[self.scores(), self.scores(faithfulness=3)])
+        self.assertEqual(code, 0)  # a 50% pass rate meets the 50% floor
+        failed = [r for r in data["results"] if r["failed"]]
+        self.assertEqual([r["id"] for r in failed], ["case-1"])
+        self.assertIn("faithfulness", failed[0]["fail_reason"])
+        self.assertEqual(failed[0]["judge_pass"],
+                         {"correctness": True, "faithfulness": False, "completeness": True})
+
+    def test_must_pass_case_requires_every_axis_at_the_pass_line(self):
+        cases = [{"id": "must", "category": "answer", "query": "fixture", "suite": ["smoke"], "must_pass": True}]
+        code, data = self.run_evals(cases, [{"answer": "ok"}], judge=[self.scores(correctness=3)])
+        self.assertEqual(code, 1)
+        self.assertEqual(data["summary"]["must_pass_failed_ids"], ["must"])
+
+    def test_axis_pass_rate_regression_against_baseline_blocks(self):
+        baseline = {"recall_at_5_mean": None, "judge_pass_score": 4,
+                    "judge_axis_pass_rate": {axis: 1.0 for axis in self.runner.AXES}}
+        code, _ = self.run_evals(self.ordinary_cases(2), [{"answer": "ok"}] * 2,
+                                 judge=[self.scores(), self.scores(correctness=1)], baseline=baseline)
+        self.assertEqual(code, 1)
+        code, _ = self.run_evals(self.ordinary_cases(2), [{"answer": "ok"}] * 2, baseline=baseline)
+        self.assertEqual(code, 0)
+
+    def test_baseline_from_the_summed_score_gate_is_rejected(self):
+        # Never silently skip the comparison with a pre-2.1.0 baseline (judge_total_mean only)
+        old = {"recall_at_5_mean": 0.9, "judge_total_mean": 13.0}
+        with self.assertRaisesRegex(ValueError, "regenerate"):
+            self.run_evals(self.ordinary_cases(1), [{"answer": "ok"}], baseline=old)
+
+    def test_baseline_with_a_different_pass_line_is_rejected(self):
+        other = {"recall_at_5_mean": None, "judge_pass_score": 3,
+                 "judge_axis_pass_rate": {axis: 1.0 for axis in self.runner.AXES}}
+        with self.assertRaisesRegex(ValueError, "pass_score"):
+            self.run_evals(self.ordinary_cases(1), [{"answer": "ok"}], baseline=other)
+
+    def test_legacy_summed_score_thresholds_are_rejected(self):
+        legacy = {"must_pass_rate": 1, "must_not_violations": 0, "recall_at_5_drop_allowed": 0.05,
+                  "judge_total_drop_allowed": 1.0, "judge_total_floor": 10.5}
+        with self.assertRaisesRegex(ValueError, "judge_total_floor"):
+            self.run_evals(self.ordinary_cases(1), [{"answer": "ok"}], thresholds=legacy)
+
+    def test_shipped_thresholds_are_valid_for_every_suite(self):
+        shipped = json.loads((ASSETS / "evals/thresholds.json").read_text())
+        for suite in ("smoke", "full"):
+            with self.subTest(suite=suite):
+                self.runner.validate_thresholds(shipped[suite])
+        self.assertEqual(shipped["judge"]["pass_score"], 4)
 
     def test_invalid_judge_scores_and_incomplete_votes_are_rejected(self):
         for values in ([5], [5, 5, 99], [5, 5, True], [5, 5, 5]):

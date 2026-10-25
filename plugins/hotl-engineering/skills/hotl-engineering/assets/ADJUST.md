@@ -66,6 +66,10 @@ existing enforced gates; introduce new advisory checks proportionately.
 - [ ] Route PR evaluations to an isolated preview of the candidate; require each target response to include the deployed `revision` matching `EXPECTED_REVISION`. A shared staging PASS is not PR evidence
 - [ ] Keep runner and thresholds on the trusted base for PR execution. Review changes to threshold policy separately; do not let a candidate lower its own gate
 - [ ] Do not use the thresholds.json values as-is; set them from the measured results of the first full run
+- [ ] When upgrading from 2.0.x, replace `judge_total_floor` / `judge_total_drop_allowed` in thresholds.json with
+      `judge_axis_pass_rate_floor` / `judge_axis_pass_rate_drop_allowed` and `judge.pass_score`, and regenerate
+      baseline.json with a calibration run that omits `--baseline`. With the old settings or baseline,
+      run_evals.py stops with the reason (it never silently skips the comparison)
 - [ ] Keep the anthropic SDK major pinned (the template uses `>=1.17,<2`). 1.x and later do not accept
       sampling parameters (temperature etc.), so judge variance is handled by the vote count. Before
       moving to 2.x (API version 2026-10-21), move the judge to a model Bedrock supports for 2026-10-21

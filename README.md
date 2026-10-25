@@ -166,7 +166,7 @@ or one native smoke does not establish a quality, cost, or latency advantage.
 
 ### Source update migration
 
-- `hotl-engineering` 2.1.0 (2026-10-25): **BREAKING for template adopters**: the workflow
+- `hotl-engineering` 2.1.0 (2026-10-26): **BREAKING for template adopters**: the workflow
   templates no longer contain model IDs. Set the repository variables `HOTL_MODEL_LIGHT`
   (ai-review on every PR, incident-triage, agent-implement), `HOTL_MODEL_DEEP` (Tier 2
   deep review), and `HOTL_JUDGE_MODEL` (eval judge); a job whose variable is unset fails
@@ -178,6 +178,18 @@ or one native smoke does not establish a quality, cost, or latency advantage.
   the plan comment, its own branch, commit and push, and lint / typecheck / test,
   installs dependencies before the agent, and opens the Draft PR from a separate job
   that runs neither the agent nor repository code. Adapted from cc-plugins.
+
+  **BREAKING for eval template adopters**: the judge gate binarizes each axis at
+  `judge.pass_score` (default 4) and gates on the pass rate per axis (an absolute floor
+  plus an allowed drop from the baseline) instead of the mean of the summed three-axis
+  score, which hid which axis dropped and could not be calibrated against human verdicts.
+  In `thresholds.json`, replace `judge_total_floor` / `judge_total_drop_allowed` with
+  `judge_axis_pass_rate_floor` / `judge_axis_pass_rate_drop_allowed` and add
+  `judge.pass_score`; regenerate `baseline.json` with a calibration run that omits
+  `--baseline`. `run_evals.py` stops before evaluating on the legacy keys, or on a baseline
+  without per-axis pass rates or scored at another pass line. Cases below the pass line on
+  any axis are reported as failed with the axis name. L3 calibration now measures per-axis
+  agreement on binarized human and judge verdicts.
 - `hotl-engineering` 2.0.2 (2026-10-25): fix the shipped templates. Since anthropic
   SDK 1.0.0 (2026-08-20), `messages.create` rejects sampling parameters, so the eval
   runner's `temperature` made every judge vote fail and the fail-closed eval gate always

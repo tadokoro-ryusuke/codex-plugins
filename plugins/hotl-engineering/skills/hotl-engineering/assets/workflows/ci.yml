@@ -99,7 +99,7 @@ jobs:
             --config p/owasp-top-ten \
             --error --severity ERROR \
             --sarif --output semgrep.sarif || exit_code=$?
-          exit ${exit_code:-0}
+          exit "${exit_code:-0}"
 
       # --- Dependency vulnerabilities ---
       - uses: pnpm/action-setup@v4
@@ -108,6 +108,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The threshold is a starting default. When changing it, triage by evidence of exploitation
+      # (CISA KEV, EPSS) rather than CVSS alone, and record each exception with an owner and expiry
       - name: Dependency audit (fail on high or above)
         run: pnpm audit --audit-level high
 
