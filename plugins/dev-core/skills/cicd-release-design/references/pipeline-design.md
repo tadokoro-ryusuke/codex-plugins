@@ -26,6 +26,36 @@ runner so local and CI behavior can be reproduced. Validate workflow behavior an
 failure paths, not just YAML syntax. Report which checks ran locally and which
 remote enforcement remains unverified.
 
+## Dependency audit gate
+
+Define the vulnerability gate once per project, here, and point local verification
+and CI templates to it. When thresholds differ between files, an agent can choose
+whichever passes.
+
+- The gate is "the configured audit command passes at the configured threshold".
+  Start by failing at High or above (for example, `pnpm audit --audit-level high`);
+  record a different threshold and its reason in an ADR.
+- Use CISA KEV and EPSS for ordering, deadlines, and exception rationale, not as
+  gate conditions: KEV-listed first and immediately, high EPSS next with a deadline,
+  other Critical/High in scheduled maintenance, Low or unreachable recorded and
+  watched. Map these to response deadlines where a maintenance agreement defines them.
+- Do not make "unreachable" or "not in KEV" an automated pass condition. Standard
+  audit commands (`npm audit`, `pnpm audit`, `pip-audit`, `cargo audit`) judge known
+  advisories and severity, not KEV listing or reachability, so such a condition lets
+  an agent pass the gate by assertion.
+- Accept exceptions only through an exceptions file (or a VEX document) with a
+  reason, expiry, and approver per entry. Protect it with CODEOWNERS so an agent
+  cannot add its own entries, and fail the gate on expired entries.
+- To fail on KEV-listed findings below the threshold, add a scripted check: a scanner
+  that reports KEV/EPSS (for example, Grype) or a match against the CISA KEV catalog.
+- If you draw a line on EPSS scores, revisit it at each EPSS model update; the same
+  score can mean something different. The 2026-10-25 score data used model_version
+  v2026.06.15; the FIRST EPSS SIG maintains the scores and Empirical Security
+  generates and publishes them (sources: https://www.first.org/epss/,
+  https://epss.empiricalsecurity.com/epss_scores-current.csv.gz; checked 2026-10-26).
+- Report a passing gate as "no findings at or above <threshold>", never "no
+  vulnerabilities", and list excluded items with reason and expiry.
+
 ## Credentials and workflow integrity
 
 Use short-lived workload identity such as OIDC where supported. Environment

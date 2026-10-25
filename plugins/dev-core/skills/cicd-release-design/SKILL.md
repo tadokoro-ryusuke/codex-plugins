@@ -12,7 +12,8 @@ providers, and runbooks; do not introduce an unrelated delivery platform.
 
 ## Select the current work
 
-- For pipeline checks, workflow permissions, or credential handling, read
+- For pipeline checks, the dependency audit gate (threshold and exceptions),
+  workflow permissions, or credential handling, read
   [pipeline design](references/pipeline-design.md).
 - For rollout strategy, flags, migrations, or rollback, read
   [release and recovery](references/release-and-recovery.md).

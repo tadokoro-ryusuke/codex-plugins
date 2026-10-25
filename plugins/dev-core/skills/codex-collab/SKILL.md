@@ -83,7 +83,10 @@ Good splits: security / test-gap / maintainability review; backend / frontend / 
 This skill ships ready-made custom agent roles:
 
 - `assets/agents/code-reviewer.toml` — zero-trust reviewer, read-only sandbox.
-- `assets/agents/security-auditor.toml` — OWASP Top 10 auditor, read-only sandbox.
+- `assets/agents/security-auditor.toml` — OWASP Top 10:2025 auditor for the diff and its reach, read-only sandbox.
+
+Both return every finding with P0-P3 severity, confidence, and file:line, so the
+parent's acceptance gate can apply one P0/P1 rule to either.
 
 To use them, copy the files into `<repo>/.codex/agents/` (project-wide) or `~/.codex/agents/` (personal), then reference the role when spawning (e.g. "spawn the code-reviewer agent on this diff").
 

@@ -45,6 +45,17 @@ Do not mark tests or the final result as passing while a hit has no basis. Use
 `$test-design` for flake quarantine rules and `$conventions-as-guardrails` for
 runner and linter settings that block focus/skip markers deterministically.
 
+## Dependency audit results
+
+A dependency audit gate means the configured audit command passes at its configured
+threshold with its approved exclusions (`$cicd-release-design` owns the threshold and
+exception policy). Some tools apply the threshold only to the exit code and still
+print lower-severity findings (for example, `npm audit --audit-level`). Report the
+gate result (command, threshold, exit code, exclusions applied with reason and expiry)
+separately from the findings printed, including those below the threshold. When the
+gate passes, write "no findings at or above <threshold>", never "no known
+vulnerabilities" or "no vulnerabilities".
+
 ## Optional fallback runner
 
 Resolve this path relative to the skill directory:
@@ -76,7 +87,9 @@ Poetry, a virtual environment, or another checker, run its configured commands.
 Python audit requires a project requirements file; other locks need their own
 export/audit procedure. Yarn/Bun audit requires a version-appropriate project
 command rather than borrowing npm's audit. Security commands may access advisory
-services or resolve dependencies; respect the task's network constraints.
+services or resolve dependencies; respect the task's network constraints. The
+runner's npm/pnpm audit uses `moderate` as a generic fallback; the project's
+configured audit command and threshold govern the gate.
 
 ## Evidence-based completion
 
@@ -94,8 +107,10 @@ system checks need current observations. A summary saying "passed" is insufficie
 - Build output proves that build in its environment.
 - A test proves the assertions it executes, not an unobserved integration. A
   focused green is not a suite green.
-- Dependency audit output covers known advisories for its input; never translate
-  it into a claim that the system has no vulnerabilities.
+- Dependency audit output covers the advisories its tool knows for its input. Cite
+  the command, threshold, exit code, and exclusions with reason and expiry; a bare
+  "audit clean" without them is not evidence. Never translate a passing gate into
+  a claim that the system has no vulnerabilities.
 - Local browser/device observations and deployed behavior need separate evidence.
 - Coverage is a diagnostic signal. Follow configured thresholds; do not impose
   a universal percentage or weaken a gate to make a result green.

@@ -95,14 +95,21 @@ Inspect the trust boundaries affected by the change:
   arguments safely. Validate outbound destinations where SSRF is relevant.
 - Keep secrets and sensitive data out of source, logs, and generated artifacts.
   Use the repository's credential mechanism and inspect the diff before delivery.
-- Preserve dependency and CI integrity. Treat agent inputs and outputs as untrusted
-  before privileged use.
+- Preserve dependency and CI integrity. A dependency audit passes at its configured
+  threshold; never restate that as "no vulnerabilities". Treat agent inputs and
+  outputs as untrusted before privileged use.
 - Handle partial failure, retries, exhaustion, and recovery without reporting success
-  for unfinished effects. Protect financial operations against duplicate effects and
-  preserve their transaction and audit invariants when those operations are in scope.
+  for unfinished effects. Fail closed: an error during authorization or validation
+  must not grant access. Roll back partially applied transactions, release resources
+  on error, and keep stack traces, SQL, and internal paths out of user-facing errors.
+  Protect financial operations against duplicate effects and preserve their
+  transaction and audit invariants when those operations are in scope.
 
-Use current primary standards when a versioned compliance mapping is requested;
-this checklist alone does not establish compliance.
+This list follows the OWASP Top 10:2025 categories, including A10 Mishandling of
+Exceptional Conditions; SSRF now falls under A01 Broken Access Control (source:
+https://github.com/OWASP/Top10/tree/master/2025/docs/en, checked 2026-10-25). Use
+current primary standards when a versioned compliance mapping is requested; this
+checklist alone does not establish compliance.
 
 Use `$frontend-patterns` or `$backend-patterns` for implementation boundaries,
 `$test-design` for strategy, and `$verification-loop` for execution evidence only

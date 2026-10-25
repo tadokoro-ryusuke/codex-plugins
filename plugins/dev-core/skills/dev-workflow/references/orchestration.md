@@ -105,7 +105,9 @@ not a review gate. Record the reason and evidence.
 
 An unavailable required reviewer leaves acceptance pending; continue independent
 authorized work and report the gap. Verify findings against actual inputs; resolve
-P0/P1 findings and fix or disclose remaining concerns. Re-run affected checks after
+P0/P1 findings and fix or disclose remaining concerns. Do not discard a
+low-confidence P0/P1: keep the affected acceptance criteria `pending` until the
+parent confirms or rejects it from actual files and outputs. Re-run affected checks after
 a fix; invalidate relevant review evidence when the reviewed inputs change.
 
 ## Decision and stop boundaries
