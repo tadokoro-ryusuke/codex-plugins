@@ -40,6 +40,8 @@ or a known fixture). These changes erase what the test proves and fake the evide
 When an acceptance criterion or plan changes the behavior, update the tests that
 encode the old behavior and report which tests changed and why. When the
 specification and a test conflict, change neither; return the conflict with evidence.
+The only sanctioned skip is an authorized quarantine with an owner, expiry, tracked
+failure, and replacement coverage (`$test-design`).
 
 The owner who claims completion (a standalone cycle's owner or the final gate) does
 not treat a focused green as a suite green. For executable behavior changes, run

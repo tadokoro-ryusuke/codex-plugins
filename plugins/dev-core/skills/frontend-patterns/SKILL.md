@@ -9,7 +9,7 @@ Follow the target frontend's component conventions, dependencies, and rendering
 model. These principles also apply to a Tauri WebView; they do not prescribe a
 framework migration or a redesign of the requested product. Confirm library choices
 from the project's dependency manifest and `AGENTS.md`, and framework APIs from the
-official documentation. Facts below marked with a date were checked on 2026-10-26.
+official documentation. Linked sources were checked on 2026-10-26.
 
 ## Components and state
 
