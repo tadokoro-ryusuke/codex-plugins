@@ -202,8 +202,9 @@ because the parent has a larger context window.
 
 Tell the agent to use TDD for executable behavior or regressions and applicable
 checks for other changes, and never to weaken an existing test to make it pass.
-Require the changed files, tests and commands/results, existing tests changed or
-deleted with their specification basis (or "none"), input/output identity,
+Require the changed files, tests and commands/results, existing tests changed,
+skipped, or deleted with their basis (a specification change or an approved
+quarantine that meets `$test-design`'s conditions) or "none", input/output identity,
 remaining concerns, and one of
 `completed`, `needs-parent`, or `blocked`. Let it choose routine implementation
 details within the contract. Have it update only its assigned plan section when

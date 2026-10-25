@@ -28,7 +28,8 @@ a mandatory agent chain or change the active parent model.
 ## Hard Rules
 
 - Do not patch before root cause is identified unless the user explicitly asks for exploratory changes.
-- Do not make a failing test pass by skipping, deleting, or loosening it without a specification change; see `../best-practices/SKILL.md`.
+- Do not make a failing test pass by skipping, deleting, or loosening it without a specification change or an approved quarantine that meets `$test-design`'s conditions (owner, expiry, tracked failure, replacement coverage for critical paths); see `../best-practices/SKILL.md`.
+- Do not claim a fix complete or commit it on a focused green; meet the full-suite completion gate in `../verification-loop/SKILL.md`. A suite that was not run or that failed blocks completion.
 - After three failed similar attempts, stop that path and report the attempts, why each failed, and a recommendation. Switch to the in-session rescue diagnosis or ask for direction; hand rescue to another agent or model only with user consent or prior authorization.
 - Remove tagged temporary instrumentation before finishing.
 - Final output must distinguish symptoms, reproduction command and its red output, evidence, root cause, fix, and verification.

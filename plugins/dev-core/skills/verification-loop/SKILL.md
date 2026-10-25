@@ -9,8 +9,9 @@ Choose checks that prove the requested change. Use applicable project instructio
 and existing commands; consult CI, manifests, or lockfiles when command selection
 or environment details are unclear.
 Keep required repository gates. Run focused checks first, then broaden for the
-touched contracts and risks. Do not repeat a completed suite without a new
-change, failure, or unresolved concern.
+touched contracts and risks. Executable behavior changes also need the full-suite
+completion gate below before completion or commit. Do not repeat a completed suite
+without a new change, failure, or unresolved concern.
 
 ## Choose evidence
 
@@ -40,8 +41,10 @@ During diff review, check for changes that weaken tests:
 - loosened coverage thresholds or test exclusion settings (`testPathIgnorePatterns`
   and similar)
 
-For each hit, report its basis: a specification change or an authorized quarantine.
-Do not mark tests or the final result as passing while a hit has no basis. Use
+For each hit, report its basis: a specification change or, for a skip, an approved
+quarantine that meets `$test-design`'s conditions (owner, expiry, tracked failure,
+replacement coverage for critical paths). Do not mark tests or the final result as
+passing while a hit has neither basis. Use
 `$test-design` for flake quarantine rules and `$conventions-as-guardrails` for
 runner and linter settings that block focus/skip markers deterministically.
 
@@ -118,3 +121,23 @@ system checks need current observations. A summary saying "passed" is insufficie
 Report executed checks, skips with reasons, relevant review findings, and the
 remaining evidence gaps. Summarize routine passing output; link logs when they
 help assess a failure. Do not copy sample counts or expose secrets/customer data.
+
+## Full-suite completion gate
+
+This is the single definition of the gate; other dev-core skills point here.
+Before claiming completion of, or committing, an executable behavior change
+(feature, regression or bug fix, or refactor), the owner who claims completion
+needs a passing unfiltered run of the project's test command for the final input.
+Run it once, or reuse an earlier full-suite result only under the reuse rules in
+"Evidence-based completion" above. A focused or targeted-file green does not meet
+this gate.
+
+- Not run (skipped, unavailable, or unable to start): do not claim completion or
+  commit; report it as blocked or not run with the reason.
+- Failed: do not claim completion or commit. Name every failure, including ones the
+  change did not cause, with any evidence that a failure predates the change, and
+  leave acceptance pending for the owner's decision.
+
+A delegated unit may return focused evidence; its parent meets this gate at the
+final gate. A deliberately partial request, such as writing only a failing Red
+test, is exempt. Prose-only changes with no executable behavior are outside it.

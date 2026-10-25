@@ -56,7 +56,10 @@ competing explanation, and state why the alternatives were dismissed. For each:
   failing regression test, then make the smallest root-cause fix. If the request is
   diagnosis only, report the root cause and fix plan and stop.
 - When no suitable seam exists for a regression test, report that as a finding.
-- Run focused verification; broaden only for affected shared behavior or unresolved risk.
+- Run focused verification, then meet the full-suite completion gate in
+  `../../verification-loop/SKILL.md` before claiming the fix complete or committing
+  it: a passing unfiltered run for the final input, fresh or reused under that
+  skill's reuse rules. A suite that was not run or that failed blocks completion.
 - Capture the lesson with `continuous-learning` when the pattern can recur.
 
 ## Three Strikes Rule

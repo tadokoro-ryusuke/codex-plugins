@@ -40,11 +40,13 @@ For each small behavior or plan iteration:
 7. Run a focused self-review of the diff for that iteration.
 8. Broaden verification when the behavior touches shared code.
 
-Change, skip, or delete an existing test only when the plan or acceptance criteria
-change that behavior, and record the test and its basis in the plan's progress log.
-If a test cannot pass without such a change and no basis exists, treat it as a
-conflict between specification and test: stop that path and return the evidence
-instead of weakening the test.
+Change, skip, or delete an existing test only on the basis of a specification
+change (the plan or acceptance criteria change that behavior) or an approved
+quarantine that meets `$test-design`'s conditions (owner, expiry, tracked failure,
+replacement coverage for critical paths). Record the test and its basis in the
+plan's progress log. If a test cannot pass without such a change and neither basis
+exists, treat it as a conflict between specification and test: stop that path and
+return the evidence instead of weakening the test.
 
 ## Iteration Status
 
@@ -65,8 +67,9 @@ After each iteration, update the durable plan: progress, decisions, evidence, co
 After all planned iterations:
 
 1. Run focused and broad-enough verification with current-turn evidence. For
-   executable behavior changes, include one unfiltered run of the project test
-   command for the final input; a focused green is not a suite green.
+   executable behavior changes, meet the full-suite completion gate in
+   `../../verification-loop/SKILL.md`; a focused green is not a suite green, and a
+   suite that was not run or that failed blocks completion and commit.
 2. Review the diff using `dev-review` criteria. Treat earlier implementation claims as untrusted.
 3. If the review finds issues, fix or refactor narrowly.
 4. Re-run affected checks after each fix/refactor round.

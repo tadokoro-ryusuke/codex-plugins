@@ -16,6 +16,7 @@ Use this skill for behavior-preserving improvements.
 4. Make small refactor batches.
 5. Run focused checks after each meaningful batch.
 6. Use `dev-review` criteria before finalizing non-trivial refactors.
+7. Before claiming completion or committing, meet the full-suite completion gate in `../verification-loop/SKILL.md`.
 
 ## Constraints
 

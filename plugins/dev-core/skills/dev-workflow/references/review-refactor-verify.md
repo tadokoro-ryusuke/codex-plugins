@@ -64,7 +64,9 @@ Do not accept implementation reports at face value:
 - If tests are claimed, inspect that tests exist and assert the relevant behavior.
 - If passing tests are claimed, inspect the diff for deleted, skipped, or focused
   tests, loosened expected values, and implementation special-casing of test
-  inputs. Accept such a change only with a specification basis; without one, do
+  inputs. Accept such a change only with a specification change or, for a skip,
+  an approved quarantine that meets `$test-design`'s conditions (owner, expiry,
+  tracked failure, replacement coverage for critical paths). Without either, do
   not count the pass as evidence and report it as a finding.
 - If typecheck or lint is claimed, still inspect the changed code for unsafe casts, ignored errors, and convention drift.
 - If a change is described as "refactor only", inspect the diff for external behavior changes.
@@ -91,6 +93,7 @@ repeat a suite without a relevant change or new failure. Consider:
 - Build: compile or bundle.
 - Type: TypeScript or language type checks.
 - Lint/format: project lint command.
-- Test: focused first, then broad enough for risk.
+- Test: focused first, then broad enough for risk; executable behavior changes
+  also need the full-suite completion gate in `../../verification-loop/SKILL.md`.
 - Security: dependency audit and secret scan where relevant.
 - Diff: inspect changed files and unintended churn.

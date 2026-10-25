@@ -17,15 +17,21 @@ Use this skill so the user can say only the behavior. Do not require them to spe
 4. Green: implement the smallest passing change.
 5. Refactor: improve structure while keeping tests green.
 6. Run focused verification and broaden checks when shared code changed.
-7. Before reporting a completed cycle or committing, run the unfiltered project test
-   command once (or reuse a current result for the final input). A green for only
-   the targeted test file is not completion evidence. Name every failure, including
-   ones you did not cause. If the suite cannot run, report it as blocked or not run
-   and neither claim completion nor commit. A deliberately partial request, such as
-   writing only the failing Red test, is exempt.
+7. Before reporting a completed cycle or committing, meet the full-suite completion
+   gate in `../verification-loop/SKILL.md`: run the unfiltered project test command
+   once, or reuse a full-suite result for the final input under that skill's reuse
+   rules. A green for only the targeted test file is not completion evidence.
+   - If the suite failed, do not claim completion or commit. Name every failure,
+     including ones you did not cause.
+   - If the suite was not run or could not run, do not claim completion or commit;
+     report it as blocked or not run.
+   - Commit only when the full suite passed. A deliberately partial request, such
+     as writing only the failing Red test, is exempt.
 
 Do not make a failing test pass by deleting, skipping, or loosening it without a
-specification change (`../best-practices/SKILL.md`, "Never weaken a test to pass").
+specification change or an approved quarantine that meets `$test-design`'s
+conditions (owner, expiry, tracked failure, replacement coverage for critical
+paths); see "Never weaken a test to pass" in `../best-practices/SKILL.md`.
 
 Keep a self-contained cycle with the current owner. If independent work or context
 isolation justifies a bounded handoff, this skill authorizes delegation under

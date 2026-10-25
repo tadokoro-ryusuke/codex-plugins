@@ -81,7 +81,8 @@ Default to real > fake > stub > mock.
   reason. A failure from setup, imports, or syntax does not count as Red.
 - Do not write a test afterwards that merely ratifies the implementation.
 - Do not make a failing test pass by weakening it without a specification change
-  (see "Never weaken a test to pass" in `../SKILL.md`).
+  or an approved quarantine that meets `$test-design`'s conditions (see "Never
+  weaken a test to pass" in `../SKILL.md`).
 
 ## 9. E2E locators
 

@@ -37,18 +37,27 @@ Do not make a failing test pass by deleting or skipping it, adding a focus marke
 (`.only`), loosening its expected value or assertion, or special-casing test inputs
 in the implementation (for example, returning a different value for a call count
 or a known fixture). These changes erase what the test proves and fake the evidence.
-When an acceptance criterion or plan changes the behavior, update the tests that
-encode the old behavior and report which tests changed and why. When the
-specification and a test conflict, change neither; return the conflict with evidence.
-The only sanctioned skip is an authorized quarantine with an owner, expiry, tracked
-failure, and replacement coverage (`$test-design`).
+
+Change an existing test only on one of two bases, and report which tests changed
+and which basis applies:
+
+- A specification change: an acceptance criterion or plan changes the behavior, so
+  update the tests that encode the old behavior.
+- An approved quarantine that meets `$test-design`'s conditions (owner, expiry,
+  tracked failure, replacement coverage for critical paths). This covers skipping a
+  flaky test only; it never covers loosening an assertion or special-casing inputs.
+
+Everywhere dev-core checks test changes, "a specification change or an approved
+quarantine that meets `$test-design`'s conditions" means exactly these two bases.
+When the specification and a test conflict, change neither; return the conflict
+with evidence.
 
 The owner who claims completion (a standalone cycle's owner or the final gate) does
-not treat a focused green as a suite green. For executable behavior changes, run
-the unfiltered project test command once before claiming completion, unless a
-reusable current result for the final input already exists (`$verification-loop`).
-A delegated unit may return focused evidence; the parent checks the suite at its
-final gate.
+not treat a focused green as a suite green. For executable behavior changes, meet
+the full-suite completion gate in `$verification-loop`: a passing unfiltered run
+for the final input, fresh or reused under its reuse rules. A suite that was not
+run or that failed blocks both completion and commit. A delegated unit may return
+focused evidence; the parent meets the gate at its final gate.
 
 ## Cohesion and boundaries
 
