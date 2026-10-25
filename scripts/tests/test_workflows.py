@@ -551,6 +551,11 @@ exit 0
                 self.assertEqual(step["with"]["path"], f"verdicts/{tier}")
                 self.assertTrue(step.get("continue-on-error"))
         self.assertIn("needs.classify.outputs.tier2 == 'true'", by_name["ai-review-verdict-deep"]["if"])
+        # Pass the download outcome (including a digest mismatch) to the validator
+        gate_env = next(step for step in steps if step.get("name") == "Enforce gate")["env"]
+        for tier, key in (("ai-review-verdict-light", "LIGHT_DOWNLOAD"), ("ai-review-verdict-deep", "DEEP_DOWNLOAD")):
+            with self.subTest(tier=tier):
+                self.assertEqual(gate_env[key], "${{ steps.%s.outcome }}" % by_name[tier]["id"])
 
     def test_actions_are_on_majors_that_run_on_node24(self):
         # GitHub removed Node 20 from hosted runners on 2026-09-23. Do not write versions that declare node20

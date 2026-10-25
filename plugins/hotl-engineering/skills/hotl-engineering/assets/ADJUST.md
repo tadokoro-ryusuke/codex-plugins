@@ -39,7 +39,9 @@ existing enforced gates; introduce new advisory checks proportionately.
 ## workflows/ai-review.yml
 - [ ] Tier 2 paths-filter → fully rewrite to the risk paths identified in the assessment (most important)
 - [ ] Keep CODEOWNERS and the paths definition in sync
-- [ ] Copy `assets/scripts/check_review_verdicts.py` to `.github/scripts/check_review_verdicts.py` on the trusted base before enabling the workflow
+- [ ] Copy `assets/scripts/check_review_verdicts.py` to `.github/scripts/check_review_verdicts.py` on the trusted base before enabling the workflow.
+      When updating the template, keep this validator and ai-review.yml on the same version (the validator expects the
+      `LIGHT_DOWNLOAD` / `DEEP_DOWNLOAD` outcomes the workflow passes)
 - [ ] Keep `AI_REVIEW_ENFORCE` unset during observation; record incomplete evidence as incomplete, then enforce after calibration
 - [ ] Require fresh light/deep verdicts with nonnegative counts and the reviewed head SHA; test missing, malformed, wrong-revision, failed, and skipped cases
 - [ ] Restrict credentials and permitted tools for the review provider; PR content and model output remain untrusted even when JSON validates

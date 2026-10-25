@@ -192,7 +192,9 @@ or one native smoke does not establish a quality, cost, or latency advantage.
   agreement on binarized human and judge verdicts. Rate thresholds (floors, allowed drops,
   `must_pass_rate`) and the baseline's per-axis pass rates must be finite numbers from 0 to
   1, and `must_not_violations` a non-negative integer; NaN, null, or out-of-range values
-  would silently make the comparison false and open the gate, so the run stops first.
+  would silently make the comparison false and open the gate, so the run stops first. The
+  baseline's `recall_at_5_mean` must be null (no recall targets) or a finite number from 0
+  to 1.
 
   Every action in the templates and in this repository's CI moves to a major whose
   `action.yml` runs on Node 24 (GitHub removed Node 20 from hosted runners on 2026-09-23):
@@ -203,7 +205,12 @@ or one native smoke does not establish a quality, cost, or latency advantage.
   pnpm 10 or earlier. claude-code-action stays on v1. Self-hosted runners need v2.327.1 or
   later. `ai-review` now downloads each verdict by name into its tier directory, because
   download-artifact v5 and later extract a single pattern match directly into the path and
-  the gate always saw the light verdict as missing. The App token keeps `app-id`
+  the gate always saw the light verdict as missing. download-artifact v8 reports a digest
+  mismatch only after extracting, so the gate also passes each download step's outcome as
+  `LIGHT_DOWNLOAD` / `DEEP_DOWNLOAD`, and `check_review_verdicts.py` treats anything but
+  `success` as incomplete evidence. **Update the trusted copy of `check_review_verdicts.py`
+  and `ai-review.yml` together**: the new validator treats a missing outcome as incomplete,
+  and the old validator ignores the download outcome. The App token keeps `app-id`
   (actionlint 1.7.12 does not know `client-id`). The default Node is 24, `deploy.yml`
   grants `id-token: write` per job and passes shellcheck, and `validate.yml` runs with
   `contents: read`.

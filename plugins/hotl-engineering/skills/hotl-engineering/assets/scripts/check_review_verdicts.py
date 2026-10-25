@@ -19,13 +19,16 @@ def main():
         errors.append("classification missing or unsuccessful")
     if not re.fullmatch(r"[0-9a-f]{40}", expected_sha):
         errors.append("expected PR revision missing or invalid")
-    tiers = [("light", "REVIEW_RESULT")]
+    tiers = [("light", "REVIEW_RESULT", "LIGHT_DOWNLOAD")]
     if tier2 == "true":
-        tiers.append(("deep", "DEEP_RESULT"))
+        tiers.append(("deep", "DEEP_RESULT", "DEEP_DOWNLOAD"))
     root = Path(os.environ.get("VERDICT_DIR", "verdicts"))
-    for tier, result_key in tiers:
+    for tier, result_key, download_key in tiers:
         if os.environ.get(result_key) != "success":
             errors.append(f"{tier}: job did not succeed")
+        # download-artifact reports a digest mismatch only after extracting, so check the download outcome even if the file exists
+        if os.environ.get(download_key) != "success":
+            errors.append(f"{tier}: verdict download did not succeed (including a failed integrity check)")
         path = root / f"ai-review-verdict-{tier}" / "verdict.json"
         try:
             verdict = json.loads(path.read_text(encoding="utf-8"))

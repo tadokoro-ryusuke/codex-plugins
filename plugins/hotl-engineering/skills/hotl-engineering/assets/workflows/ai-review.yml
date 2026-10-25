@@ -269,12 +269,14 @@ jobs:
       # Download each verdict by name. download-artifact v5 and later extract a pattern that matches only one
       # artifact directly into path, so on an ordinary PR (light only) it lands outside where the validator reads
       - name: Download light verdict
-        continue-on-error: true # the validator reports missing evidence in either phase
+        id: light-verdict
+        continue-on-error: true # the validator reports a failed download in either phase (the outcome is passed to it)
         uses: actions/download-artifact@v8
         with:
           name: ai-review-verdict-light
           path: verdicts/ai-review-verdict-light
       - name: Download deep verdict
+        id: deep-verdict
         if: needs.classify.outputs.tier2 == 'true'
         continue-on-error: true
         uses: actions/download-artifact@v8
@@ -291,4 +293,6 @@ jobs:
           TIER2: ${{ needs.classify.outputs.tier2 }}
           IS_DRAFT: ${{ github.event.pull_request.draft }}
           EXPECTED_SHA: ${{ github.event.pull_request.head.sha }}
+          LIGHT_DOWNLOAD: ${{ steps.light-verdict.outcome }}
+          DEEP_DOWNLOAD: ${{ steps.deep-verdict.outcome }}
         run: python3 .trusted/.github/scripts/check_review_verdicts.py

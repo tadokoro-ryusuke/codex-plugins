@@ -30,6 +30,7 @@ class ReviewGateTests(unittest.TestCase):
             env = {**os.environ, "VERDICT_DIR": directory, "ENFORCE": "true",
                    "CLASSIFY_RESULT": "success", "TIER2": "false", "IS_DRAFT": "false",
                    "REVIEW_RESULT": "success", "DEEP_RESULT": "skipped",
+                   "LIGHT_DOWNLOAD": "success", "DEEP_DOWNLOAD": "success" if deep is not None else "skipped",
                    "EXPECTED_SHA": "a" * 40, **overrides}
             return subprocess.run([sys.executable, str(VERDICT_GATE)], env=env,
                                   capture_output=True, text=True, timeout=5)
@@ -60,6 +61,16 @@ class ReviewGateTests(unittest.TestCase):
         result = self.run_gate(self.verdict(), self.verdict(), TIER2="true", DEEP_RESULT="success")
         self.assertEqual(result.returncode, 0, result.stderr)
         result = self.run_gate(self.verdict(), TIER2="true", DEEP_RESULT="success")
+        self.assertEqual(result.returncode, 1)
+
+    def test_failed_artifact_download_blocks_even_with_a_valid_verdict(self):
+        # download-artifact v8 reports a digest mismatch only after extracting. The step is continue-on-error, so even
+        # if the file remains, the validator gets the download outcome and treats a failure as incomplete evidence
+        for overrides in ({"LIGHT_DOWNLOAD": "failure"}, {"LIGHT_DOWNLOAD": ""}):
+            with self.subTest(overrides=overrides):
+                self.assertEqual(self.run_gate(self.verdict(), **overrides).returncode, 1)
+        result = self.run_gate(self.verdict(), self.verdict(), TIER2="true", DEEP_RESULT="success",
+                               DEEP_DOWNLOAD="failure")
         self.assertEqual(result.returncode, 1)
 
     def test_observation_reports_failure_without_enforcing(self):
@@ -215,6 +226,16 @@ class EvalGateTests(unittest.TestCase):
         old = {"recall_at_5_mean": 0.9, "judge_total_mean": 13.0}
         with self.assertRaisesRegex(ValueError, "regenerate"):
             self.run_evals(self.ordinary_cases(1), [{"answer": "ok"}], baseline=old)
+
+    def test_baseline_recall_must_be_a_finite_fraction_or_absent(self):
+        # A suite with no recall targets has a None baseline. Any other invalid value silently disables the recall check
+        for bad in (float("nan"), float("-inf"), -0.1, 1.5, True, "0.9"):
+            with self.subTest(bad=bad), self.assertRaisesRegex(ValueError, "recall"):
+                self.run_evals(self.ordinary_cases(1), [{"answer": "ok"}],
+                               baseline={**self.baseline(), "recall_at_5_mean": bad})
+        code, _ = self.run_evals(self.ordinary_cases(1), [{"answer": "ok"}],
+                                 baseline={**self.baseline(), "recall_at_5_mean": None})
+        self.assertEqual(code, 0)
 
     def test_baseline_with_a_different_pass_line_is_rejected(self):
         other = {"recall_at_5_mean": None, "judge_pass_score": 3,
