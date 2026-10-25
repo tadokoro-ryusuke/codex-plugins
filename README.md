@@ -166,6 +166,23 @@ or one native smoke does not establish a quality, cost, or latency advantage.
 
 ### Source update migration
 
+- `dev-core` 5.6.0 (2026-10-26): adapt the cc-plugins dev-core knowledge refresh
+  (cc commits 93212c4, ecb8a56, f5fa356, 5691dda, 4978073, 648f849, 5cfc439,
+  6f77348, 70c1b1a). Never weaken a test to make it pass; verification-loop
+  checks the diff for skips, deletions, and loosened assertions, and the
+  completion owner runs the full suite once. Add a testing reference to
+  best-practices. Keep refactors behavior-preserving with characterization tests.
+  Start debugging from a red reproduction, and hand a three-strikes rescue to
+  another agent or model only with consent or prior authorization. Write E2E
+  tests with user-facing locators. Give the bundled reviewer and security
+  auditor a shared P0-P3/confidence contract and OWASP Top 10:2025. Define the
+  dependency audit gate in cicd-release-design and report its result separately
+  from printed findings. Add supply-chain hardening and a dated supply-chain
+  reference to cicd-release-design, and extend frontend-patterns with rendering
+  models, accessibility, Core Web Vitals, and testing. Add six behavior cases.
+  Reinstall and start a new task to load the changes; copy updated agent TOML
+  files from `codex-collab/assets/agents/` into existing installations.
+
 - `dev-core` 5.5.0 (2026-09-23): adopt Sol medium for general implementation,
   Luna high for bounded research and routine edits, Luna max for settled bounded
   implementation, and Sol high for complex implementation. Keep Astra high parent
