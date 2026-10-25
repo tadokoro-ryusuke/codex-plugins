@@ -5,13 +5,30 @@ Use this for refactoring, self-review, PR readiness, and final quality checks.
 ## Refactoring
 
 1. Confirm the target: working tree, PR, branch, commit, file, or directory.
-2. Run or inspect existing tests before changing behavior.
+   - A working-tree target includes staged, unstaged, and untracked files.
+   - For a PR, stop if the current branch is not the PR's head branch; do not
+     switch branches over uncommitted changes, and leave the switch to the user.
+   - If the target resolves to none of these, stop and report it instead of
+     guessing, for example, recent commits.
+2. Run existing tests and confirm they are green before changing code. If no test
+   covers a behavior you will change, pin it first with a characterization test
+   that records the current output (an approval test for large or structured
+   output). The recorded value is current behavior, not the specification; list
+   replacing it with intentional assertions as follow-up work.
 3. Prioritize by concrete impact, likelihood, and the changed contract. Treat
    duplication, conditionals, size, naming, and formatting as investigation
    signals. Report a finding only when it causes an identifiable problem or
    violates an enforced repository rule; do not assign severity from size alone.
-4. Preserve external behavior unless the user requested behavior change.
-5. Run tests after each meaningful refactor batch.
+4. Preserve external behavior unless the user requested behavior change. Report,
+   rather than fix, bugs, security problems, and changes that alter loading,
+   fetch timing, or caching (such as replacing a React data-fetching effect); each
+   needs its own change that starts from a failing test. Extract constants only
+   when defaults stay unchanged.
+5. Run tests after each meaningful refactor batch. If a pinned value diverges,
+   revert the batch or stop and report the behavior change; never rewrite the
+   expectation to match.
+6. When delivery is authorized, push only the current branch, never the default
+   branch.
 
 ## Code Review
 
