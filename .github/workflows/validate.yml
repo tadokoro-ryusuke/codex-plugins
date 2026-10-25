@@ -8,6 +8,9 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      # Do not skip the hotl SDK contract test (test_hotl_sdk_contract.py)
+      HOTL_REQUIRE_SDK: "1"
     steps:
       - uses: actions/checkout@v4
 
@@ -27,6 +30,10 @@ jobs:
 
       - name: Install workflow parser for offline fixture tests
         run: python3 -m pip install PyYAML==6.0.2
+
+      # Same version spec as the eval-gate.yml template (test_workflows.py checks they match)
+      - name: Install the anthropic SDK pinned by the hotl eval-gate template
+        run: python3 -m pip install "anthropic[bedrock]>=1.17,<2"
 
       - name: Test verification and delivery gates with offline fixtures
         run: python3 -m unittest discover -s scripts/tests -v

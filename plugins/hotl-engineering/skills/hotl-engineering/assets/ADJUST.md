@@ -15,7 +15,10 @@ existing enforced gates; introduce new advisory checks proportionately.
 ## workflows/ci.yml
 - [ ] pnpm → the actual package manager (npm/yarn/uv/poetry). For a Python stack, map L1-L5 to ruff / mypy / pip-audit / pytest
 - [ ] `pnpm lint` / `pnpm test` / `pnpm build` → the script names that actually exist
-- [ ] Coverage threshold (70%) → start from a realistic value matched to existing coverage results
+- [ ] Coverage threshold → set vitest.config's `coverage.thresholds` (whole codebase) from a realistic
+      value matched to existing coverage results, then raise it gradually. To require coverage only on
+      changed files, choose a tool that actually measures the diff and confirm with a fixture that it
+      accepts your coverage output format before adopting it
 - [ ] Observe newly introduced noisy checks during calibration; do not weaken an existing enforced security job
 
 ## workflows/ai-review.yml
@@ -38,6 +41,14 @@ existing enforced gates; introduce new advisory checks proportionately.
 - [ ] Route PR evaluations to an isolated preview of the candidate; require each target response to include the deployed `revision` matching `EXPECTED_REVISION`. A shared staging PASS is not PR evidence
 - [ ] Keep runner and thresholds on the trusted base for PR execution. Review changes to threshold policy separately; do not let a candidate lower its own gate
 - [ ] Do not use the thresholds.json values as-is; set them from the measured results of the first full run
+- [ ] Keep the anthropic SDK major pinned (the template uses `>=1.17,<2`). 1.x and later do not accept
+      sampling parameters (temperature etc.), so judge variance is handled by the vote count. Before
+      moving to 2.x (API version 2026-10-21), move the judge to a model Bedrock supports for 2026-10-21
+      (Claude 4.7 or later) together with the IAM and endpoint changes, and first pass a network-free
+      contract test (codex-plugins' scripts/tests/test_hotl_sdk_contract.py is an example) on the new version
+- [ ] The default JUDGE_MODEL (Sonnet 4.5) is a deprecated previous-generation model. Replace it with a
+      successor enabled in your organization, and record the replacement date and the date you checked
+      the model list
 - [ ] Bootstrap the reviewed baseline explicitly with a calibration run that omits `--baseline`; store it before enabling the workflow. Routine missing/failed downloads must not disable comparison
 - [ ] Keep report/artifact output in a fresh runner temporary directory. Publish only fresh results; setup failures must never publish a candidate-supplied PASS report
 - [ ] Keep the trusted-runner approach for PRs (checkout from the base side). For a PR that changes
@@ -64,7 +75,18 @@ existing enforced gates; introduce new advisory checks proportionately.
 
 ## workflows/incident-triage.yml
 - [ ] Guarantee via IaC/procedure that the investigation role is Read-Only (Reader + log viewing only)
-- [ ] Rewrite the --allowedTools command list to the read-only commands of the target platform
+- [ ] Rewrite the --allowedTools command list to the read-only commands of the target platform. Spell
+      prefixes down to the specific subcommand (a broad prefix such as `az monitor:*` also allows
+      mutating subcommands). Do not add general-purpose commands such as `gh api` or any write command.
+      Keep the `--tools` restriction and the `--disallowedTools` ban on file-editing tools
+- [ ] Keep `github_token: ${{ github.token }}` on claude-code-action. Without it, the Claude GitHub App
+      token, which can write, is handed to the agent. Keep the triage job's permissions to read plus id-token
+- [ ] Keep Issue creation and notification in the separate report job (never run the agent in a job
+      that can write)
+- [ ] Write the alert payload to a file through env: and have the agent read it. Never expand it with
+      `${{ }}` in the prompt or in run:
+- [ ] Only the agent's final answer goes into the Issue, but the final answer can still quote logs.
+      Check who can read Issues (is the repository private?) and add masking before posting if needed
 - [ ] The alert → repository_dispatch relay (Function/Logic App) requires separate implementation
 
 ## templates/

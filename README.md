@@ -166,6 +166,19 @@ or one native smoke does not establish a quality, cost, or latency advantage.
 
 ### Source update migration
 
+- `hotl-engineering` 2.0.2 (2026-10-25): fix the shipped templates. Since anthropic
+  SDK 1.0.0 (2026-08-20), `messages.create` rejects sampling parameters, so the eval
+  runner's `temperature` made every judge vote fail and the fail-closed eval gate always
+  blocked. The runner no longer sends sampling parameters and the template pins
+  `anthropic[bedrock]>=1.17,<2` (2.x sends API version 2026-10-21, which the
+  previous-generation judge does not support on Bedrock). `incident-triage` now passes a
+  job-scoped read token, restricts the agent to read-only tools, passes the alert payload
+  as a file, posts only the final answer to the Issue from a separate job, and falls back
+  to a run link when no summary is available. `ci.yml` drops a "changed files" coverage
+  step that actually enforced a whole-codebase threshold. Gate calibration now promotes
+  on representative results rather than elapsed days. Adapted from cc-plugins.
+- `ui-ux-pro-max` 1.3.1 (2026-10-25): ship the upstream MIT `LICENSE` and a `NOTICE.md`
+  recording the upstream commit and local modifications.
 - `dev-core` 5.5.0 (2026-09-23): adopt Sol medium for general implementation,
   Luna high for bounded research and routine edits, Luna max for settled bounded
   implementation, and Sol high for complex implementation. Keep Astra high parent

@@ -25,7 +25,7 @@ Facts may change over time, but the principles themselves remain stable.
 
 ## 6. Gates go comment-only → calibration → enforcement. False positives destroy trust
 **Rationale**: Enforcing from day one causes teams to revolt against false positives that a calibration period would have resolved, and the tool gets ripped out entirely (the most common failure pattern in AI code review adoption).
-**Practice**: Reject any new-gate rollout plan that does not include a calibration period (roughly 2 weeks).
+**Practice**: Reject any new-gate rollout plan that does not include calibration (an observation period, promotion criteria, an owner, and a way to disable it). Treat the duration as a guide only; promote on representative run results, not elapsed days. Never use this procedure to weaken gates that are already enforced.
 
 ## 7. Prompt changes are change-management items with the same weight as code changes
 **Rationale**: The deployable unit for an agent is the bundle of "model + prompt + tool definitions" (agent version). Promotion is judged by eval results, not by test pass/fail.
