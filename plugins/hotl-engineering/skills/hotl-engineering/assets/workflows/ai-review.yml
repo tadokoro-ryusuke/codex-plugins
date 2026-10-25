@@ -48,8 +48,8 @@ jobs:
     outputs:
       tier2: ${{ steps.filter.outputs.critical }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -77,12 +77,12 @@ jobs:
       issues: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.GITHUB_OIDC_ROLE }}
           aws-region: ap-northeast-1
@@ -147,7 +147,7 @@ jobs:
       # Structured output for the gate decision (read by the aggregate job)
       - name: Upload verdict
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ai-review-verdict-light
           path: ${{ runner.temp }}/review-light/verdict.json
@@ -168,12 +168,12 @@ jobs:
       issues: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.GITHUB_OIDC_ROLE }}
           aws-region: ap-northeast-1
@@ -240,7 +240,7 @@ jobs:
       # Structured output for the gate decision (read by the aggregate job)
       - name: Upload verdict
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ai-review-verdict-deep
           path: ${{ runner.temp }}/review-deep/verdict.json
@@ -261,17 +261,26 @@ jobs:
     steps:
       # Install assets/scripts/check_review_verdicts.py at this path on the base
       # branch before enforcing. Never execute a gate script supplied by the PR.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           path: .trusted
           persist-credentials: false
-      - name: Download verdicts
+      # Download each verdict by name. download-artifact v5 and later extract a pattern that matches only one
+      # artifact directly into path, so on an ordinary PR (light only) it lands outside where the validator reads
+      - name: Download light verdict
         continue-on-error: true # the validator reports missing evidence in either phase
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
-          pattern: ai-review-verdict-*
-          path: verdicts
+          name: ai-review-verdict-light
+          path: verdicts/ai-review-verdict-light
+      - name: Download deep verdict
+        if: needs.classify.outputs.tier2 == 'true'
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          name: ai-review-verdict-deep
+          path: verdicts/ai-review-verdict-deep
 
       - name: Enforce gate
         env:

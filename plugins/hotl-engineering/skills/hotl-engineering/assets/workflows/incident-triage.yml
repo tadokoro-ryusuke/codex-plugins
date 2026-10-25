@@ -63,20 +63,20 @@ jobs:
       actions: read # gh run list
       id-token: write # OIDC for Bedrock / Azure
     steps:
-      - uses: actions/checkout@v4 # so it can read AGENTS.md / runbooks/
+      - uses: actions/checkout@v7 # so it can read AGENTS.md / runbooks/
         with:
           persist-credentials: false
 
       # --- AWS OIDC for Bedrock (inference) ---
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.GITHUB_OIDC_ROLE }}
           aws-region: ap-northeast-1
 
       # --- Read-only OIDC for the investigation target (Azure) ---
       - name: Azure login (Reader only)
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_READER }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -165,7 +165,7 @@ jobs:
       # Hand only the final answer to the report job as an artifact (never run the agent in a job that can write)
       - name: Keep triage summary for the report job
         if: always() && steps.summary.outputs.path != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: triage-summary
           path: ${{ steps.summary.outputs.path }}
@@ -183,7 +183,7 @@ jobs:
       - name: Fetch triage summary
         if: needs.triage.result == 'success'
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: triage-summary
           path: ${{ runner.temp }}/triage

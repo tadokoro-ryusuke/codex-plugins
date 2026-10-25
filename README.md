@@ -190,6 +190,20 @@ or one native smoke does not establish a quality, cost, or latency advantage.
   without per-axis pass rates or scored at another pass line. Cases below the pass line on
   any axis are reported as failed with the axis name. L3 calibration now measures per-axis
   agreement on binarized human and judge verdicts.
+
+  Every action in the templates and in this repository's CI moves to a major whose
+  `action.yml` runs on Node 24 (GitHub removed Node 20 from hosted runners on 2026-09-23):
+  checkout, setup-node, and setup-python v7, upload-artifact v7, download-artifact v8,
+  github-script v9, create-github-app-token v3, configure-aws-credentials v6, azure/login
+  v3, paths-filter v4, gitleaks-action v3, sticky-pull-request-comment v3, and
+  pnpm/action-setup v6.1.0 (the floating `@v6` tag predates pnpm 12 support); use v5 for
+  pnpm 10 or earlier. claude-code-action stays on v1. Self-hosted runners need v2.327.1 or
+  later. `ai-review` now downloads each verdict by name into its tier directory, because
+  download-artifact v5 and later extract a single pattern match directly into the path and
+  the gate always saw the light verdict as missing. The App token keeps `app-id`
+  (actionlint 1.7.12 does not know `client-id`). The default Node is 24, `deploy.yml`
+  grants `id-token: write` per job and passes shellcheck, and `validate.yml` runs with
+  `contents: read`.
 - `hotl-engineering` 2.0.2 (2026-10-25): fix the shipped templates. Since anthropic
   SDK 1.0.0 (2026-08-20), `messages.create` rejects sampling parameters, so the eval
   runner's `temperature` made every judge vote fail and the fail-closed eval gate always

@@ -78,7 +78,7 @@ jobs:
           directory=$(mktemp -d "$RUNNER_TEMP/eval-out.XXXXXX")
           echo "directory=$directory" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # On PR runs, take the runner code from the base side (trusted). Changes to
       # candidate thresholds must not weaken the gate. A swap of the runner code
@@ -86,18 +86,18 @@ jobs:
       # until after merge (this blocks API-key exfiltration via a malicious PR)
       - name: Checkout trusted runner (base)
         if: github.event_name == 'pull_request'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           path: .trusted
 
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.GITHUB_OIDC_ROLE }}
           aws-region: ap-northeast-1
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -141,7 +141,7 @@ jobs:
       # --- CP4 evidence: post the report as a PR comment ---
       - name: Post report to PR
         if: always() && steps.artifacts.outcome == 'success' && steps.artifacts.outputs.directory != '' && steps.run.outcome != 'skipped' && github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           header: eval-report
           path: ${{ steps.artifacts.outputs.directory }}/report.md
@@ -149,7 +149,7 @@ jobs:
       # --- J-SOX audit trail: archive to artifact + S3 (immutable storage) ---
       - name: Upload artifact
         if: always() && steps.artifacts.outcome == 'success' && steps.artifacts.outputs.directory != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: eval-report-${{ github.run_id }}
           path: ${{ steps.artifacts.outputs.directory }}/

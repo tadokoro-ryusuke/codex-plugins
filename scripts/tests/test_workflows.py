@@ -113,6 +113,16 @@ def is_read_only_triage_tool(tool):
     return tool in {f"Bash({command}:*)" for command in TRIAGE_READ_ONLY_COMMANDS}
 
 
+# The first major version of each action that runs on Node 24 (checked against runs.using in each action's
+# action.yml, 2026-10-26). claude-code-action is a composite action and v1 is current
+NODE24_MIN_MAJOR = {"actions/checkout": 5, "actions/setup-node": 5, "pnpm/action-setup": 5,
+                    "actions/upload-artifact": 6, "actions/download-artifact": 7, "actions/setup-python": 6,
+                    "actions/github-script": 8, "actions/create-github-app-token": 3,
+                    "aws-actions/configure-aws-credentials": 6, "azure/login": 3, "dorny/paths-filter": 4,
+                    "gitleaks/gitleaks-action": 3, "marocchino/sticky-pull-request-comment": 3,
+                    "anthropics/claude-code-action": 1}
+
+
 def pinned_sdk(path):
     match = re.search(r'pip install "(anthropic\[bedrock\][^"]*)"', path.read_text())
     return match.group(1) if match else None
@@ -525,6 +535,40 @@ exit 0
                 with self.subTest(job=job_name, step=step.get("name") or step.get("uses")):
                     self.assertNotIn("jest-coverage-report-action", step.get("uses", ""))
                     self.assertNotIn("changed files", (step.get("name") or "").lower())
+
+    def test_gate_downloads_each_verdict_by_name_into_its_tier_directory(self):
+        # download-artifact v5 and later extract a pattern that matches only one artifact directly into path. An
+        # ordinary PR has only light, so it becomes verdicts/verdict.json, outside verdicts/ai-review-verdict-light/
+        # where the validator reads
+        steps = workflow("ai-review.yml")["jobs"]["ai-review-gate"]["steps"]
+        downloads = [step for step in steps if "download-artifact" in step.get("uses", "")]
+        self.assertTrue(downloads)
+        self.assertFalse([step for step in downloads if "pattern" in step.get("with", {})])
+        by_name = {step["with"]["name"]: step for step in downloads}
+        self.assertEqual(set(by_name), {"ai-review-verdict-light", "ai-review-verdict-deep"})
+        for tier, step in by_name.items():
+            with self.subTest(tier=tier):
+                self.assertEqual(step["with"]["path"], f"verdicts/{tier}")
+                self.assertTrue(step.get("continue-on-error"))
+        self.assertIn("needs.classify.outputs.tier2 == 'true'", by_name["ai-review-verdict-deep"]["if"])
+
+    def test_actions_are_on_majors_that_run_on_node24(self):
+        # GitHub removed Node 20 from hosted runners on 2026-09-23. Do not write versions that declare node20
+        for path in [*WORKFLOWS.glob("*.yml"), *(ROOT / ".github/workflows").glob("*.yml")]:
+            for job_name, job in yaml.safe_load(path.read_text())["jobs"].items():
+                for step in job.get("steps", []):
+                    uses = step.get("uses")
+                    if not uses:
+                        continue
+                    action, _, ref = uses.partition("@")
+                    with self.subTest(path=path.name, job=job_name, uses=uses):
+                        self.assertIn(action, NODE24_MIN_MAJOR)
+                        match = re.fullmatch(r"v(\d+)(?:\.\d+){0,2}", ref)
+                        self.assertIsNotNone(match, "templates use @vN or @vN.M.P and pin a SHA when applied")
+                        self.assertGreaterEqual(int(match.group(1)), NODE24_MIN_MAJOR[action])
+                        if action == "pnpm/action-setup" and int(match.group(1)) == 6:
+                            # The floating @v6 tag points to v6.0.10 as of 2026-10-26, older than v6.1.0 (pnpm 12)
+                            self.assertNotEqual(ref, "v6")
 
 
 if __name__ == "__main__":

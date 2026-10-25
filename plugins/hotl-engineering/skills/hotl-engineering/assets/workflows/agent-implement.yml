@@ -61,7 +61,7 @@ jobs:
     outputs:
       authorized: ${{ steps.actor.outputs.authorized }}
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v9
         id: actor
         with:
           script: |
@@ -92,21 +92,21 @@ jobs:
     # If the environment is left unset, it runs immediately as before, with no protection
     environment: agent-implement
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       # ADAPT: install dependencies from the lockfile before the agent runs (the agent may not
       # install). Keep the package manager and Node version in line with ci.yml
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v6.1.0 # @v5 for pnpm 10 or earlier (see the ADAPT note in ci.yml)
+      - uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "24"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
       - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.GITHUB_OIDC_ROLE }}
           aws-region: ap-northeast-1
@@ -192,7 +192,7 @@ jobs:
 
       # Hand the PR title and body to the job that opens the PR (treated as agent-written data)
       - name: Keep the pull request draft for the next job
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: agent-pr
           path: ${{ runner.temp }}/agent-pr/
@@ -215,7 +215,7 @@ jobs:
     steps:
       - name: Fetch the pull request draft
         continue-on-error: true
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: agent-pr
           path: ${{ runner.temp }}/agent-pr
@@ -223,8 +223,10 @@ jobs:
       - name: Create a GitHub App token for the pull request
         id: app-token
         if: vars.HOTL_APP_ID != ''
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         with:
+          # v3.1 and later recommend client-id and deprecate app-id (it still works). actionlint 1.7.12 does not
+          # know client-id and reports an error, so keep app-id until actionlint supports it
           app-id: ${{ vars.HOTL_APP_ID }}
           private-key: ${{ secrets.HOTL_APP_PRIVATE_KEY }}
           # Narrow to the permissions needed to open the PR (do not inherit everything granted to the App)

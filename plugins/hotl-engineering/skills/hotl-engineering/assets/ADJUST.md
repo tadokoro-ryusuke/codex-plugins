@@ -17,10 +17,18 @@ existing enforced gates; introduce new advisory checks proportionately.
 - [ ] Secret names (GITHUB_OIDC_ROLE / AZURE_CLIENT_ID* / TEAMS_WEBHOOK_URL, etc.) → align with the secrets that actually exist; if not yet created, attach the creation steps to the deliverable
 - [ ] Pin third-party actions (`dorny/paths-filter` / `marocchino/sticky-pull-request-comment` /
       `gitleaks/gitleaks-action`, etc.) to a commit SHA rather than a tag
-      (the template writes `@vN` for readability; since CI itself is Tier 2, pinning is the default when applying it)
+      (the template writes `@vN` for readability; since CI itself is Tier 2, pinning is the default when applying it).
+      If an organization or enterprise allowed-actions policy enforces SHA pinning, unpinned workflows fail at run
+      time. Automate pinning and updates with Renovate or similar instead of doing it by hand
+- [ ] Every action is on a version that runs on Node 24 (GitHub removed Node 20 from hosted runners on 2026-09-23).
+      Self-hosted runners must be v2.327.1 or later. Do not downgrade to a Node 20 version
 
 ## workflows/ci.yml
 - [ ] pnpm → the actual package manager (npm/yarn/uv/poetry). For a Python stack, map L1-L5 to ruff / mypy / pip-audit / pytest
+- [ ] `pnpm/action-setup`: v6.1.0 or later for pnpm 11 and later, v5 for pnpm 10 or earlier (the floating `@v6` tag
+      points to v6.0.10 as of 2026-10-26, which does not support pnpm 12)
+- [ ] Choose `NODE_VERSION` from the current LTS releases (v24 as of 2026-10-26; v22 reaches EOL on 2027-04-30, and v26
+      enters LTS on 2026-10-28)
 - [ ] `pnpm lint` / `pnpm test` / `pnpm build` → the script names that actually exist
 - [ ] Coverage threshold → set vitest.config's `coverage.thresholds` (whole codebase) from a realistic
       value matched to existing coverage results, then raise it gradually. To require coverage only on
@@ -55,7 +63,8 @@ existing enforced gates; introduce new advisory checks proportionately.
       and the two PR files; never add bare Edit / Write (they can rewrite Actions environment files outside the working tree)
 - [ ] The step that opens the PR uses GITHUB_TOKEN by default, so pull_request workflows do not run automatically
       on that PR. To run CI or ai-review on it, create your own GitHub App (write access to Contents and Pull requests)
-      and set `vars.HOTL_APP_ID` and `secrets.HOTL_APP_PRIVATE_KEY`
+      and set `vars.HOTL_APP_ID` and `secrets.HOTL_APP_PRIVATE_KEY`. create-github-app-token v3.1 and later recommend
+      `client-id` (the App's Client ID), but actionlint 1.7.12 does not support it, so the template keeps `app-id`
 - [ ] Tests and git commit (hooks) run repository code while the job's credentials are in the environment.
       Operations inside those child processes are not limited by the pre-approvals. Where outsiders can file Issues,
       always combine environment reviewers with finalizing the Issue body at CP1
