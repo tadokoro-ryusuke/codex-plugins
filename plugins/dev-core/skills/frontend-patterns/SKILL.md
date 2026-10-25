@@ -80,18 +80,19 @@ Replacing existing effect-based fetching changes loading behavior, fetch timing,
 and caching. Do it only when the request includes it; otherwise fix missing cleanup
 or report it.
 
-Examples of optimistic update mechanics: React 19 `useOptimistic` shows the
-optimistic value only while the action runs and then reverts to the source state,
-so update the parent state only on success and catch errors to show them
-(https://react.dev/reference/react/useOptimistic). TanStack Query either refetches
+Examples of optimistic update mechanics: on React 19 or later, `useOptimistic`
+shows the optimistic value only while the action runs and then reverts to the
+source state, so update the parent state only on success and catch errors to show
+them (https://react.dev/reference/react/useOptimistic). TanStack Query either refetches
 to restore the true value on failure, or saves the previous value in `onMutate`,
 restores it in `onError`, and revalidates in `onSettled`
 (https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates).
 
-## React 19 and React Compiler
+## React 19 APIs
 
-Use these only when the project is on React 19 or later (stable since 2024-12-05,
-https://react.dev/blog/2024/12/05/react-19) or has adopted the compiler.
+Use these only when the project's React is 19 or later (stable since 2024-12-05,
+https://react.dev/blog/2024/12/05/react-19). Do not introduce them into a React 18
+or earlier project, even when it uses React Compiler.
 
 - Group submissions and mutations into Actions; use `<form action={fn}>` with
   `useActionState` for pending state, errors, and results.
@@ -99,12 +100,22 @@ https://react.dev/blog/2024/12/05/react-19) or has adopted the compiler.
   (https://react.dev/reference/react-dom/components/form). If validation errors are
   returned rather than thrown, inputs can be lost; return the submitted values and
   restore them through `defaultValue`, or use controlled inputs.
-- React Compiler 1.0 is stable since 2025-10-07
-  (https://react.dev/blog/2025/10/07/react-compiler-1). Where it is adopted, leave
-  memoization of new code to the compiler and keep `useMemo`/`useCallback` as escape
-  hatches for precise control, such as stable effect dependencies. Keep existing
-  memoization; removing it can change compiled output, so remove it only with
-  thorough tests. Without the compiler, memoize only where measurement shows a benefit.
+- For optimistic updates, use `useOptimistic` as described under "Data flow".
+
+## React Compiler
+
+Apply this only when the project has installed React Compiler and configured it for
+its React version. The compiler is stable since 1.0 on 2025-10-07
+(https://react.dev/blog/2025/10/07/react-compiler-1). Its `target` option supports
+React 17, 18, and 19; targets 17 and 18 need `react-compiler-runtime` as a runtime
+dependency (https://react.dev/reference/react-compiler/target). Using the compiler
+does not make React 19 APIs available.
+
+- Leave memoization of new code to the compiler and keep `useMemo`/`useCallback` as
+  escape hatches for precise control, such as stable effect dependencies.
+- Keep existing memoization; removing it can change compiled output, so remove it
+  only with thorough tests.
+- Without the compiler, memoize only where measurement shows a benefit.
 
 ## Accessibility implementation
 
