@@ -70,9 +70,42 @@ secrets and write tokens. Protect workflow changes through the repository's revi
 policy; propose CODEOWNERS or environment protections when they address a concrete
 gap, and apply remote changes only within existing authorization.
 
+- Enforce SHA pinning with the enterprise, organization, or repository allowed
+  actions policy so a workflow using an unpinned action fails; automate pinning
+  and updates (for example, Renovate) instead of editing pins by hand.
+- Avoid `pull_request_target` and `workflow_run`. These triggers run with the base
+  repository's secrets and write permissions even for fork PRs, so checking out
+  fork code hands it those privileges. If one is unavoidable, never check out the
+  fork head and pass no secrets or write permissions. GitHub's default rule that
+  disables `pull_request_target` covers only public repositories; for private or
+  internal repositories, configure execution-protection event rules yourself.
+- Pass untrusted values such as `${{ github.event.* }}` to `run:` steps through
+  environment variables, never inline, to prevent script injection. Lint workflows
+  with actionlint or zizmor, starting in warning mode before making them required.
+- Run any CI job that gives an agent untrusted input (issue or PR text, fork code)
+  separately from jobs holding write permissions or secrets.
+
+Harden dependency intake by default, because a compromised version or install
+script reaches CI secrets the moment it installs:
+
+- Wait 3 to 14 days before adopting newly published versions, paired with an
+  exception path that takes security fixes immediately.
+- Deny dependency install scripts by default and allowlist only the packages that
+  need them, such as native builds.
+- Commit the lockfile and install in CI without rewriting it (`npm ci`,
+  `pnpm install --frozen-lockfile`, `uv sync --locked`).
+- When the project publishes packages, use Trusted Publishing (OIDC) and remove
+  long-lived publish tokens.
+
+Which of these apply by default depends on the tool and version. For the current
+defaults, setting names, and GitHub Actions controls with sources and check
+dates, read [supply chain](supply-chain.md).
+
 Keep dependency updates maintainable. Add artifact provenance, SBOM, or other
-supply-chain controls when the delivery requirements justify them. Recheck current
-official provider guidance for implementation syntax and platform behavior.
+supply-chain controls when the delivery requirements justify them; the current
+SLSA release is v1.2, published 2025-11-24 with a new Source Track (source:
+https://slsa.dev/blog/2025/11/announce-slsa-v1.2, checked 2026-10-26). Recheck
+current official provider guidance for implementation syntax and platform behavior.
 
 Do not claim a passing pipeline establishes device behavior, production health,
 or client acceptance. Retain the exact revision, command/job, result, and relevant
