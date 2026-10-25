@@ -221,6 +221,15 @@ class EvalGateTests(unittest.TestCase):
         code, _ = self.run_evals(self.ordinary_cases(2), [{"answer": "ok"}] * 2, baseline=baseline)
         self.assertEqual(code, 0)
 
+    def test_regression_boundary_tolerates_float_rounding(self):
+        # 0.8 - 0.1 is 0.7000000000000001 in floating point; a drop of exactly the allowance must not count
+        thresholds = {**self.THRESHOLDS, "judge_axis_pass_rate_drop_allowed": 0.1}
+        judges = [self.scores(correctness=2) if i < 3 else self.scores() for i in range(10)]
+        code, data = self.run_evals(self.ordinary_cases(10), [{"answer": "ok"}] * 10, judge=judges,
+                                    baseline=self.baseline(correctness=0.8), thresholds=thresholds)
+        self.assertEqual(data["summary"]["judge_axis_pass_rate"]["correctness"], 0.7)
+        self.assertEqual(code, 0)
+
     def test_baseline_from_the_summed_score_gate_is_rejected(self):
         # Never silently skip the comparison with a pre-2.1.0 baseline (judge_total_mean only)
         old = {"recall_at_5_mean": 0.9, "judge_total_mean": 13.0}
