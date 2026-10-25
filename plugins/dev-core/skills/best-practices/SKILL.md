@@ -38,8 +38,9 @@ Do not make a failing test pass by deleting or skipping it, adding a focus marke
 in the implementation (for example, returning a different value for a call count
 or a known fixture). These changes erase what the test proves and fake the evidence.
 
-Change an existing test only on one of two bases, and report which tests changed
-and which basis applies:
+A change that weakens an existing test (deleting or skipping it, loosening an
+assertion, or special-casing its inputs) needs one of two bases, and you report
+which tests changed and which basis applies:
 
 - A specification change: an acceptance criterion or plan changes the behavior, so
   update the tests that encode the old behavior.
@@ -49,6 +50,10 @@ and which basis applies:
 
 Everywhere dev-core checks test changes, "a specification change or an approved
 quarantine that meets `$test-design`'s conditions" means exactly these two bases.
+Changes that keep or strengthen what a test proves need no such basis: replacing an
+expected value computed from the implementation with one derived from the
+specification, adding assertions, or restructuring a test without loosening it.
+Still report them as changed tests.
 When the specification and a test conflict, change neither; return the conflict
 with evidence.
 

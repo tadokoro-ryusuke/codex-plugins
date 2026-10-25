@@ -40,11 +40,14 @@ For each small behavior or plan iteration:
 7. Run a focused self-review of the diff for that iteration.
 8. Broaden verification when the behavior touches shared code.
 
-Change, skip, or delete an existing test only on the basis of a specification
-change (the plan or acceptance criteria change that behavior) or an approved
+Weaken an existing test (skip, delete, loosen an assertion, or special-case its
+inputs) only on the basis of a specification change (the plan or acceptance
+criteria change that behavior) or an approved
 quarantine that meets `$test-design`'s conditions (owner, expiry, tracked failure,
 replacement coverage for critical paths). Record the test and its basis in the
-plan's progress log. If a test cannot pass without such a change and neither basis
+plan's progress log. Changes that keep or strengthen what a test proves (for
+example, replacing an expected value computed from the implementation) need no
+such basis, but are still recorded. If a test cannot pass without such a change and neither basis
 exists, treat it as a conflict between specification and test: stop that path and
 return the evidence instead of weakening the test.
 
