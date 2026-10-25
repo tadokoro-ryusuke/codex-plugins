@@ -87,11 +87,32 @@ jobs:
           role-to-assume: ${{ secrets.GITHUB_OIDC_ROLE }}
           aws-region: ap-northeast-1
 
-      - uses: anthropics/claude-code-action@v1
+      # The model ID comes from a repository variable (never written in the template). Stop before the agent runs if it is unset
+      - name: Require the model variable
+        id: model
         env:
-          VERDICT_PATH: ${{ runner.temp }}/review-light/verdict.json
+          MODEL: ${{ vars.HOTL_MODEL_LIGHT }}
+        run: |
+          if [ -z "$MODEL" ]; then
+            echo "::error::Set the repository variable HOTL_MODEL_LIGHT (see ADJUST.md)"
+            exit 1
+          fi
+
+      # Prepare a fresh location for the verdict file before the agent runs (no previous verdict survives)
+      - name: Prepare the verdict directory
+        id: verdict-dir
+        run: |
+          rm -rf "$RUNNER_TEMP/review-light"
+          mkdir -p "$RUNNER_TEMP/review-light"
+
+      - uses: anthropics/claude-code-action@v1
         with:
           use_bedrock: "true"
+          # The agent may only read, comment on the PR (the same means as the upstream PR review
+          # example), and write one verdict file. github_token is explicit so the write-capable
+          # Claude GitHub App token is not handed over. Only user settings are read, so the
+          # repository's (including the PR head's) Claude Code project settings and .mcp.json cannot widen permissions
+          github_token: ${{ github.token }}
           prompt: |
             Review this PR. Follow the review conventions in AGENTS.md.
 
@@ -110,14 +131,18 @@ jobs:
             ## Output
             1. A result summary as a PR comment (short enough for a human to read in 3 minutes at CP2)
             2. Individual findings as inline comments on the relevant lines
-            3. Create the parent directory of VERDICT_PATH and write the current review to that
-               environment-variable path. Never reuse a verdict from repository content.
+            3. Use Write to put the current review in `${{ runner.temp }}/review-light/verdict.json`
+               (the directory is already prepared). Never reuse a verdict from repository content.
                Write {"critical": <nonnegative integer>, "high": <nonnegative integer>,
                       "head_sha": "${{ github.event.pull_request.head.sha }}"}.
                Use zero counts when there are no findings. Review this exact head revision.
           claude_args: |
             --max-turns 5
-            --model apac.anthropic.claude-sonnet-4-5-20250929-v1:0
+            --model ${{ vars.HOTL_MODEL_LIGHT }}
+            --setting-sources user
+            --strict-mcp-config
+            --tools "Read,Grep,Glob,Bash,Write"
+            --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Edit(/${{ runner.temp }}/review-light/verdict.json)"
 
       # Structured output for the gate decision (read by the aggregate job)
       - name: Upload verdict
@@ -153,11 +178,31 @@ jobs:
           role-to-assume: ${{ secrets.GITHUB_OIDC_ROLE }}
           aws-region: ap-northeast-1
 
-      - uses: anthropics/claude-code-action@v1
+      # The model ID comes from a repository variable (never written in the template). Stop before the agent runs if it is unset
+      - name: Require the model variable
+        id: model
         env:
-          VERDICT_PATH: ${{ runner.temp }}/review-deep/verdict.json
+          MODEL: ${{ vars.HOTL_MODEL_DEEP }}
+        run: |
+          if [ -z "$MODEL" ]; then
+            echo "::error::Set the repository variable HOTL_MODEL_DEEP (see ADJUST.md)"
+            exit 1
+          fi
+
+      # Prepare a fresh location for the verdict file before the agent runs (no previous verdict survives)
+      - name: Prepare the verdict directory
+        id: verdict-dir
+        run: |
+          rm -rf "$RUNNER_TEMP/review-deep"
+          mkdir -p "$RUNNER_TEMP/review-deep"
+
+      - uses: anthropics/claude-code-action@v1
         with:
           use_bedrock: "true"
+          # The agent may only read, comment on the PR (the same means as the upstream PR review
+          # example), and write one verdict file. github_token is explicit so the write-capable
+          # Claude GitHub App token is not handed over
+          github_token: ${{ github.token }}
           prompt: |
             This PR touches critical paths — authentication, permissions, DB
             schema, infrastructure, etc. (Tier 2). Review it in depth, from an
@@ -180,13 +225,17 @@ jobs:
             Post an audit-style report to the PR comment stating, for each angle,
             "no issues" or "issue found (with evidence)". For findings where an
             attack scenario is viable, include an outline of the PoC steps.
-            Create the parent directory of VERDICT_PATH and write a fresh verdict to that
-            environment-variable path. Never reuse repository verdicts. Review this exact head.
+            Use Write to put a fresh verdict in `${{ runner.temp }}/review-deep/verdict.json`
+            (the directory is already prepared). Never reuse repository verdicts. Review this exact head.
             Write {"critical": <nonnegative integer>, "high": <nonnegative integer>,
                    "head_sha": "${{ github.event.pull_request.head.sha }}"}.
           claude_args: |
             --max-turns 8
-            --model apac.anthropic.claude-opus-4-6-v1:0
+            --model ${{ vars.HOTL_MODEL_DEEP }}
+            --setting-sources user
+            --strict-mcp-config
+            --tools "Read,Grep,Glob,Bash,Write"
+            --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Edit(/${{ runner.temp }}/review-deep/verdict.json)"
 
       # Structured output for the gate decision (read by the aggregate job)
       - name: Upload verdict

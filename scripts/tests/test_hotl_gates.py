@@ -93,9 +93,37 @@ class EvalGateTests(unittest.TestCase):
             scores = {axis: {"score": 5, "reason": "fixture"} for axis in self.runner.AXES}
             with patch.object(sys, "argv", args), patch.object(self.runner, "call_target", side_effect=target), \
                  patch.object(self.runner, "eval_l2", side_effect=judge, return_value=scores), \
+                 patch.object(self.runner, "JUDGE_MODEL", "fixture-judge-model"), \
                  contextlib.redirect_stdout(io.StringIO()):
                 result = self.runner.main()
             return result, json.loads((root / "out/results.json").read_text())
+
+    def test_judge_model_is_required(self):
+        # No default model ID (never depend silently on a model that will be retired). If unset, do not start evaluating
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            args = ["evals", "--dataset", str(root / "missing.jsonl"), "--thresholds",
+                    str(root / "missing.json"), "--out", str(root / "out")]
+            with patch.object(sys, "argv", args), patch.object(self.runner, "JUDGE_MODEL", ""), \
+                 patch("sys.stderr", new_callable=io.StringIO) as stderr:
+                self.assertEqual(self.runner.main(), 2)
+            self.assertIn("JUDGE_MODEL", stderr.getvalue())
+            self.assertFalse((root / "out").exists())
+
+    def test_cli_without_judge_model_exits_before_evaluating(self):
+        # Run the CLI in a separate process without the environment variable, so the import-time default is covered too
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "anthropic.py").write_text("def AnthropicBedrock(**kwargs):\n    return None\n")
+            env = {key: value for key, value in os.environ.items() if key != "JUDGE_MODEL"}
+            env["PYTHONPATH"] = str(root)
+            result = subprocess.run(
+                [sys.executable, str(ASSETS / "evals/run_evals.py"), "--dataset", str(root / "missing.jsonl"),
+                 "--thresholds", str(root / "missing.json"), "--out", str(root / "out")],
+                env=env, capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 2, result.stderr)
+            self.assertIn("JUDGE_MODEL", result.stderr)
+            self.assertFalse((root / "out").exists())
 
     def cases(self):
         return [{"id": "must", "category": "answer", "query": "fixture", "suite": ["smoke"], "must_pass": True},

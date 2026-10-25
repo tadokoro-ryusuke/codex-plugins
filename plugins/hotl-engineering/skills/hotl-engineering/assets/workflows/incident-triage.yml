@@ -90,6 +90,17 @@ jobs:
           mkdir -p .incident
           printf '%s\n' "$ALERT_PAYLOAD" > .incident/alert.json
 
+      # The model ID comes from a repository variable (never written in the template). Stop before the agent runs if it is unset
+      - name: Require the model variable
+        id: model
+        env:
+          MODEL: ${{ vars.HOTL_MODEL_LIGHT }}
+        run: |
+          if [ -z "$MODEL" ]; then
+            echo "::error::Set the repository variable HOTL_MODEL_LIGHT (see ADJUST.md)"
+            exit 1
+          fi
+
       - uses: anthropics/claude-code-action@v1
         id: triage
         with:
@@ -129,7 +140,9 @@ jobs:
               P3 (next sprint)
           claude_args: |
             --max-turns 15
-            --model apac.anthropic.claude-sonnet-4-5-20250929-v1:0
+            --model ${{ vars.HOTL_MODEL_LIGHT }}
+            --setting-sources user
+            --strict-mcp-config
             --tools "Read,Grep,Glob,Bash"
             --allowedTools "Read,Grep,Glob,Bash(az monitor activity-log list:*),Bash(az monitor log-analytics query:*),Bash(az monitor metrics list:*),Bash(az containerapp revision list:*),Bash(az containerapp show:*),Bash(az containerapp logs show:*),Bash(gh pr list:*),Bash(gh run list:*)"
             --disallowedTools "Edit,MultiEdit,Write,NotebookEdit"

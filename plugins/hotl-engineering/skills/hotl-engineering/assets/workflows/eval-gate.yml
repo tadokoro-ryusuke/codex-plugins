@@ -68,9 +68,9 @@ jobs:
       EXPECTED_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
       TARGET_API_KEY: ${{ secrets.TARGET_STAGING_API_KEY }}
       # Model used as judge (Bedrock Tokyo). Ideally kept separate from the generation model.
-      # ADAPT: Sonnet 4.5 is a deprecated previous-generation model (retired on Anthropic-operated
-      # platforms on 2026-11-30; AWS decides the Bedrock date). See ADJUST.md for the migration
-      JUDGE_MODEL: apac.anthropic.claude-sonnet-4-5-20250929-v1:0
+      # Set it with the repository variable HOTL_JUDGE_MODEL (if unset, run_evals.py fails before
+      # evaluating). See ADJUST.md for how to choose it
+      JUDGE_MODEL: ${{ vars.HOTL_JUDGE_MODEL }}
     steps:
       - name: Prepare fresh evaluation artifacts
         id: artifacts

@@ -21,6 +21,24 @@
 #     can file Issues, always combine this with adding environment approval,
 #     judging the filer as trusted, and having a human finalize the body
 #     before applying the label at CP1
+#   - The agent is pre-approved to run only the direct commands listed in
+#     --allowedTools (the plan comment, creating and pushing the Issue's branch,
+#     lint / typecheck / test). Pushes are fixed to the Issue's branch; gh api,
+#     merge, force push, and adding dependencies are not granted. Repository-side
+#     settings and .mcp.json are not read (--setting-sources user / --strict-mcp-config)
+#   - File edits are pre-approved only inside the working tree and for the two
+#     files holding the PR title and body (the agent cannot rewrite Actions
+#     environment files or anything else outside the working tree)
+#   - The agent never opens the PR. It only writes the title and body to files;
+#     a separate job that runs neither the agent nor repository code opens it
+#     with a fixed repo, head, base, and Draft flag. The PR is opened only when
+#     the branch head moved in this run, and an existing PR is left unchanged
+#   - Remaining risk: lint / typecheck / test and git commit (hooks) run
+#     repository code while this job's credentials (a write-capable token, AWS
+#     credentials for Bedrock) are in the environment. Code written through
+#     prompt injection via the Issue can read them. Operations inside those
+#     child processes are not limited by the pre-approvals above; contain this
+#     with the approval practices above
 # =============================================================================
 name: Agent Implement
 
@@ -61,6 +79,8 @@ jobs:
     if: needs.authorize.outputs.authorized == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    outputs:
+      before: ${{ steps.before.outputs.sha }}
     permissions:
       contents: write
       issues: write
@@ -76,11 +96,55 @@ jobs:
         with:
           fetch-depth: 0
 
+      # ADAPT: install dependencies from the lockfile before the agent runs (the agent may not
+      # install). Keep the package manager and Node version in line with ci.yml
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.GITHUB_OIDC_ROLE }}
           aws-region: ap-northeast-1
+
+      # The model ID comes from a repository variable (never written in the template). Stop before the agent runs if it is unset
+      - name: Require the model variable
+        id: model
+        env:
+          MODEL: ${{ vars.HOTL_MODEL_LIGHT }}
+        run: |
+          if [ -z "$MODEL" ]; then
+            echo "::error::Set the repository variable HOTL_MODEL_LIGHT (see ADJUST.md)"
+            exit 1
+          fi
+
+      # Prepare a fresh location for the PR title and body before the agent runs
+      - name: Prepare the pull request draft directory
+        id: pr-dir
+        run: |
+          rm -rf "$RUNNER_TEMP/agent-pr"
+          mkdir -p "$RUNNER_TEMP/agent-pr"
+
+      # Record the branch head before the agent runs. The PR is opened only when this run moved the head
+      - name: Record the branch head before the agent
+        id: before
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BRANCH: agent/issue-${{ github.event.issue.number }}
+        run: |
+          if sha=$(gh api "repos/$GH_REPO/git/ref/heads/$BRANCH" --jq .object.sha 2>"$RUNNER_TEMP/before.err"); then
+            echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          elif grep -q 'HTTP 404' "$RUNNER_TEMP/before.err"; then
+            echo "sha=none" >> "$GITHUB_OUTPUT"
+          else
+            cat "$RUNNER_TEMP/before.err" >&2
+            exit 1
+          fi
 
       - uses: anthropics/claude-code-action@v1
         with:
@@ -90,24 +154,121 @@ jobs:
 
             ## Steps (SDD: plan → implement → verify)
             1. Read the acceptance criteria in the Issue body and post an
-               implementation plan as an Issue comment (affected files,
-               approach, risks). If the acceptance criteria are ambiguous or
-               contradictory, do not implement — post a clarifying comment and stop
-            2. Create the branch `agent/issue-${{ github.event.issue.number }}`
+               implementation plan with `gh issue comment ${{ github.event.issue.number }}`
+               (affected files, approach, risks). If the acceptance criteria are
+               ambiguous or contradictory, do not implement — post a clarifying comment and stop
+            2. Create the branch with `git switch -c agent/issue-${{ github.event.issue.number }}`
             3. Implement according to the conventions in AGENTS.md. Write the
                corresponding test for each acceptance criterion first (TDD).
                Implementation without tests is not allowed
-            4. Run lint / typecheck / test locally, and fix issues until everything passes
-            5. Create a Draft PR. The PR body must always include:
+            4. Run `pnpm lint`, `pnpm typecheck`, and `pnpm test`, and fix issues until
+               everything passes. If you conclude that the spec and the tests contradict
+               each other so they cannot pass, bend neither the tests nor the implementation:
+               post a clarifying comment with your evidence on the Issue and stop
+            5. After `git add` and `git commit`, push with
+               `git push -u origin agent/issue-${{ github.event.issue.number }}`. Do not open
+               a PR (a later step opens it as a Draft). Instead, use Write to put the PR title
+               on one line in `${{ runner.temp }}/agent-pr/title.txt` and the body in
+               `${{ runner.temp }}/agent-pr/body.md`. The body must always include:
                - `Closes #${{ github.event.issue.number }}`
                - A table mapping acceptance criteria to verification results
                - Self-reported risk points (what the human reviewer should look at)
+               - Existing tests you changed or deleted and why ("none" if there are none)
 
             ## Prohibited
             - Changes outside the scope written in the Issue (file a separate
               Issue for improvements you notice)
             - Adding dependency packages (if needed, ask for approval via a plan comment)
             - Dropping existing columns in a change that includes a migration
+            - Deleting, skipping, or loosening existing tests, snapshots, or coverage
+              thresholds to make things pass without grounds in the Issue's acceptance criteria
           claude_args: |
             --max-turns 30
-            --model apac.anthropic.claude-sonnet-4-5-20250929-v1:0
+            --model ${{ vars.HOTL_MODEL_LIGHT }}
+            --setting-sources user
+            --strict-mcp-config
+            --tools "Read,Grep,Glob,Edit,MultiEdit,Write,Bash"
+            --allowedTools "Read,Grep,Glob,Edit(/${{ github.workspace }}/**),Bash(gh issue comment ${{ github.event.issue.number }}:*),Bash(git switch -c agent/issue-${{ github.event.issue.number }}),Bash(git status),Bash(git diff:*),Bash(git add:*),Bash(git commit:*),Bash(git push -u origin agent/issue-${{ github.event.issue.number }}),Bash(pnpm lint),Bash(pnpm typecheck),Bash(pnpm test:*),Edit(/${{ runner.temp }}/agent-pr/title.txt),Edit(/${{ runner.temp }}/agent-pr/body.md)"
+
+      # Hand the PR title and body to the job that opens the PR (treated as agent-written data)
+      - name: Keep the pull request draft for the next job
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-pr
+          path: ${{ runner.temp }}/agent-pr/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # The PR is opened in a separate job that runs neither the agent nor repository code (a fresh
+  # runner, so environment files rewritten in the previous job have no effect). repo, head, base,
+  # and the Draft flag are fixed.
+  # ADAPT: pull_request workflows do not run automatically on a PR opened with GITHUB_TOKEN. To run
+  # CI and ai-review on the PR, create your own GitHub App and set vars.HOTL_APP_ID and
+  # secrets.HOTL_APP_PRIVATE_KEY (see ADJUST.md)
+  open-pr:
+    needs: implement
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Fetch the pull request draft
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: agent-pr
+          path: ${{ runner.temp }}/agent-pr
+
+      - name: Create a GitHub App token for the pull request
+        id: app-token
+        if: vars.HOTL_APP_ID != ''
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.HOTL_APP_ID }}
+          private-key: ${{ secrets.HOTL_APP_PRIVATE_KEY }}
+          # Narrow to the permissions needed to open the PR (do not inherit everything granted to the App)
+          permission-contents: read
+          permission-pull-requests: write
+
+      - name: Open the draft pull request
+        id: open-pr
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+          GH_REPO: ${{ github.repository }}
+          BRANCH: agent/issue-${{ github.event.issue.number }}
+          BASE: ${{ github.event.repository.default_branch }}
+          BEFORE: ${{ needs.implement.outputs.before }}
+          ISSUE: ${{ github.event.issue.number }}
+          PR_DIR: ${{ runner.temp }}/agent-pr
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          # Check the branch head through the API. 404 means "not pushed"; any other error fails the step
+          if ! head=$(gh api "repos/$GH_REPO/git/ref/heads/$BRANCH" --jq .object.sha 2>"$RUNNER_TEMP/head.err"); then
+            if grep -q 'HTTP 404' "$RUNNER_TEMP/head.err"; then
+              echo "No branch $BRANCH was pushed; no pull request is created"
+              exit 0
+            fi
+            cat "$RUNNER_TEMP/head.err" >&2
+            exit 1
+          fi
+          # Do not open a PR if the head did not move in this run (never adopt a branch left by an earlier run)
+          if [ -z "$BEFORE" ] || [ "$head" = "$BEFORE" ]; then
+            echo "Branch $BRANCH did not move in this run; no pull request is created"
+            exit 0
+          fi
+          # Leave an existing PR unchanged, including one a human already marked Ready
+          if [ -n "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[].number')" ]; then
+            echo "A pull request for $BRANCH already exists; it is left unchanged"
+            exit 0
+          fi
+          mkdir -p "$PR_DIR"
+          title=$(head -n 1 "$PR_DIR/title.txt" 2>/dev/null || true)
+          [ -n "$title" ] || title="Implement #$ISSUE"
+          body="$PR_DIR/body.md"
+          if ! [ -f "$body" ] || ! grep -q '[^[:space:]]' "$body"; then
+            printf 'The agent did not write a body. See the Actions run: %s\n' "$RUN_URL" > "$body"
+          fi
+          grep -qE "Closes #${ISSUE}([^0-9]|$)" "$body" || printf '\nCloses #%s\n' "$ISSUE" >> "$body"
+          gh pr create --repo "$GH_REPO" --draft --head "$BRANCH" --base "$BASE" \
+            --title "$title" --body-file "$body"

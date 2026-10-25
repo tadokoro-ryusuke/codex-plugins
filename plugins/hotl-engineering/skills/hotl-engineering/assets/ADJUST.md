@@ -5,7 +5,14 @@ the selected project. They are not a ready-to-deploy universal stack. Preserve
 existing enforced gates; introduce new advisory checks proportionately.
 
 ## Common to all files
-- [ ] Bedrock model ID (`apac.anthropic.claude-*`) → replace with the inference profile enabled for your organization
+- [ ] Model IDs are not written in the templates. Set them as repository variables; a job whose variable is unset fails before the agent runs
+      - `HOTL_MODEL_LIGHT`: ai-review (every PR), incident-triage, agent-implement
+      - `HOTL_MODEL_DEEP`: the ai-review Tier 2 deep-dive review
+      - `HOTL_JUDGE_MODEL`: the eval-gate judge (ideally a different model from the generator)
+      - Use the model ID or inference profile ID of a model your organization has enabled on Bedrock. Check
+        current model IDs in Anthropic's model tables for "Claude in Amazon Bedrock" and "Claude on Amazon
+        Bedrock (legacy)". Do not pick a deprecated model (such as Sonnet 4.5). Record the date you set the
+        variables and the date you checked the model tables
 - [ ] AWS region (ap-northeast-1) → your organization's region
 - [ ] Secret names (GITHUB_OIDC_ROLE / AZURE_CLIENT_ID* / TEAMS_WEBHOOK_URL, etc.) → align with the secrets that actually exist; if not yet created, attach the creation steps to the deliverable
 - [ ] Pin third-party actions (`dorny/paths-filter` / `marocchino/sticky-pull-request-comment` /
@@ -28,12 +35,30 @@ existing enforced gates; introduce new advisory checks proportionately.
 - [ ] Keep `AI_REVIEW_ENFORCE` unset during observation; record incomplete evidence as incomplete, then enforce after calibration
 - [ ] Require fresh light/deep verdicts with nonnegative counts and the reviewed head SHA; test missing, malformed, wrong-revision, failed, and skipped cases
 - [ ] Restrict credentials and permitted tools for the review provider; PR content and model output remain untrusted even when JSON validates
+- [ ] Limit the review jobs' `--allowedTools` to the PR comment tools plus a write to the one verdict file
+      (`Edit(//<absolute path>)`). Keep `github_token: ${{ github.token }}`. Create the verdict directory fresh
+      before the agent runs (no previous verdict survives)
+- [ ] Keep `--setting-sources user` and `--strict-mcp-config` in every agent's `claude_args`. `--allowedTools` only
+      adds pre-approvals and is not an upper bound, so without them the repository's (including the PR head's)
+      Claude Code project settings (`settings.json` allow rules) and `.mcp.json` widen the agent's permissions
 
 ## workflows/agent-implement.yml
 - [ ] Add an Issue template (acceptance criteria required) alongside it in .github/ISSUE_TEMPLATE/
 - [ ] Confirm that the blocked operations (adding a dependency, dropping a column) match the project's actual situation
 - [ ] Verify that the read-only authorization job can query the label actor's repository permission; the sample requires admin permission and fails closed on API errors
 - [ ] Configure environment reviewers and preserve the approved issue text/revision before enabling autonomous implementation; an editable issue body is not a durable approval snapshot
+- [ ] Replace the lint / typecheck / test commands in `--allowedTools` with scripts that actually exist in the project.
+      Install dependencies in a step before the agent; never allow install as a direct agent command.
+      Keep pushes fixed to the Issue's branch and do not add `gh api`, merge, or force push. Do not let the agent
+      open the PR (prefix rules cannot constrain `gh pr create` arguments); a separate job opens it with a fixed
+      repo, head, base, and Draft flag. Limit file-edit approvals to the working tree (`Edit(//<workspace>/**)`)
+      and the two PR files; never add bare Edit / Write (they can rewrite Actions environment files outside the working tree)
+- [ ] The step that opens the PR uses GITHUB_TOKEN by default, so pull_request workflows do not run automatically
+      on that PR. To run CI or ai-review on it, create your own GitHub App (write access to Contents and Pull requests)
+      and set `vars.HOTL_APP_ID` and `secrets.HOTL_APP_PRIVATE_KEY`
+- [ ] Tests and git commit (hooks) run repository code while the job's credentials are in the environment.
+      Operations inside those child processes are not limited by the pre-approvals. Where outsiders can file Issues,
+      always combine environment reviewers with finalizing the Issue body at CP1
 
 ## workflows/eval-gate.yml (agent systems only)
 - [ ] Trigger paths (prompts/, etc.) → the actual location of your prompts and retrieval logic
@@ -46,9 +71,8 @@ existing enforced gates; introduce new advisory checks proportionately.
       moving to 2.x (API version 2026-10-21), move the judge to a model Bedrock supports for 2026-10-21
       (Claude 4.7 or later) together with the IAM and endpoint changes, and first pass a network-free
       contract test (codex-plugins' scripts/tests/test_hotl_sdk_contract.py is an example) on the new version
-- [ ] The default JUDGE_MODEL (Sonnet 4.5) is a deprecated previous-generation model. Replace it with a
-      successor enabled in your organization, and record the replacement date and the date you checked
-      the model list
+- [ ] Before changing the judge model (`HOTL_JUDGE_MODEL`), compare eval-gate results and L3 human calibration
+      between the old and new models
 - [ ] Bootstrap the reviewed baseline explicitly with a calibration run that omits `--baseline`; store it before enabling the workflow. Routine missing/failed downloads must not disable comparison
 - [ ] Keep report/artifact output in a fresh runner temporary directory. Publish only fresh results; setup failures must never publish a candidate-supplied PASS report
 - [ ] Keep the trusted-runner approach for PRs (checkout from the base side). For a PR that changes

@@ -166,6 +166,18 @@ or one native smoke does not establish a quality, cost, or latency advantage.
 
 ### Source update migration
 
+- `hotl-engineering` 2.1.0 (2026-10-25): **BREAKING for template adopters**: the workflow
+  templates no longer contain model IDs. Set the repository variables `HOTL_MODEL_LIGHT`
+  (ai-review on every PR, incident-triage, agent-implement), `HOTL_MODEL_DEEP` (Tier 2
+  deep review), and `HOTL_JUDGE_MODEL` (eval judge); a job whose variable is unset fails
+  before the agent runs, and `run_evals.py` exits 2 without `JUDGE_MODEL`. The former
+  Sonnet 4.5 default is deprecated. Every agent now gets an explicit `--tools` set plus
+  `--setting-sources user` and `--strict-mcp-config`, so repository settings and
+  `.mcp.json` cannot widen its permissions. `ai-review` pre-approves the PR comment tools
+  and a write to one freshly created verdict file. `agent-implement` pre-approves only
+  the plan comment, its own branch, commit and push, and lint / typecheck / test,
+  installs dependencies before the agent, and opens the Draft PR from a separate job
+  that runs neither the agent nor repository code. Adapted from cc-plugins.
 - `hotl-engineering` 2.0.2 (2026-10-25): fix the shipped templates. Since anthropic
   SDK 1.0.0 (2026-08-20), `messages.create` rejects sampling parameters, so the eval
   runner's `temperature` made every judge vote fail and the fail-closed eval gate always

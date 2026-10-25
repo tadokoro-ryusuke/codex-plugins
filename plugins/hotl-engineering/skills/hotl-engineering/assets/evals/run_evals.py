@@ -15,7 +15,7 @@ Usage:
 Environment variables:
     TARGET_ENDPOINT  Base URL of the evaluation target (staging)
     TARGET_API_KEY   Its API key
-    JUDGE_MODEL      Bedrock inference profile ID (default: Sonnet Tokyo)
+    JUDGE_MODEL      Bedrock model ID or inference profile ID (required; no default)
     AWS_REGION       ap-northeast-1
 """
 
@@ -34,9 +34,8 @@ from pathlib import Path
 
 from anthropic import AnthropicBedrock
 
-JUDGE_MODEL = os.environ.get(
-    "JUDGE_MODEL", "apac.anthropic.claude-sonnet-4-5-20250929-v1:0"
-)
+# No default: never depend silently on a model that will be retired; if unset, do not start evaluating (see main)
+JUDGE_MODEL = os.environ.get("JUDGE_MODEL", "")
 RUBRIC_PATH = Path(__file__).parent / "judge_rubric.md"
 AXES = ("correctness", "faithfulness", "completeness")
 
@@ -284,6 +283,10 @@ def main() -> int:
     ap.add_argument("--out", default="evals/out")
     ap.add_argument("--expected-revision", help="Require every target response to identify this deployed revision")
     args = ap.parse_args()
+    if not JUDGE_MODEL:
+        print("JUDGE_MODEL is not set: choose a judge model enabled in your Bedrock account "
+              "(see ADJUST.md)", file=sys.stderr)
+        return 2
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
