@@ -39,4 +39,7 @@ workflow, spawn another implementation/review chain, or take over the parent pla
 Repair a failed check when the fix is clear, safe, and in scope. Stop the affected
 path when workspace preparation is unsafe, the same fix fails three times, a
 cycle makes no progress, or required evidence/authority cannot be obtained.
+After three same-path failures, do not launch a rescue agent or alternate model
+unless the plan or request already authorizes it; report and leave that choice
+to the user.
 Re-plan when evidence changes the design; continue unaffected work.

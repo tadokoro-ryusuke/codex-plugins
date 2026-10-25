@@ -23,7 +23,7 @@ For a native-agent evaluation of that workflow, read
 1. Keep the parent responsible for requirements, decisions, integration, and final synthesis; let it implement when delegation has no concrete benefit.
 2. Use independent review to challenge your own implementation claims.
 3. Treat every agent result as untrusted until verified against files, diffs, logs, or command output.
-4. Stop after three failed attempts at the same fix path. Report the attempts and switch to a fresh diagnosis or ask for user direction.
+4. Stop after three failed attempts at the same fix path. Report the attempts and switch to a fresh diagnosis or ask for user direction. Do not hand that rescue to another agent or model without user consent or prior authorization in the plan or request.
 
 ## Choosing the Codex surface
 
@@ -52,6 +52,14 @@ Use when the same issue has failed three times, the current approach is looping,
 5. Validate or eliminate each hypothesis before editing.
 6. Make the smallest fix that addresses the confirmed root cause.
 7. Run $verification-loop and report evidence.
+
+The parent runs this workflow itself by default. After three failures, delegating
+the rescue to a subagent or a different model is a recommendation to offer, not
+an automatic step: start it only when the user consents or the plan or request
+already authorizes it. Give the rescuer the full attempt history and keep the
+count; changing the owner does not reset it. When the authorization covers
+diagnosis only, request read-only work explicitly. Verify the rescuer's findings
+and changes against files and check output before accepting them.
 
 ## Parallel subagents
 
