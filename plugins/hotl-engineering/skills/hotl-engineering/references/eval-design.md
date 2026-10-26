@@ -6,8 +6,9 @@ implementation.
 
 Treat sample counts, vote counts, agreement thresholds, and reading-time targets
 below as initial design examples. Calibrate them to representative task outcomes,
-latency/cost, and human judgments. A temperature setting does not make model
-results deterministic. Schema validation alone is not a skill-behavior eval.
+latency/cost, and human judgments. Judge results are not deterministic (current anthropic
+SDKs cannot send sampling parameters such as temperature). Schema validation alone is not a
+skill-behavior eval.
 
 ## Three-layer structure (separating cost from signal)
 
@@ -15,7 +16,9 @@ results deterministic. Schema validation alone is not a skill-behavior eval.
    validation, refusal detection. Run every time, on every case, at near-zero cost. Do not run L2 on
    cases that already failed L1
 2. **L2 LLM-as-judge**: Rubric scoring (three axes — accuracy, faithfulness, completeness — each scored
-   1-5). Use temperature 0 plus the median of 3 votes to suppress variance. Run the smoke subset on
+   1-5). Do not send sampling parameters (anthropic SDK 1.0 and later reject them). Handle variance
+   with the median of 3 votes and L3 human calibration. Pin the SDK major, and before raising it,
+   confirm the arguments and API version with a network-free contract test. Run the smoke subset on
    PRs and the full set nightly
 3. **L3 human calibration**: Each month, stratified-sample 30 cases (weighted toward failures) and have
    a human score them with the same rubric. If the ±1-point agreement rate falls below 85%, revise the

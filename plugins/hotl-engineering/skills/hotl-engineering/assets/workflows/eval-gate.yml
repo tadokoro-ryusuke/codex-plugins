@@ -67,7 +67,9 @@ jobs:
       TARGET_ENDPOINT: ${{ vars.TARGET_STAGING_ENDPOINT }}
       EXPECTED_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
       TARGET_API_KEY: ${{ secrets.TARGET_STAGING_API_KEY }}
-      # Model used as judge (Bedrock Tokyo). Ideally kept separate from the generation model
+      # Model used as judge (Bedrock Tokyo). Ideally kept separate from the generation model.
+      # ADAPT: Sonnet 4.5 is a deprecated previous-generation model (retired on Anthropic-operated
+      # platforms on 2026-11-30; AWS decides the Bedrock date). See ADJUST.md for the migration
       JUDGE_MODEL: apac.anthropic.claude-sonnet-4-5-20250929-v1:0
     steps:
       - name: Prepare fresh evaluation artifacts
@@ -99,7 +101,11 @@ jobs:
         with:
           python-version: "3.12"
 
-      - run: pip install "anthropic[bedrock]" boto3
+      # Pin the SDK major. 2.x sends API version 2026-10-21, which Bedrock supports only for
+      # Claude 4.7 and later (the previous-generation judge returns 400). 1.x does not accept
+      # sampling parameters, so run_evals.py does not send them. When changing the version, also
+      # change the version used by the contract test in CI (scripts/tests/test_hotl_sdk_contract.py)
+      - run: pip install "anthropic[bedrock]>=1.17,<2" boto3
 
       # Fetch the real-data golden set from S3 (only samples live in the repo)
       - name: Fetch golden dataset
@@ -111,14 +117,16 @@ jobs:
 
       - name: Run evals
         id: run
+        # inputs.suite is a workflow_dispatch input. Pass it through env: instead of expanding it in the shell
         env:
           EVAL_OUT: ${{ steps.artifacts.outputs.directory }}
+          SUITE: ${{ github.event_name == 'pull_request' && 'smoke' || (inputs.suite || 'full') }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          SUITE="${{ github.event_name == 'pull_request' && 'smoke' || (inputs.suite || 'full') }}"
           RUNNER="evals/run_evals.py"
           THRESHOLDS="evals/thresholds.json"
           # On PR, use the base-side runner (see the trusted checkout above)
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
+          if [ "$EVENT_NAME" = "pull_request" ]; then
             RUNNER=".trusted/evals/run_evals.py"
             THRESHOLDS=".trusted/evals/thresholds.json"
           fi

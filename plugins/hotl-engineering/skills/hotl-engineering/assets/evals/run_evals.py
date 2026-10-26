@@ -3,7 +3,7 @@
 run_evals.py — Eval harness for the retrieval QA agent
 
 L1: Deterministic checks (recall@5, MRR, must_not, refusal)
-L2: LLM-as-judge (Bedrock Tokyo / temperature 0 / median of 3 votes)
+L2: LLM-as-judge (Bedrock Tokyo / no sampling parameters / median of 3 votes)
 Gate decision: thresholds.json + baseline comparison → exit code
 
 Usage:
@@ -39,6 +39,16 @@ JUDGE_MODEL = os.environ.get(
 )
 RUBRIC_PATH = Path(__file__).parent / "judge_rubric.md"
 AXES = ("correctness", "faithfulness", "completeness")
+
+# Since anthropic SDK 1.0.0 (2026-08-20), messages.create no longer accepts sampling
+# parameters; sending one raises TypeError and every judge vote fails. Judge variance is
+# handled by the median of several votes. If thresholds.json still sets one, it is not
+# sent and the run log says it was ignored
+SAMPLING_KEYS = ("temperature", "top_p", "top_k")
+
+
+def ignored_sampling_keys(cfg: dict) -> list[str]:
+    return [key for key in SAMPLING_KEYS if key in cfg]
 
 
 # ---------------------------------------------------------------------------
@@ -150,11 +160,12 @@ def eval_l2(
             msg = client.messages.create(
                 model=JUDGE_MODEL,
                 max_tokens=int(cfg.get("max_tokens", 1024)),
-                temperature=float(cfg.get("temperature", 0)),
                 messages=[{"role": "user", "content": prompt}],
             )
         except Exception as e:  # noqa: BLE001 — do not stop the whole suite for a single judge vote failure
-            print(f"  judge vote failed ({type(e).__name__})", file=sys.stderr)
+            # The type name alone cannot reveal breaking SDK changes (such as removed arguments),
+            # so also print the start of the message
+            print(f"  judge vote failed ({type(e).__name__}: {str(e)[:200]})", file=sys.stderr)
             continue
         text = "".join(b.text for b in msg.content if b.type == "text")
         m = re.search(r"\{.*\}", text, re.DOTALL)
@@ -279,6 +290,9 @@ def main() -> int:
     all_thresholds = json.loads(Path(args.thresholds).read_text())
     thresholds = all_thresholds[args.suite]
     judge_cfg = all_thresholds.get("judge", {})
+    if ignored := ignored_sampling_keys(judge_cfg):
+        print(f"judge: ignoring sampling parameters {', '.join(ignored)} "
+              "(not accepted by anthropic SDK >= 1.0)", file=sys.stderr)
     rubric = RUBRIC_PATH.read_text(encoding="utf-8")
 
     baseline = None

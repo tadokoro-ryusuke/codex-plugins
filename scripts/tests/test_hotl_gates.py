@@ -147,5 +147,56 @@ class EvalGateTests(unittest.TestCase):
                         self.runner.eval_l2(client, self.cases()[0], {}, "rubric", {})
 
 
+class JudgeSamplingTests(unittest.TestCase):
+    """Never send sampling parameters (temperature / top_p / top_k) to the judge.
+
+    Since anthropic SDK 1.0.0 (2026-08-20), messages.create rejects them and every vote fails
+    with TypeError. If thresholds.json still sets one, it is not sent and the run says so.
+    """
+
+    MODELS = ("apac.anthropic.claude-sonnet-4-5-20250929-v1:0",
+              "anthropic.claude-haiku-4-5-20251001-v1:0",
+              "anthropic.claude-opus-4-7",
+              "arn:aws:bedrock:ap-northeast-1:000000000000:application-inference-profile/fixture")
+    SAMPLING = {"temperature": 0, "top_p": 0.9, "top_k": 5}
+
+    @classmethod
+    def setUpClass(cls):
+        EvalGateTests.setUpClass()
+        cls.runner = EvalGateTests.runner
+
+    def judge_params(self, model, cfg):
+        vote = json.dumps({axis: {"score": 5, "reason": "fixture"} for axis in self.runner.AXES})
+        message = types.SimpleNamespace(content=[types.SimpleNamespace(type="text", text=vote)])
+        create = Mock(return_value=message)
+        client = types.SimpleNamespace(messages=types.SimpleNamespace(create=create))
+        case = {"id": "fixture", "category": "answer", "query": "fixture"}
+        with patch.object(self.runner, "JUDGE_MODEL", model):
+            self.runner.eval_l2(client, case, {}, "rubric", cfg)
+        self.assertEqual(create.call_count, cfg.get("votes", 3))
+        return create.call_args.kwargs
+
+    def test_sampling_parameters_are_never_sent(self):
+        for model in self.MODELS:
+            with self.subTest(model=model):
+                params = self.judge_params(model, dict(self.SAMPLING))
+                self.assertFalse(set(self.SAMPLING) & set(params))
+                self.assertIn("max_tokens", params)
+
+    def test_configured_sampling_parameters_are_reported_as_ignored(self):
+        self.assertEqual(self.runner.ignored_sampling_keys({"votes": 3, **self.SAMPLING}),
+                         ["temperature", "top_p", "top_k"])
+        self.assertEqual(self.runner.ignored_sampling_keys({"votes": 3}), [])
+
+    def test_judge_failure_reports_the_sdk_error_message(self):
+        # The type name alone cannot reveal breaking SDK changes such as removed arguments
+        error = TypeError("create() got an unexpected keyword argument 'temperature'")
+        client = types.SimpleNamespace(messages=types.SimpleNamespace(create=Mock(side_effect=error)))
+        case = {"id": "fixture", "category": "answer", "query": "fixture"}
+        with patch("sys.stderr", new_callable=io.StringIO) as stderr, self.assertRaises(ValueError):
+            self.runner.eval_l2(client, case, {}, "rubric", {"votes": 1})
+        self.assertIn("unexpected keyword argument 'temperature'", stderr.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()
