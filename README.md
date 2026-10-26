@@ -183,7 +183,67 @@ or one native smoke does not establish a quality, cost, or latency advantage.
   models, accessibility, Core Web Vitals, and testing. Add eight behavior cases.
   Reinstall and start a new task to load the changes; copy updated agent TOML
   files from `codex-collab/assets/agents/` into existing installations.
+- `hotl-engineering` 2.1.0 (2026-10-26): **BREAKING for template adopters**: the workflow
+  templates no longer contain model IDs. Set the repository variables `HOTL_MODEL_LIGHT`
+  (ai-review on every PR, incident-triage, agent-implement), `HOTL_MODEL_DEEP` (Tier 2
+  deep review), and `HOTL_JUDGE_MODEL` (eval judge); a job whose variable is unset fails
+  before the agent runs, and `run_evals.py` exits 2 without `JUDGE_MODEL`. The former
+  Sonnet 4.5 default is deprecated. Every agent now gets an explicit `--tools` set plus
+  `--setting-sources user` and `--strict-mcp-config`, so repository settings and
+  `.mcp.json` cannot widen its permissions. `ai-review` pre-approves the PR comment tools
+  and a write to one freshly created verdict file. `agent-implement` pre-approves only
+  the plan comment, its own branch, commit and push, and lint / typecheck / test,
+  installs dependencies before the agent, and opens the Draft PR from a separate job
+  that runs neither the agent nor repository code. Adapted from cc-plugins.
 
+  **BREAKING for eval template adopters**: the judge gate binarizes each axis at
+  `judge.pass_score` (default 4) and gates on the pass rate per axis (an absolute floor
+  plus an allowed drop from the baseline) instead of the mean of the summed three-axis
+  score, which hid which axis dropped and could not be calibrated against human verdicts.
+  In `thresholds.json`, replace `judge_total_floor` / `judge_total_drop_allowed` with
+  `judge_axis_pass_rate_floor` / `judge_axis_pass_rate_drop_allowed` and add
+  `judge.pass_score`; regenerate `baseline.json` with a calibration run that omits
+  `--baseline`. `run_evals.py` stops before evaluating on the legacy keys, or on a baseline
+  without per-axis pass rates or scored at another pass line. Cases below the pass line on
+  any axis are reported as failed with the axis name. L3 calibration now measures per-axis
+  agreement on binarized human and judge verdicts. Rate thresholds (floors, allowed drops,
+  `must_pass_rate`) and the baseline's per-axis pass rates must be finite numbers from 0 to
+  1, and `must_not_violations` a non-negative integer; NaN, null, or out-of-range values
+  would silently make the comparison false and open the gate, so the run stops first. The
+  baseline's `recall_at_5_mean` must be null (no recall targets) or a finite number from 0
+  to 1.
+
+  Every action in the templates and in this repository's CI moves to a major whose
+  `action.yml` runs on Node 24 (GitHub removed Node 20 from hosted runners on 2026-09-23):
+  checkout, setup-node, and setup-python v7, upload-artifact v7, download-artifact v8,
+  github-script v9, create-github-app-token v3, configure-aws-credentials v6, azure/login
+  v3, paths-filter v4, gitleaks-action v3, sticky-pull-request-comment v3, and
+  pnpm/action-setup v6.1.0 (the floating `@v6` tag predates pnpm 12 support); use v5 for
+  pnpm 10 or earlier. claude-code-action stays on v1. Self-hosted runners need v2.327.1 or
+  later. `ai-review` now downloads each verdict by name into its tier directory, because
+  download-artifact v5 and later extract a single pattern match directly into the path and
+  the gate always saw the light verdict as missing. download-artifact v8 reports a digest
+  mismatch only after extracting, so the gate also passes each download step's outcome as
+  `LIGHT_DOWNLOAD` / `DEEP_DOWNLOAD`, and `check_review_verdicts.py` treats anything but
+  `success` as incomplete evidence. **Update the trusted copy of `check_review_verdicts.py`
+  and `ai-review.yml` together**: the new validator treats a missing outcome as incomplete,
+  and the old validator ignores the download outcome. The App token keeps `app-id`
+  (actionlint 1.7.12 does not know `client-id`). The default Node is 24, `deploy.yml`
+  grants `id-token: write` per job and passes shellcheck, and `validate.yml` runs with
+  `contents: read`.
+- `hotl-engineering` 2.0.2 (2026-10-25): fix the shipped templates. Since anthropic
+  SDK 1.0.0 (2026-08-20), `messages.create` rejects sampling parameters, so the eval
+  runner's `temperature` made every judge vote fail and the fail-closed eval gate always
+  blocked. The runner no longer sends sampling parameters and the template pins
+  `anthropic[bedrock]>=1.17,<2` (2.x sends API version 2026-10-21, which the
+  previous-generation judge does not support on Bedrock). `incident-triage` now passes a
+  job-scoped read token, restricts the agent to read-only tools, passes the alert payload
+  as a file, posts only the final answer to the Issue from a separate job, and falls back
+  to a run link when no summary is available. `ci.yml` drops a "changed files" coverage
+  step that actually enforced a whole-codebase threshold. Gate calibration now promotes
+  on representative results rather than elapsed days. Adapted from cc-plugins.
+- `ui-ux-pro-max` 1.3.1 (2026-10-25): ship the upstream MIT `LICENSE` and a `NOTICE.md`
+  recording the upstream commit and local modifications.
 - `dev-core` 5.5.0 (2026-09-23): adopt Sol medium for general implementation,
   Luna high for bounded research and routine edits, Luna max for settled bounded
   implementation, and Sol high for complex implementation. Keep Astra high parent

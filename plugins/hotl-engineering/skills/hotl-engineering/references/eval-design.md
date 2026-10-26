@@ -6,8 +6,9 @@ implementation.
 
 Treat sample counts, vote counts, agreement thresholds, and reading-time targets
 below as initial design examples. Calibrate them to representative task outcomes,
-latency/cost, and human judgments. A temperature setting does not make model
-results deterministic. Schema validation alone is not a skill-behavior eval.
+latency/cost, and human judgments. Judge results are not deterministic (current anthropic
+SDKs cannot send sampling parameters such as temperature). Schema validation alone is not a
+skill-behavior eval.
 
 ## Three-layer structure (separating cost from signal)
 
@@ -15,11 +16,22 @@ results deterministic. Schema validation alone is not a skill-behavior eval.
    validation, refusal detection. Run every time, on every case, at near-zero cost. Do not run L2 on
    cases that already failed L1
 2. **L2 LLM-as-judge**: Rubric scoring (three axes — accuracy, faithfulness, completeness — each scored
-   1-5). Use temperature 0 plus the median of 3 votes to suppress variance. Run the smoke subset on
+   1-5). Anchor every level with a verifiable description (assets/evals/judge_rubric.md). Keep the
+   graded levels because how far a case fell is diagnostic and sets the order of fixes, but never
+   gate on the graded score itself. The gate binarizes each axis at the pass line
+   (`judge.pass_score` in thresholds.json, default 4) and judges the pass rate per axis. Never sum
+   the axes (a sum hides which axis dropped and is hard to calibrate). Do not send sampling
+   parameters (anthropic SDK 1.0 and later reject them). Handle variance with the median of 3
+   votes and L3 human calibration. Pin the SDK major, and before raising it,
+   confirm the arguments and API version with a network-free contract test. Run the smoke subset on
    PRs and the full set nightly
 3. **L3 human calibration**: Each month, stratified-sample 30 cases (weighted toward failures) and have
-   a human score them with the same rubric. If the ±1-point agreement rate falls below 85%, revise the
-   judge prompt. Keep the calibration record as an audit trail
+   a human score them with the same rubric, independently of the judge. Binarize both the human and
+   the judge scores at the pass line and compute agreement per axis (TPR/TNR). If agreement on clear
+   cases falls well below roughly 90%, fix the judge prompt or the rubric (early on, the sample is
+   small and the interval wide, so accumulate months before reading it). Keep the calibration record
+   (date, judge model ID, rubric version, case IDs, human and judge verdicts, agreement) in the
+   adopting repository's evals/calibration/ as an audit trail
 
 ## Golden-set category design (this is the core of the design)
 
@@ -39,8 +51,9 @@ Start at 50 cases and grow to 100-150. This only works paired with the operating
 ## Gate condition design
 
 - must-pass category: 100%. Block on a single failure. Do not mix it into the average
-- Quality score: a **dual threshold** of relative (baseline minus tolerance) and absolute (floor)
-  (Principle 8)
+- Quality score: apply a **dual threshold** of relative (baseline minus tolerance) and absolute
+  (floor) to the judge's pass rate per axis (Principle 8). Compare only with a baseline scored at the
+  same pass line
 - Completeness: block on target/judge execution failures, invalid or missing
   votes, empty selected suites, and mismatched deployed revisions. Keep these
   failures separate from quality averages
