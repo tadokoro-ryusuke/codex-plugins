@@ -26,7 +26,7 @@ permissions:
   contents: read
 
 env:
-  NODE_VERSION: "22"
+  NODE_VERSION: "24" # ADAPT: choose from the current LTS releases (ADJUST.md)
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -37,9 +37,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      # ADAPT: v6.1.0 or later for pnpm 11 and later (the floating @v6 tag points to v6.0.10 as of 2026-10-26).
+      # @v5 for pnpm 10 or earlier (same behavior as v4, runs on Node 24). Pin to a SHA when applying
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -55,9 +57,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -77,13 +79,13 @@ jobs:
     # to enforce it (day-one enforcement is the most common failure pattern — principle 6)
     continue-on-error: true # ← remove in Phase 2
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Gitleaks needs the full history to scan it
 
       # --- Secret detection (the most common incident in AI-generated code) ---
       - name: Gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -99,15 +101,17 @@ jobs:
             --config p/owasp-top-ten \
             --error --severity ERROR \
             --sarif --output semgrep.sarif || exit_code=$?
-          exit ${exit_code:-0}
+          exit "${exit_code:-0}"
 
       # --- Dependency vulnerabilities ---
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The threshold is a starting default. When changing it, triage by evidence of exploitation
+      # (CISA KEV, EPSS) rather than CVSS alone, and record each exception with an owner and expiry
       - name: Dependency audit (fail on high or above)
         run: pnpm audit --audit-level high
 
@@ -122,9 +126,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
@@ -143,9 +147,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm

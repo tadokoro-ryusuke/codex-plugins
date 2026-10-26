@@ -19,7 +19,7 @@ Write it as **a norm the machine follows, not an explanation for humans**. Keep 
 - Prefer named exports (default export only for Next.js convention files)
 - Server-side input validation uses zod. Do not rely on client-side validation alone
 - Do not swallow errors. Emit structured logs via `src/lib/logger.ts`
-- Tests: Vitest. At least one test per acceptance criterion. Mock external I/O with MSW
+- Tests: Vitest. At least one test per acceptance criterion. Mock external HTTP with MSW. Do not mock your own DB (PostgreSQL); run integration tests against a real one (Testcontainers or similar)
 
 ## Development Commands
 ```bash

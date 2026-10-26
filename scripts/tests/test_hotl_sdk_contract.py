@@ -65,7 +65,8 @@ class JudgeSdkContractTests(unittest.TestCase):
             http_client=httpx.Client(transport=httpx.MockTransport(handler)))
         case = {"id": "fixture", "category": "answer", "query": "fixture"}
 
-        result = self.runner.eval_l2(client, case, {}, "rubric", cfg)
+        with patch.object(self.runner, "JUDGE_MODEL", "fixture-judge-model"):
+            result = self.runner.eval_l2(client, case, {}, "rubric", cfg)
 
         self.assertEqual(len(requests), cfg["votes"])
         self.assertEqual({axis: result[axis]["score"] for axis in self.runner.AXES},
