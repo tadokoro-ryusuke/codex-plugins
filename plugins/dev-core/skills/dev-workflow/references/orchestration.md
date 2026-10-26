@@ -94,6 +94,8 @@ Keep project-required checks and test-first development for executable behavior.
 Use `../../verification-loop/SKILL.md` when choosing checks, and the matching
 section of `review-refactor-verify.md` for review or refactoring. Run focused
 checks and broaden when changed shared contracts or unresolved risks justify it.
+Before accepting an executable behavior change, meet the full-suite completion gate
+in `../../verification-loop/SKILL.md`.
 
 For non-trivial changes, review before completion. Decide review independence
 separately from implementation ownership. Require a fresh read-only reviewer for
@@ -105,7 +107,9 @@ not a review gate. Record the reason and evidence.
 
 An unavailable required reviewer leaves acceptance pending; continue independent
 authorized work and report the gap. Verify findings against actual inputs; resolve
-P0/P1 findings and fix or disclose remaining concerns. Re-run affected checks after
+P0/P1 findings and fix or disclose remaining concerns. Do not discard a
+low-confidence P0/P1: keep the affected acceptance criteria `pending` until the
+parent confirms or rejects it from actual files and outputs. Re-run affected checks after
 a fix; invalidate relevant review evidence when the reviewed inputs change.
 
 ## Decision and stop boundaries

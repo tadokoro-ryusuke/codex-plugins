@@ -22,7 +22,7 @@ Check at least:
 
 - Behavior correctness, edge cases, and regression risk.
 - Security: auth, input validation, injection, secrets, unsafe dependencies.
-- Test coverage: missing unit, integration, E2E, or regression tests.
+- Test coverage: missing unit, integration, E2E, or regression tests; existing tests deleted, skipped, or loosened without a specification change or an approved quarantine that meets `$test-design`'s conditions (owner, expiry, tracked failure, replacement coverage for critical paths).
 - Architecture: FSD, Clean Architecture, DDD boundaries when relevant.
 - Maintainability: naming, complexity, duplication, type safety, error handling.
 - Project conventions from `AGENTS.md`, README, CI, package scripts, and surrounding code.

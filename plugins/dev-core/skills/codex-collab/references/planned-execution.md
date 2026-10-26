@@ -201,8 +201,11 @@ Do not forward the parent's full history or a generic workflow manual merely
 because the parent has a larger context window.
 
 Tell the agent to use TDD for executable behavior or regressions and applicable
-checks for other changes. Require the changed files, tests and commands/results,
-input/output identity, remaining concerns, and one of
+checks for other changes, and never to weaken an existing test to make it pass.
+Require the changed files, tests and commands/results, existing tests changed,
+skipped, or deleted with their basis (a specification change or an approved
+quarantine that meets `$test-design`'s conditions) or "none", input/output identity,
+remaining concerns, and one of
 `completed`, `needs-parent`, or `blocked`. Let it choose routine implementation
 details within the contract. Have it update only its assigned plan section when
 that write is explicitly included; keep the overall plan under parent ownership.
@@ -221,8 +224,8 @@ is not acceptance. Avoid repeated status polling without new information.
 
 ## Return decisions to the parent
 
-Return with evidence when the plan contradicts the code, an unplanned public
-contract or data change is needed, shared ownership overlaps, or a check reveals
+Return with evidence when the plan contradicts the code, the specification and a
+test conflict, an unplanned public contract or data change is needed, shared ownership overlaps, or a check reveals
 a design question outside the handoff. Stop the failing path after three similar
 failed fixes; do not mask that history by replacing the agent.
 

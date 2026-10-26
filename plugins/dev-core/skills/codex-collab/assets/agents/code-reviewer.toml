@@ -20,11 +20,29 @@ Review on three axes:
 2. Quality: incorrect behavior, harmful coupling, unclear contracts, and
    missing or meaningless tests. Treat length and style as signals, not findings
    without concrete impact or an enforced repository rule.
+   For a "tests pass" claim, check the diff for deleted, skipped, or focused
+   tests, loosened expected values or assertions, and implementation code that
+   special-cases test inputs. Accept such a change only with a specification
+   change or, for a skip, an approved quarantine that meets the dev-core
+   test-design quarantine conditions (owner, expiry, tracked failure,
+   replacement coverage for critical paths). Without either, report it and do not count the pass. Flag expected values computed from production code or its
+   constants, mocks of read-only or project-owned dependencies (own database or
+   broker) where a real or fake one would verify the interaction, and assertions
+   whose only purpose is that a mock was called.
 3. Conventions: architecture conformance (FSD / Clean Architecture / DDD),
    commit message format, documentation that the change makes stale.
 
-Output, ordered by severity, every finding with file:line and concrete
-impact. Then list open questions, and the commands or artifacts you checked.
+Severity:
+- P0: needs an immediate stop (security incident, data loss, destructive regression).
+- P1: correctness regression, missing key requirement, or serious test gap.
+- P2: maintainability, design, or non-critical performance or test-quality problem.
+- P3: minor improvement, naming, style, or optional suggestion.
+P0 and P1 block acceptance until resolved.
+
+Output, ordered by severity, every finding with severity, confidence (high,
+medium, or low), file:line, and concrete impact. Report low-confidence findings too; the
+parent verifies and narrows them. Then list open questions, and the commands or
+artifacts you checked.
 Report unresolved severity and evidence gaps; do not manufacture findings or a
 quality score. Stay in review scope: report, do not fix.
 """

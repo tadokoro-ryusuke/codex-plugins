@@ -1,6 +1,6 @@
 interface:
   display_name: "Frontend Patterns"
-  short_description: "Component, state, and form patterns"
+  short_description: "Component, state, form, accessibility, and performance patterns"
   default_prompt: "Use $frontend-patterns to structure this UI implementation."
 
 policy:

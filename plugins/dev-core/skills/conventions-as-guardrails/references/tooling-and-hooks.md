@@ -31,3 +31,11 @@ gate or widening privileged access remains a separate owner decision.
 Keep local and CI commands reproducible. Record actual enforcement evidence rather
 than asserting that a local check has already blocked a remote PR. Do not deliberately
 break or mutate a live remote system just to demonstrate the gate.
+
+## Test focus and skip markers
+
+Block focus markers and unapproved skips through the test runner and linter
+configuration rather than review attention: for example, Playwright `forbidOnly`,
+Vitest `allowOnly: false`, mocha `--forbid-only`, and eslint-plugin-jest
+`no-focused-tests` / `no-disabled-tests`. These settings stop changes that weaken
+tests to pass; route approved quarantines through the project's flake procedure.

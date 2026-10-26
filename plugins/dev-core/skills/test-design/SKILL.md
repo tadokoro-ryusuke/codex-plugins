@@ -66,9 +66,18 @@ review when warranted and authorized, or critically inspect locally; this does n
 prohibit an implementer from writing TDD tests. Run exploratory work with a stated
 question and time boundary when it adds evidence beyond scripted checks.
 
-Investigate flakes using the preserved first failure and a bounded diagnostic retry.
+Investigate flakes before changing a gate. Preserve the first failure (logs, seed,
+execution order, environment) and confirm it with a bounded diagnostic retry; a
+retry pass is not pass evidence. Check async waits, order dependence and shared
+state, time and randomness, external dependencies and network, environment and
+resources, and concurrency. When several tests fail together, suspect a common
+cause and investigate it with `$dev-debug` before fixing tests one by one.
 An authorized quarantine needs an owner, expiry, tracked failure, and replacement
-coverage for critical paths. Do not create external issues without authority.
+coverage for critical paths; an unconditioned quarantine is indistinguishable from
+an unauthorized skip. Do not create external issues without authority.
+
+For how to write tests (expected values, test doubles, real-dependency integration
+tests, test data), read `../best-practices/references/testing.md`.
 
 ## Contract acceptance only when in scope
 

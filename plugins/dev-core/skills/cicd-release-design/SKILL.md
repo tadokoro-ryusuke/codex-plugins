@@ -12,8 +12,13 @@ providers, and runbooks; do not introduce an unrelated delivery platform.
 
 ## Select the current work
 
-- For pipeline checks, workflow permissions, or credential handling, read
+- For pipeline checks, the dependency audit gate (threshold and exceptions),
+  workflow permissions, or credential handling, read
   [pipeline design](references/pipeline-design.md).
+- For dependency intake hardening (cooldowns, install scripts, frozen installs,
+  Trusted Publishing) or GitHub Actions supply-chain controls, read the principles
+  in pipeline design, then [supply chain](references/supply-chain.md) for current
+  tool defaults and setting names with check dates.
 - For rollout strategy, flags, migrations, or rollback, read
   [release and recovery](references/release-and-recovery.md).
 - For diagnosing a failing existing pipeline, use `$dev-debug`; for designing test

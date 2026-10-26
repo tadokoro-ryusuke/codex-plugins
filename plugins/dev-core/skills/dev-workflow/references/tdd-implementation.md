@@ -29,7 +29,9 @@ Keep Tidy First behavior-preserving and verify it before starting Red.
 
 For each small behavior or plan iteration:
 
-1. Red: write or update one focused failing test.
+1. Red: write or update one focused failing test. Follow
+   `../../best-practices/references/testing.md` for expected values, test doubles,
+   and real-dependency integration tests.
 2. Run the narrowest relevant test and confirm it fails because the required behavior is absent or incorrect, rather than because of syntax, imports, missing tools, or unrelated setup. Use observable contracts, not assertions that merely repeat implementation details.
 3. Green: implement the smallest change that makes the test pass.
 4. Run the narrow test again and confirm it passes.
@@ -37,6 +39,17 @@ For each small behavior or plan iteration:
 6. Run the narrow test after refactoring.
 7. Run a focused self-review of the diff for that iteration.
 8. Broaden verification when the behavior touches shared code.
+
+Weaken an existing test (skip, delete, loosen an assertion, or special-case its
+inputs) only on the basis of a specification change (the plan or acceptance
+criteria change that behavior) or an approved
+quarantine that meets `$test-design`'s conditions (owner, expiry, tracked failure,
+replacement coverage for critical paths). Record the test and its basis in the
+plan's progress log. Changes that keep or strengthen what a test proves (for
+example, replacing an expected value computed from the implementation) need no
+such basis, but are still recorded. If a test cannot pass without such a change and neither basis
+exists, treat it as a conflict between specification and test: stop that path and
+return the evidence instead of weakening the test.
 
 ## Iteration Status
 
@@ -56,7 +69,10 @@ After each iteration, update the durable plan: progress, decisions, evidence, co
 
 After all planned iterations:
 
-1. Run focused and broad-enough verification with current-turn evidence.
+1. Run focused and broad-enough verification with current-turn evidence. For
+   executable behavior changes, meet the full-suite completion gate in
+   `../../verification-loop/SKILL.md`; a focused green is not a suite green, and a
+   suite that was not run or that failed blocks completion and commit.
 2. Review the diff using `dev-review` criteria. Treat earlier implementation claims as untrusted.
 3. If the review finds issues, fix or refactor narrowly.
 4. Re-run affected checks after each fix/refactor round.
@@ -79,4 +95,5 @@ Commit only when the user asked for commits or the workflow explicitly includes 
 
 ## Final Report
 
-Include changed files, behavior implemented, tests run, and residual risk.
+Include changed files, behavior implemented, tests run, existing tests changed or
+deleted with their basis (or "none"), and residual risk.
