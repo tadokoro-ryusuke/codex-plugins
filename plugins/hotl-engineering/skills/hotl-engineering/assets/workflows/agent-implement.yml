@@ -25,7 +25,9 @@
 #     --allowedTools (the plan comment, creating and pushing the Issue's branch,
 #     lint / typecheck / test). Pushes are fixed to the Issue's branch; gh api,
 #     merge, force push, and adding dependencies are not granted. Repository-side
-#     settings and .mcp.json are not read (--setting-sources user / --strict-mcp-config)
+#     settings and .mcp.json are not read (--setting-sources user / --strict-mcp-config).
+#     These flags also keep Claude Code from loading the project's AGENTS.md, so the
+#     prompt reads it first
 #   - File edits are pre-approved only inside the working tree and for the two
 #     files holding the PR title and body (the agent cannot rewrite Actions
 #     environment files or anything else outside the working tree)
@@ -91,6 +93,11 @@ jobs:
     # (recommended in environments with external filers).
     # If the environment is left unset, it runs immediately as before, with no protection
     environment: agent-implement
+    # Fallback targets for a refusal (cyber etc.). On Bedrock, without an Opus pin, fallback is off for every
+    # model (ADJUST.md). Unset variables pass through empty, which behaves as before
+    env:
+      ANTHROPIC_DEFAULT_OPUS_MODEL: ${{ vars.HOTL_FALLBACK_OPUS_MODEL }}
+      ANTHROPIC_DEFAULT_SONNET_MODEL: ${{ vars.HOTL_FALLBACK_SONNET_MODEL }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -111,16 +118,26 @@ jobs:
           role-to-assume: ${{ secrets.GITHUB_OIDC_ROLE }}
           aws-region: ap-northeast-1
 
-      # The model ID comes from a repository variable (never written in the template). Stop before the agent runs if it is unset
-      - name: Require the model variable
+      # The model ID and effort come from repository variables (never written in the template). An unset model or
+      # an invalid effort stops before the agent runs. Without an explicit effort, changing only the model variable
+      # silently changes the effort too
+      - name: Check the model and effort variables
         id: model
         env:
           MODEL: ${{ vars.HOTL_MODEL_LIGHT }}
+          EFFORT: ${{ vars.HOTL_EFFORT_IMPLEMENT || 'medium' }}
         run: |
           if [ -z "$MODEL" ]; then
             echo "::error::Set the repository variable HOTL_MODEL_LIGHT (see ADJUST.md)"
             exit 1
           fi
+          case "$EFFORT" in
+            low|medium|high|xhigh|max) echo "effort=$EFFORT" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "::error::HOTL_EFFORT_IMPLEMENT must be one of low, medium, high, xhigh, max (see ADJUST.md)"
+              exit 1
+              ;;
+          esac
 
       # Prepare a fresh location for the PR title and body before the agent runs
       - name: Prepare the pull request draft directory
@@ -150,6 +167,10 @@ jobs:
         with:
           use_bedrock: "true"
           prompt: |
+            First, use Read on AGENTS.md at the root of the repository and follow its norms (absolute rules, coding
+            conventions, development commands) while you work; this run does not load it automatically. If it is
+            missing, say so in the plan comment and continue. If the Issue body conflicts with AGENTS.md, AGENTS.md wins.
+
             Implement Issue #${{ github.event.issue.number }}.
 
             ## Steps (SDD: plan → implement → verify)
@@ -185,6 +206,7 @@ jobs:
           claude_args: |
             --max-turns 30
             --model ${{ vars.HOTL_MODEL_LIGHT }}
+            --effort ${{ steps.model.outputs.effort }}
             --setting-sources user
             --strict-mcp-config
             --tools "Read,Grep,Glob,Edit,MultiEdit,Write,Bash"

@@ -54,12 +54,21 @@ decision logic tightly coupled to your own data and your own permission model.
 
 1. Compare the current and new versions under identical conditions using your own eval set (golden set).
    Treat benchmark articles as reference values only
-2. Check the must-pass category results first. Reject the switch if must-pass regresses even when the
+   - Fix effort explicitly, and compare old and new at several levels (for example, the default and one level
+     on each side). The default effort can differ by path (example from 2026-11: Fable 5.2 defaults to high on
+     the Messages API and to medium in Claude Code). Record which path and level you measured, with the date
+   - Before moving up to a higher-tier model, compare against the current model at a higher effort
+2. Audit the system prompts, skills, agent definitions, and memory you carry over for wording aimed at older
+   models (instructions about how much to think, prompts to delegate, token budgets shown to the model, harsh
+   style rules, accumulated warnings). Run the longest task and watch for early stops, needless approval
+   requests, long silences, and over-delegation. Add a countermeasure only for behavior you observed, one at
+   a time, and measure its effect and tokens. Test prompt changes in a fresh conversation
+3. Check the must-pass category results first. Reject the switch if must-pass regresses even when the
    average improves
-3. Record cost (token unit price × measured consumption) and latency at the same time
-4. Ship the switch as a single agent version in one PR (run it through the eval-gate even if only the
-   model ID changes)
-5. Confirm the rollback procedure (a pointer to the previous version) before promoting
+4. Record cost (token unit price × measured consumption) and latency at the same time
+5. Ship the switch as a single agent version (the bundle of model, effort, prompt, and tool definitions) in
+   one PR (run it through the eval-gate even if only the model ID or effort changes)
+6. Confirm the rollback procedure (a pointer to the previous version) before promoting
 
 ## F5. Criteria for enabling auto-merge (Principles 3, 5)
 
@@ -100,7 +109,7 @@ failure pattern.
 - **kitchen sink session**: Mixing unrelated tasks into one session and polluting the context
 - **automation without verification**: Promoting to Autonomous on "it worked, so it's fine" (Principles 3, 4)
 - **write-once-and-forget norms**: AGENTS.md / a golden set with no update rule (the 24-hour rule, the
-  twice rule) (Principle 11)
+  twice rule, the rule to review and prune) (Principle 11)
 - **escaping into the average**: Mixing a boundary that should be must-pass (permissions, injection) into
   the score average (Principle 9)
 - **hollowed-out human approval**: CP2 has become a ritual of "it's green, so approve immediately." The

@@ -30,7 +30,7 @@ skill-behavior eval.
    the judge scores at the pass line and compute agreement per axis (TPR/TNR). If agreement on clear
    cases falls well below roughly 90%, fix the judge prompt or the rubric (early on, the sample is
    small and the interval wide, so accumulate months before reading it). Keep the calibration record
-   (date, judge model ID, rubric version, case IDs, human and judge verdicts, agreement) in the
+   (date, judge model ID and effort, rubric version, case IDs, human and judge verdicts, agreement) in the
    adopting repository's evals/calibration/ as an audit trail
 
 ## Golden-set category design (this is the core of the design)
@@ -72,8 +72,8 @@ Start at 50 cases and grow to 100-150. This only works paired with the operating
   storage at CI run time. Keep only sanitized sample data in the repository
 - Require the report to be "readable by a human in 3 minutes" (a table of failure cases plus the
   baseline diff). This becomes the evidence for CP4 (promotion approval)
-- Changes to the judge model and changes to the rubric itself are also subject to the eval-gate
-  (control over meta-changes)
+- Changes to the judge model or its effort, and changes to the rubric itself, are also subject to the
+  eval-gate (control over meta-changes)
 - For workflow skills, test routing and observable tool/artifact behavior in
   isolated fixtures. Include negative trigger cases and forbidden side effects;
   give graders the rubric separately from the task prompt. Record model/runtime,

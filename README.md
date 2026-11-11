@@ -166,6 +166,43 @@ or one native smoke does not establish a quality, cost, or latency advantage.
 
 ### Source update migration
 
+- `hotl-engineering` 2.2.0 (2026-11-12): adapt the cc-plugins hotl-engineering 2.2.0 update for
+  current models with thinking on by default and the Claude Fable 5.2 release (Claude Code 2.1.321).
+  The templates still contain no model IDs.
+  - **Eval judge (fix by hand in applied repositories)**: raise `judge.max_tokens` in
+    `thresholds.json` from 1024 to 16000 (the runner default is 16000 too). A judge with thinking on
+    by default (Opus 5 and later, Sonnet 5 and later, Haiku 5.5, the Fable models) thinks without a
+    `thinking` parameter, and the thinking counts toward `max_tokens`. At 1024 votes stop before the
+    JSON is complete, and the fail-closed gate blocks. The SDK refuses non-streaming calls above about
+    21,333, so stay below that. The cut-off rate on Bedrock is not measured. `run_evals.py` now prints
+    the reason and `stop_reason` for every dropped vote (never the judge's text), accepts an optional
+    `judge.effort` (sent through `output_config` only when set; the pinned SDK 1.17.0 puts it in the
+    Bedrock body), stops on an invalid effort before evaluating, and records `judge_model` and
+    `judge_effort` in the results.json summary and the report.
+  - **AGENTS.md is not loaded automatically by the CI agents**: `--setting-sources user` (added in
+    2.1.0) also keeps Claude Code from loading the project's AGENTS.md (checked locally with 2.1.322). Each agent
+    prompt now reads the root AGENTS.md first (incident-triage also reads runbooks/). claude-code-action
+    never restores AGENTS.md to the PR base, so ai-review exports the base tree to
+    `$RUNNER_TEMP/trusted-base/` and reads AGENTS.md and the files it references from there; the PR
+    head's norm files are review subjects, not instructions. Keep `--setting-sources user`.
+  - **Explicit effort**: every agent gets `--effort` from `HOTL_EFFORT_LIGHT` (default medium),
+    `HOTL_EFFORT_DEEP` (default high), `HOTL_EFFORT_IMPLEMENT`, and `HOTL_EFFORT_TRIAGE` (default
+    medium). An invalid value stops before the agent runs.
+  - **Refusal fallback**: each agent job passes `HOTL_FALLBACK_OPUS_MODEL` and
+    `HOTL_FALLBACK_SONNET_MODEL` as `ANTHROPIC_DEFAULT_OPUS_MODEL` / `ANTHROPIC_DEFAULT_SONNET_MODEL`.
+    On Bedrock, without an Opus pin or an Opus 4.8 entry, fallback is off for every model. Unset
+    variables behave as before.
+  - `ADJUST.md` adds the Bedrock model lifecycle (Sonnet 4.5 became Legacy on 2026-10-08 in commercial
+    Regions including ap-northeast-1; EOL 2027-04-08), the processing region (`jp.` Geo profiles exist
+    for Opus 5.5 and Haiku 5.5; Sonnet 5.5 and Fable 5.2 are `global.` only from Tokyo), profile IDs
+    instead of aliases or ARNs, the claude-code-action pin, and pruning of accumulated AGENTS.md lines.
+    References add effort and harness version to the agent version, an effort sweep and a carried-over
+    prompt audit to F4, and a pruning rule to Principle 11; SKILL.md adds a re-audit on each model release.
+  - **From 2.0.x**: those templates hard-coded the Sonnet 4.5 and Opus 4.6 `apac.` profile IDs in
+    ai-review.yml (`--model`, light and deep), agent-implement.yml and incident-triage.yml (`--model`),
+    eval-gate.yml (`JUDGE_MODEL`), and the `JUDGE_MODEL` default in run_evals.py. Replace those files with
+    this version, delete the IDs, set `HOTL_MODEL_LIGHT` / `HOTL_MODEL_DEEP` / `HOTL_JUDGE_MODEL` as
+    `ADJUST.md` describes, and migrate the eval thresholds and baseline as the 2.1.0 entry describes.
 - `dev-core` 5.6.0 (2026-10-26): adapt the cc-plugins dev-core knowledge refresh
   (cc commits 93212c4, ecb8a56, f5fa356, 5691dda, 4978073, 648f849, 5cfc439,
   6f77348, 70c1b1a). Never weaken a test to make it pass; verification-loop

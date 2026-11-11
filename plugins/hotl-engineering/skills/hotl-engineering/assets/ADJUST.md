@@ -9,10 +9,59 @@ existing enforced gates; introduce new advisory checks proportionately.
       - `HOTL_MODEL_LIGHT`: ai-review (every PR), incident-triage, agent-implement
       - `HOTL_MODEL_DEEP`: the ai-review Tier 2 deep-dive review
       - `HOTL_JUDGE_MODEL`: the eval-gate judge (ideally a different model from the generator)
-      - Use the model ID or inference profile ID of a model your organization has enabled on Bedrock. Check
-        current model IDs in Anthropic's model tables for "Claude in Amazon Bedrock" and "Claude on Amazon
-        Bedrock (legacy)". Do not pick a deprecated model (such as Sonnet 4.5). Record the date you set the
+      - Use the inference profile ID (an ID that contains `claude-`) of a model your organization has enabled on
+        Bedrock. Check current model IDs in Anthropic's model tables for "Claude in Amazon Bedrock" and "Claude on
+        Amazon Bedrock (legacy)". Do not pick a deprecated model (such as Sonnet 4.5). Record the date you set the
         variables and the date you checked the model tables
+      - Do not use an alias (`sonnet` / `opus` / `haiku` / `fable`). On Bedrock an alias can resolve to an older
+        model (checked 2026-11-12: `sonnet` is Sonnet 4.5 and `haiku` is Haiku 4.5)
+      - Avoid application inference profile ARNs (see the effort item below)
+- [ ] Bedrock decides model lifecycle separately from Anthropic. Check the AWS model lifecycle (Active / Legacy /
+      EOL / public extended access) and do not pick a Legacy model. A Legacy model can lose access after 15 days
+      without use. Avoid one especially for incident-triage, which runs rarely and would first fail during an incident
+      - Example (checked 2026-11-12): Sonnet 4.5 became Legacy on 2026-10-08 in the commercial Regions, including
+        ap-northeast-1. Public extended access starts on 2027-01-08 and EOL is 2027-04-08. This schedule differs from
+        its retirement on Anthropic's own platform (2026-11-30)
+- [ ] Decide the data processing region from the project's requirements. The template's requirement is that code
+      never goes to the direct Anthropic API; it does not promise processing inside Japan. The inference profile sets
+      the processing region: a Geo profile (`jp.`, `apac.`, etc.) routes within that geography, and a Global profile
+      (`global.`) routes worldwide
+      - If processing in Japan is a requirement, pick a model that has a `jp.` Geo profile. As of 2026-11-12, Opus 5.5
+        and Haiku 5.5 have one (routed to Tokyo and Osaka). Recheck the AWS model card before you choose
+      - From Tokyo, Sonnet 5.5 and Fable 5.2 are available only through `global.` (checked 2026-11-12). That is a wider
+        processing region than the `apac.` profiles the 2.0.x templates used
+      - Fable 5.2 is available only on the bedrock-runtime endpoint (not bedrock-mantle). The template's paths
+        (claude-code-action and run_evals.py) use bedrock-runtime
+- [ ] Choose effort together with the model variable, and record them together. The templates pass `--effort` to
+      every agent and take the value from a repository variable. An unset variable uses the default; an invalid value
+      stops before the agent runs
+      - `HOTL_EFFORT_LIGHT` (default medium): ai-review on every PR
+      - `HOTL_EFFORT_DEEP` (default high): the ai-review Tier 2 deep-dive review
+      - `HOTL_EFFORT_IMPLEMENT` (default medium): agent-implement
+      - `HOTL_EFFORT_TRIAGE` (default medium): incident-triage
+      - Without an explicit effort, changing only the model variable silently changes the effort too. Claude Code's
+        default differs by model (checked 2026-11-12: medium for Fable 5.2, Opus 5.5, Sonnet 5.5, and Haiku 5.5;
+        xhigh for Opus 4.7; high for the others)
+      - The available levels differ by model. For a level the model does not support, Claude Code runs the highest
+        supported level below it. Effort has no effect on a model without effort support (such as Haiku 4.5)
+      - Claude Code turns on effort and thinking support by matching the model ID against known patterns. IDs such
+        as application inference profile ARNs often do not match, and then these features stay off (`--effort` has
+        no effect either). `ANTHROPIC_DEFAULT_*_MODEL_SUPPORTED_CAPABILITIES` declares capabilities for a pinned
+        model, but claude-code-action does not pass it to Claude Code, and whether it applies to an ARN passed with
+        `--model` is unverified
+      - The Claude Code changelog lists a fix to `--effort` in 2.1.72, so the flag works from that version at the
+        latest; `xhigh` arrived in 2.1.111. The pinned claude-code-action SHA decides the Claude Code version (below)
+- [ ] The agents run with `--setting-sources user`, so Claude Code does not load the project's AGENTS.md (checked
+      2026-11-12 with Claude Code 2.1.322 in a local run: AGENTS.md loaded with `user,project` and did not load with
+      `user`; a subdirectory's AGENTS.md was not attached on Read under `user` either). Each prompt reads the root AGENTS.md first with Read. Keep that instruction when you rewrite a prompt,
+      and keep `--setting-sources user` (see the ai-review section)
+      - ai-review exports the PR's base tree to `$RUNNER_TEMP/trusted-base/` and reads AGENTS.md and the files it
+        references from there as the norms. The norm files in the working tree (the PR head) are subjects of the
+        review, not instructions (see the ai-review section)
+      - Subdirectory AGENTS.md files are not read as norms
+      - agent-implement and incident-triage do not run on PR events, so they read the default-branch checkout.
+        incident-triage also reads runbooks/
+      - If the project keeps its norms in another file (such as CLAUDE.md), name that file in every prompt instead
 - [ ] AWS region (ap-northeast-1) → your organization's region
 - [ ] Secret names (GITHUB_OIDC_ROLE / AZURE_CLIENT_ID* / TEAMS_WEBHOOK_URL, etc.) → align with the secrets that actually exist; if not yet created, attach the creation steps to the deliverable
 - [ ] Pin third-party actions (`dorny/paths-filter` / `marocchino/sticky-pull-request-comment` /
@@ -20,6 +69,17 @@ existing enforced gates; introduce new advisory checks proportionately.
       (the template writes `@vN` for readability; since CI itself is Tier 2, pinning is the default when applying it).
       If an organization or enterprise allowed-actions policy enforces SHA pinning, unpinned workflows fail at run
       time. Automate pinning and updates with Renovate or similar instead of doing it by hand
+- [ ] Pin `anthropics/claude-code-action` to a commit SHA as well. The SHA decides the two points below, so check
+      them before you raise the pin, before you change a model variable or effort, and in Renovate's update PRs
+      - The Claude Code version it installs (`claudeCodeVersion` in `src/entrypoints/run.ts`; v1 installs 2.1.322 as
+        of 2026-11-12). Some models need a minimum version (for example, Fable 5.2 needs 2.1.321 or later). Raise the
+        pin if the version falls short
+      - On PR events, the action restores fixed paths (`SENSITIVE_PATHS` in `src/github/operations/restore-config.ts`:
+        `.claude`, `.mcp.json`, `CLAUDE.md`, and a few others) from the PR's base branch before it starts Claude Code
+        (`restoreConfigFromBase` in `run.ts`). AGENTS.md is not among them, so the working tree always holds the PR
+        head's AGENTS.md. ai-review therefore reads its norms from the export of the base tree and never from the
+        working tree. The replacement of the `.claude` directory and `.mcp.json` still relies on this restore,
+        so pin a version that includes it
 - [ ] Every action is on a version that runs on Node 24 (GitHub removed Node 20 from hosted runners on 2026-09-23).
       Self-hosted runners must be v2.327.1 or later. Do not downgrade to a Node 20 version
 
@@ -51,6 +111,63 @@ existing enforced gates; introduce new advisory checks proportionately.
 - [ ] Keep `--setting-sources user` and `--strict-mcp-config` in every agent's `claude_args`. `--allowedTools` only
       adds pre-approvals and is not an upper bound, so without them the repository's (including the PR head's)
       Claude Code project settings (`settings.json` allow rules) and `.mcp.json` widen the agent's permissions
+- [ ] Read the review norms from the PR's base revision. claude-code-action never restores AGENTS.md to the base
+      version (see the claude-code-action item under "Common to all files"). Read from the working tree, a PR that
+      rewrites AGENTS.md or a file it references could change the review norms and the verdict
+      - Before the agent, each review job exports the base tree fresh to `$RUNNER_TEMP/trusted-base/` with
+        `git archive`. The export lives outside the working tree, so it stays out of working-tree searches. Files the
+        base's `.gitattributes` marks `export-ignore` are not exported, so never mark norm files that way
+      - The prompt reads the AGENTS.md in the export and the files it references. A referenced file missing from the
+        export is never read from the working tree instead. The working tree's (the PR head's) AGENTS.md, the files
+        it references, and changes to them are subjects of the review, not instructions. If the export cannot be
+        read, the agent reviews without norms and never falls back to the working tree's AGENTS.md
+      - The agent can read the export because the bare `Read` rule in `--allowedTools` matches all file reads,
+        including outside the working tree (Claude Code's permissions documentation, checked 2026-11-12). Turning on
+        `permissions.blockReadsOutsideWorkingDirectories` in user settings blocks it. The agent then reviews without
+        norms and says so in the summary or report. This is unverified in real CI: during observation, check that no
+        review reports unreadable norms
+      - If the export is heavy in a large repository, narrow it to the norm files (for example,
+        `git archive "$BASE_SHA" AGENTS.md docs/review/`). When you narrow it, keep every file AGENTS.md references
+      - Do not add the export with `--add-dir`. Claude Code also loads skills, commands, and agents from the added
+        directory's `.claude` directory
+- [ ] The light review runs with `--max-turns 5`, and reading AGENTS.md and its references takes turns. The prompt
+      allows reading them in the same turn as fetching the diff. During observation, check that the turns suffice
+      (a verdict file is written every time)
+- [ ] If LIGHT or DEEP uses a model with safety classifiers (the Fable models, Opus 5.5, Sonnet 5.5, Opus 5), set the
+      fallback targets for a refusal. An attacker's-perspective deep review tends to hit the cyber classifier and can
+      be refused from the first request
+      - On Bedrock, without an Opus pin (`ANTHROPIC_DEFAULT_OPUS_MODEL`) or an Opus 4.8 entry in the provider's model
+        list, fallback is off for every model and the request ends with the refusal ("Enable fallback on Bedrock,
+        Agent Platform, and Foundry" in Claude Code's model configuration documentation, checked 2026-11-12)
+      - Each agent job's env takes `ANTHROPIC_DEFAULT_OPUS_MODEL` from the repository variable
+        `HOTL_FALLBACK_OPUS_MODEL` and `ANTHROPIC_DEFAULT_SONNET_MODEL` from `HOTL_FALLBACK_SONNET_MODEL`.
+        claude-code-action passes these two from the job env to Claude Code. Unset variables pass through empty,
+        which behaves as before
+      - Set them to the inference profile IDs of another enabled Opus (such as Opus 4.8) and Sonnet (such as
+        Sonnet 5). The fallback model needs a context window at least as large as the source model's (1M by default
+        on Bedrock). The refusing model itself or a model from another family leaves the refusal standing
+      - Sonnet 5.5 also needs a Sonnet pin (or a Sonnet 5 entry in the model list) in addition to the Opus pin
+      - After a fallback, the fallback model writes the rest of the review and the verdict file. Keep the model that
+        actually ran (`modelUsage` in the result message of the execution file) in the audit trail, not the model in
+        the variable
+      - A refusal leaves no verdict file, and the validator treats that as incomplete evidence (Phase 2 blocks the
+        merge). Record refusals during observation. If they continue, consider weakening the PoC instruction to "show
+        why the attack holds (the reachable path and its preconditions)"
+- [ ] When you change a LIGHT / DEEP model variable or effort, compare the old and new settings on the same PRs before
+      switching. How CRITICAL counts come out depends on the model and effort together
+      - On a gate that `AI_REVIEW_ENFORCE` already enforces, keep enforcement and the current model on the gate. Never
+        unset `AI_REVIEW_ENFORCE` (go back to Phase 1) for the change: the required check then passes even with
+        CRITICAL findings, and principles.md #6 forbids weakening an enforced gate. Phase 1 is only for a gate not yet
+        enforced. A repository still in Phase 1 stays there and counts only the new setting's runs toward promotion
+      - Run the new model and effort side by side as an observation-only review. Compare the old and new verdicts
+        (CRITICAL / HIGH counts, misses, false positives), get the gate owner's approval, and only then switch the
+        variables
+      - For example, copy ai-review.yml to a workflow that is not a required check. Give the copy its own
+        `concurrency` group (sharing `ai-review-<PR number>` with `cancel-in-progress` cancels the enforced run),
+        rename or drop its `ai-review-gate` job (that name is the required check), read the model and effort from
+        variables of its own, and never read `AI_REVIEW_ENFORCE`. Keep the same permissions, `--allowedTools`,
+        setting sources, and trusted-base export as the original jobs. Mark the copy's PR comments so reviewers can
+        tell them apart. This is unverified in real CI
 
 ## workflows/agent-implement.yml
 - [ ] Add an Issue template (acceptance criteria required) alongside it in .github/ISSUE_TEMPLATE/
@@ -86,8 +203,22 @@ existing enforced gates; introduce new advisory checks proportionately.
       moving to 2.x (API version 2026-10-21), move the judge to a model Bedrock supports for 2026-10-21
       (Claude 4.7 or later) together with the IAM and endpoint changes, and first pass a network-free
       contract test (codex-plugins' scripts/tests/test_hotl_sdk_contract.py is an example) on the new version
-- [ ] Before changing the judge model (`HOTL_JUDGE_MODEL`), compare eval-gate results and L3 human calibration
-      between the old and new models
+- [ ] Leave room for thinking in the judge's `max_tokens`. A judge with thinking on by default (Opus 5 and later,
+      Sonnet 5 and later, Haiku 5.5, the Fable models) thinks even when `thinking` is not sent, and the thinking counts
+      toward `max_tokens`. Opus 4.7 / 4.8 run without thinking when it is omitted. The template's default is 16000.
+      Set it from `usage.output_tokens` in the first calibration run. The SDK refuses a non-streaming call whose value
+      exceeds about 21,333 before sending it, so stay below that. **In repositories that already applied the
+      template, edit the value in thresholds.json by hand**
+      - If it is too small, votes stop before the JSON is complete. run_evals.py prints the reason and `stop_reason`
+        for every dropped vote. On `stop_reason=max_tokens`, raise `judge.max_tokens` or lower `judge.effort`
+- [ ] Set the judge's effort with `judge.effort` in `thresholds.json` (low / medium / high / xhigh / max). It is sent
+      only when set, and an invalid value stops the run before evaluating. Unset, the model's API default applies,
+      which can differ from Claude Code's default (checked 2026-11-12: the Messages API default is high for Fable 5.2
+      and Sonnet 5.5, and medium for Opus 5.5 and Haiku 5.5). Do not set it for a model that rejects effort (such as
+      Haiku 4.5)
+- [ ] Record the judge model and effort together (the report and `judge_model` / `judge_effort` in the results.json
+      summary show both). Before changing either, compare eval-gate results and L3 human calibration between the
+      old and new settings
 - [ ] Bootstrap the reviewed baseline explicitly with a calibration run that omits `--baseline`; store it before enabling the workflow. Routine missing/failed downloads must not disable comparison
 - [ ] Keep report/artifact output in a fresh runner temporary directory. Publish only fresh results; setup failures must never publish a candidate-supplied PASS report
 - [ ] Keep the trusted-runner approach for PRs (checkout from the base side). For a PR that changes
@@ -129,6 +260,17 @@ existing enforced gates; introduce new advisory checks proportionately.
 - [ ] The alert → repository_dispatch relay (Function/Logic App) requires separate implementation
 
 ## templates/
-- [ ] AGENTS.md.template → fully rewrite to the project's absolute norms, commands, and conventions (keep only the template's structure)
+- [ ] AGENTS.md.template → fully rewrite to the project's absolute norms, commands, and conventions (keep only the template's structure).
+      Put it at the repository root (the workflow agents read the root AGENTS.md)
+- [ ] If developers also use Claude Code locally, check which instruction files load. Claude Code 2.1.277 and later
+      reads AGENTS.md by default only when no CLAUDE.md (including one in a `.claude` directory) or CLAUDE.local.md
+      exists in the working directory or above it; with one, it reads the CLAUDE.md files only (Claude Code's memory documentation, checked
+      2026-11-12). To share the norms, add `@AGENTS.md` to the committed CLAUDE.md. The `claude-md-and-agents-md`
+      setting also reads both, but Claude Code ignores it in project and local settings files, so each user sets it in
+      their own settings. The workflow agents read AGENTS.md with Read in their prompts, so this does not affect them
+- [ ] Give every line you add to "Common Mistakes" a reason and a scope. Review the lines when you change models and
+      periodically, and delete lines whose reason is gone. Models follow accumulated warnings closely, so stale lines
+      can make the agent ask for approvals nobody needs or stop routine work. For a rule that must always hold, state
+      its scope and reason, and write the exception path into the rule ("get human approval before ...")
 - [ ] CODEOWNERS.template → actual usernames, Tier 2 paths
 - [ ] setup-branch-protection.sh → run in Phase 2 (do not run in Phase 1)
