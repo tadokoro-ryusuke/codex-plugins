@@ -1,9 +1,10 @@
 # AGENTS.md — <Project Name> constitution (repository norms for the coding agent)
 
-This file holds the norms the coding agent (Codex / Claude Code / claude-code-action) follows. Codex and a local
-Claude Code load it automatically. The hotl workflow agents run with `--setting-sources user`, which keeps Claude Code
-from loading it, so each prompt reads it first with Read (keep it at the repository root). ai-review reads the PR
-base's version of this file and of the files it references.
+This file holds the norms the coding agent (Codex / Claude Code / claude-code-action) follows. Codex loads it
+automatically. A local Claude Code loads it only when no CLAUDE.md (including one in a `.claude` directory) or
+CLAUDE.local.md exists in the working directory or above it; if you keep one, import this file from it (`@AGENTS.md`). The hotl workflow agents run
+with `--setting-sources user`, which keeps Claude Code from loading it, so each prompt reads it first with Read (keep
+it at the repository root). ai-review reads the PR base's version of this file and of the files it references.
 Write it as **a norm the machine follows, not an explanation for humans**. Keep it short (split into a Skill if it grows too large).
 
 ## Project Overview

@@ -153,9 +153,21 @@ existing enforced gates; introduce new advisory checks proportionately.
       - A refusal leaves no verdict file, and the validator treats that as incomplete evidence (Phase 2 blocks the
         merge). Record refusals during observation. If they continue, consider weakening the PoC instruction to "show
         why the attack holds (the reachable path and its preconditions)"
-- [ ] When you change a LIGHT / DEEP model variable or effort, go back to Phase 1 (`AI_REVIEW_ENFORCE` unset) or
-      compare the old and new verdicts on the same PRs before switching. How CRITICAL counts come out depends on the
-      model and effort together
+- [ ] When you change a LIGHT / DEEP model variable or effort, compare the old and new settings on the same PRs before
+      switching. How CRITICAL counts come out depends on the model and effort together
+      - On a gate that `AI_REVIEW_ENFORCE` already enforces, keep enforcement and the current model on the gate. Never
+        unset `AI_REVIEW_ENFORCE` (go back to Phase 1) for the change: the required check then passes even with
+        CRITICAL findings, and principles.md #6 forbids weakening an enforced gate. Phase 1 is only for a gate not yet
+        enforced. A repository still in Phase 1 stays there and counts only the new setting's runs toward promotion
+      - Run the new model and effort side by side as an observation-only review. Compare the old and new verdicts
+        (CRITICAL / HIGH counts, misses, false positives), get the gate owner's approval, and only then switch the
+        variables
+      - For example, copy ai-review.yml to a workflow that is not a required check. Give the copy its own
+        `concurrency` group (sharing `ai-review-<PR number>` with `cancel-in-progress` cancels the enforced run),
+        rename or drop its `ai-review-gate` job (that name is the required check), read the model and effort from
+        variables of its own, and never read `AI_REVIEW_ENFORCE`. Keep the same permissions, `--allowedTools`,
+        setting sources, and trusted-base export as the original jobs. Mark the copy's PR comments so reviewers can
+        tell them apart. This is unverified in real CI
 
 ## workflows/agent-implement.yml
 - [ ] Add an Issue template (acceptance criteria required) alongside it in .github/ISSUE_TEMPLATE/
@@ -250,6 +262,12 @@ existing enforced gates; introduce new advisory checks proportionately.
 ## templates/
 - [ ] AGENTS.md.template → fully rewrite to the project's absolute norms, commands, and conventions (keep only the template's structure).
       Put it at the repository root (the workflow agents read the root AGENTS.md)
+- [ ] If developers also use Claude Code locally, check which instruction files load. Claude Code 2.1.277 and later
+      reads AGENTS.md by default only when no CLAUDE.md (including one in a `.claude` directory) or CLAUDE.local.md
+      exists in the working directory or above it; with one, it reads the CLAUDE.md files only (Claude Code's memory documentation, checked
+      2026-11-12). To share the norms, add `@AGENTS.md` to the committed CLAUDE.md. The `claude-md-and-agents-md`
+      setting also reads both, but Claude Code ignores it in project and local settings files, so each user sets it in
+      their own settings. The workflow agents read AGENTS.md with Read in their prompts, so this does not affect them
 - [ ] Give every line you add to "Common Mistakes" a reason and a scope. Review the lines when you change models and
       periodically, and delete lines whose reason is gone. Models follow accumulated warnings closely, so stale lines
       can make the agent ask for approvals nobody needs or stop routine work. For a rule that must always hold, state
