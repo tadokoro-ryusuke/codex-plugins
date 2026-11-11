@@ -166,6 +166,13 @@ or one native smoke does not establish a quality, cost, or latency advantage.
 
 ### Source update migration
 
+- `dev-core` 5.7.0 (2026-11-12): adapt the cc-plugins rule-writing update (cc commit
+  b8f65a6). In conventions-as-guardrails, give each kept prohibition its reason and
+  scope, and write a possible exception into the rule as "before X, do Y" instead of
+  "never X". In continuous-learning, write scope, reason, date added, and exception
+  path into a prose rule, and add a step that retires stale rules when the model
+  changes and periodically, while keeping confirmation for risky or irreversible
+  actions. Reinstall and start a new task to load the changes.
 - `hotl-engineering` 2.2.0 (2026-11-12): adapt the cc-plugins hotl-engineering 2.2.0 update for
   current models with thinking on by default and the Claude Fable 5.2 release (Claude Code 2.1.321).
   The templates still contain no model IDs.
