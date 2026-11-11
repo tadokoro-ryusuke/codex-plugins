@@ -179,8 +179,8 @@ or one native smoke does not establish a quality, cost, or latency advantage.
     `judge.effort` (sent through `output_config` only when set; the pinned SDK 1.17.0 puts it in the
     Bedrock body), stops on an invalid effort before evaluating, and records `judge_model` and
     `judge_effort` in the results.json summary and the report.
-  - **AGENTS.md was never loaded by the CI agents**: `--setting-sources user` (added in 2.1.0) also
-    keeps Claude Code from loading the project's AGENTS.md (checked locally with 2.1.322). Each agent
+  - **AGENTS.md is not loaded automatically by the CI agents**: `--setting-sources user` (added in
+    2.1.0) also keeps Claude Code from loading the project's AGENTS.md (checked locally with 2.1.322). Each agent
     prompt now reads the root AGENTS.md first (incident-triage also reads runbooks/). claude-code-action
     never restores AGENTS.md to the PR base, so ai-review exports the base tree to
     `$RUNNER_TEMP/trusted-base/` and reads AGENTS.md and the files it references from there; the PR

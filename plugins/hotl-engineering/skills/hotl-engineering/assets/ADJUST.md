@@ -53,7 +53,7 @@ existing enforced gates; introduce new advisory checks proportionately.
         latest; `xhigh` arrived in 2.1.111. The pinned claude-code-action SHA decides the Claude Code version (below)
 - [ ] The agents run with `--setting-sources user`, so Claude Code does not load the project's AGENTS.md (checked
       2026-11-12 with Claude Code 2.1.322 in a local run: AGENTS.md loaded with `user,project` and did not load with
-      `user`). Each prompt reads the root AGENTS.md first with Read. Keep that instruction when you rewrite a prompt,
+      `user`; a subdirectory's AGENTS.md was not attached on Read under `user` either). Each prompt reads the root AGENTS.md first with Read. Keep that instruction when you rewrite a prompt,
       and keep `--setting-sources user` (see the ai-review section)
       - ai-review exports the PR's base tree to `$RUNNER_TEMP/trusted-base/` and reads AGENTS.md and the files it
         references from there as the norms. The norm files in the working tree (the PR head) are subjects of the
