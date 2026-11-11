@@ -32,6 +32,15 @@ Identify what went wrong in this session: build errors, test failures, lint viol
 | Missing knowledge | Record the project constraint | `AGENTS.md` (keep it under the ~32 KiB default read limit; link out for detail) |
 | Missing tooling | Add a lint rule, test, or script | linter config, test files, `scripts/` |
 
+When the prevention is a written rule, state its scope, its reason, and when it was
+added. Where an exception can exist, write the exception path into the rule as
+"before X, do Y" instead of "never X". A bare "never" reads as a rule without
+exceptions and can block work that was already approved; the reason and date let a
+later review decide whether the rule still applies. For example: "Regenerate
+`src/gen/` with the generator instead of editing it by hand, because the next run
+discards hand edits (scope: `src/gen/`; added 2026-11). Before a temporary hand fix
+for a generator bug, get the owner's approval."
+
 Use command handlers for this repository's portable hooks. Current Codex also
 supports MCP tool hooks; prompt/agent handlers are parsed but skipped. Plugin
 hooks require user trust review. Use the host's documented event/payload contract;
@@ -43,6 +52,22 @@ The dev-core plugin ships command examples in its hooks directory.
 - Pipe a synthetic payload to the hook in an isolated fixture and inspect its decision. Never execute a destructive operation to test a blocker.
 - Write the same bad code — does lint or a test catch it?
 - Start a fresh session — is the new rule actually loaded and followed?
+
+### 5. Review and retire rules
+
+Rules and cautions pile up in instruction files, memory, and notes. Agents follow
+them closely, so stale ones lead to unneeded approval requests and routine work left
+on hold. Review them when you change the model you work with, because how literally
+a model follows written rules differs between models, and periodically (for example,
+each quarter). Remove:
+
+- rules whose reason no longer holds (the code, tool, or practice they assumed is gone);
+- cautions aimed at a failure that no longer reproduces;
+- prose rules that duplicate what lint, a hook, or a test already enforces.
+
+Keep confirmation steps for risky or irreversible actions. Retire rules within the
+authorized project scope; touch personal memory or global settings only on an
+explicit request.
 
 ## Scope and durability
 
@@ -60,6 +85,7 @@ Each session improves the harness; the improved harness makes the next session m
 Session 1: bug found        → rule added
 Session 2: rule prevents it → new bug found → hook added
 Session 3: hook + rule hold → attention moves to harder problems
+Model change: review        → stale rules and hook-enforced duplicates retired
 ```
 
 ## Growing the Stop-time checks

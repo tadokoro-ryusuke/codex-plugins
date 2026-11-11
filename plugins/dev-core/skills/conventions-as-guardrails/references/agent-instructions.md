@@ -10,7 +10,11 @@ paths or stable symbols; avoid copying code and long best-practice passages alre
 owned by tools, skills, or source documents.
 
 Write explicit prohibitions only where they protect a real invariant. Avoid
-converting every preference or past failure into a universal ban. Put enforceable
+converting every preference or past failure into a universal ban. Give each
+prohibition you keep its reason and scope. Where an exception can exist, write the
+exception path into the rule as "before X, do Y" instead of "never X", naming the
+check or owner decision that clears it; a bare "never" reads as a rule without
+exceptions and can block a step that was already approved. Put enforceable
 formatting and lint rules in their configs and keep semantic intent in the document.
 Preserve user scope and existing authorization; describe when a new decision is
 needed instead of requiring approval before routine work.
