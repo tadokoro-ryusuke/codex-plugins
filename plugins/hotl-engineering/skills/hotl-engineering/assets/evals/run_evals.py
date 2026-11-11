@@ -3,7 +3,8 @@
 run_evals.py — Eval harness for the retrieval QA agent
 
 L1: Deterministic checks (recall@5, MRR, must_not, refusal)
-L2: LLM-as-judge (Bedrock Tokyo / no sampling parameters / median of 3 votes)
+L2: LLM-as-judge (Bedrock Tokyo / no sampling parameters / median of 3 votes /
+    effort is sent only when thresholds.json sets judge.effort)
     Binarize each axis's graded score (1-5) at the pass line (judge.pass_score) and compute a
     pass rate per axis. Axes are never summed: a sum hides which axis dropped and cannot be
     calibrated against human pass/fail judgments
@@ -52,6 +53,24 @@ SAMPLING_KEYS = ("temperature", "top_p", "top_k")
 
 def ignored_sampling_keys(cfg: dict) -> list[str]:
     return [key for key in SAMPLING_KEYS if key in cfg]
+
+
+# A judge with thinking on by default (Opus 5 and later, Sonnet 5 and later, Haiku 5.5, the Fable models) counts
+# thinking toward max_tokens. 1024 cannot hold the thinking and the three axis reasons, so the reply stops before
+# the JSON is complete. The SDK refuses a non-streaming call whose max_tokens exceeds about 21,333 before sending
+# it, so stay below that
+DEFAULT_JUDGE_MAX_TOKENS = 16000
+JUDGE_EFFORT_LEVELS = ("low", "medium", "high", "xhigh", "max")
+
+
+def judge_effort(cfg: dict) -> str | None:
+    """Optional judge.effort, sent through output_config only when set. Unset, the model's API default applies"""
+    effort = cfg.get("effort")
+    if effort is None:
+        return None
+    if type(effort) is not str or effort not in JUDGE_EFFORT_LEVELS:
+        raise ValueError(f"judge effort must be one of {', '.join(JUDGE_EFFORT_LEVELS)}, got {effort!r}")
+    return effort
 
 
 # 2.1.0 replaced the summed-score gate with a per-axis pass-rate gate. Stop on the old keys instead of ignoring them
@@ -209,6 +228,42 @@ def make_judge_prompt(case: dict, response: dict, rubric: str) -> str:
 Output only the JSON specified by the rubric."""
 
 
+def parse_judge_vote(msg) -> tuple[dict | None, str | None]:
+    """Take the vote out of the judge's reply. When it cannot, return the reason for dropping the vote"""
+    text = "".join(b.text for b in msg.content if b.type == "text")
+    m = re.search(r"\{.*\}", text, re.DOTALL)
+    if not m:
+        return None, "no JSON object in the reply"
+    try:
+        vote = json.loads(m.group(0))
+    except json.JSONDecodeError:
+        return None, "the JSON in the reply does not parse"
+    if not isinstance(vote, dict):
+        return None, "the JSON in the reply is not an object"
+    if not all(isinstance(vote.get(axis), dict)
+               and type(vote[axis].get("score")) is int
+               and 1 <= vote[axis]["score"] <= 5 for axis in AXES):
+        return None, "the JSON does not match the rubric (each axis needs an integer score from 1 to 5)"
+    return vote, None
+
+
+def report_dropped_vote(reason: str, msg) -> None:
+    """Print why a vote was dropped and how the reply stopped. Never print the judge's text or a refusal's
+    explanation: they can contain confidential golden-set data"""
+    stop_reason = getattr(msg, "stop_reason", None)
+    line = f"  judge vote dropped: {reason} (stop_reason={stop_reason}"
+    details = getattr(msg, "stop_details", None)
+    if details is not None:
+        line += f", stop_details.type={getattr(details, 'type', None)}, category={getattr(details, 'category', None)}"
+    line += ")"
+    if stop_reason == "max_tokens":
+        line += ("; the reply hit judge.max_tokens before the JSON was complete (thinking counts toward it): "
+                 "raise judge.max_tokens or lower judge.effort in thresholds.json")
+    elif stop_reason == "refusal":
+        line += "; the judge model refused this case"
+    print(line, file=sys.stderr)
+
+
 def eval_l2(
     client: AnthropicBedrock, case: dict, response: dict, rubric: str, cfg: dict
 ) -> dict:
@@ -217,33 +272,26 @@ def eval_l2(
     vote_count = cfg.get("votes", 3)
     if type(vote_count) is not int or vote_count < 1:
         raise ValueError("judge votes must be a positive integer")
+    params: dict = {
+        "model": JUDGE_MODEL,
+        "max_tokens": int(cfg.get("max_tokens", DEFAULT_JUDGE_MAX_TOKENS)),
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    if (effort := judge_effort(cfg)) is not None:
+        params["output_config"] = {"effort": effort}
     for _ in range(vote_count):
         try:
-            msg = client.messages.create(
-                model=JUDGE_MODEL,
-                max_tokens=int(cfg.get("max_tokens", 1024)),
-                messages=[{"role": "user", "content": prompt}],
-            )
+            msg = client.messages.create(**params)
         except Exception as e:  # noqa: BLE001 — do not stop the whole suite for a single judge vote failure
             # The type name alone cannot reveal breaking SDK changes (such as removed arguments),
             # so also print the start of the message
             print(f"  judge vote failed ({type(e).__name__}: {str(e)[:200]})", file=sys.stderr)
             continue
-        text = "".join(b.text for b in msg.content if b.type == "text")
-        m = re.search(r"\{.*\}", text, re.DOTALL)
-        if not m:
+        vote, reason = parse_judge_vote(msg)
+        if reason:
+            report_dropped_vote(reason, msg)
             continue
-        try:
-            vote = json.loads(m.group(0))
-            if not isinstance(vote, dict):
-                continue
-            if not all(isinstance(vote.get(axis), dict)
-                       and type(vote[axis].get("score")) is int
-                       and 1 <= vote[axis]["score"] <= 5 for axis in AXES):
-                continue
-            votes.append(vote)
-        except json.JSONDecodeError:
-            continue
+        votes.append(vote)
 
     if len(votes) != vote_count:
         raise ValueError("incomplete or invalid judge votes")
@@ -310,7 +358,8 @@ def write_report(out: Path, summary: dict, results: list[dict], ok: bool, failur
     lines = [
         f"## Eval Report — {'✅ PASS' if ok else '❌ FAIL'}",
         "",
-        f"- suite: `{summary['suite']}` / cases: {summary['n_cases']} / judge: `{JUDGE_MODEL}`",
+        f"- suite: `{summary['suite']}` / cases: {summary['n_cases']} / judge: `{summary['judge_model']}`"
+        f" (effort: {summary['judge_effort'] or 'API default'})",
         f"- must-pass: {summary['must_pass_rate']:.0%}  |  must_not violations: {summary['must_not_violations']}",
         f"- recall@5 mean: {fmt(summary['recall_at_5_mean'])}"
         + (f"(baseline {fmt(baseline.get('recall_at_5_mean'))})" if baseline else ""),
@@ -372,6 +421,8 @@ def main() -> int:
     validate_thresholds(thresholds)
     judge_cfg = all_thresholds.get("judge", {})
     pass_score = judge_pass_score(judge_cfg)
+    # Stop on an invalid effort before evaluating, instead of hiding it among per-case judge failures
+    effort = judge_effort(judge_cfg)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     if ignored := ignored_sampling_keys(judge_cfg):
@@ -446,6 +497,9 @@ def main() -> int:
         "infrastructure_failed_ids": [r["id"] for r in results if r.get("infrastructure_error")],
         "recall_at_5_mean": statistics.mean(recalls) if recalls else None,
         "judge_pass_score": pass_score,
+        # Record the judge model and effort together (an effort of None means the model's API default)
+        "judge_model": JUDGE_MODEL,
+        "judge_effort": effort,
         "judge_axis_pass_rate": {
             a: (sum(r["judge_pass"][a] for r in judged) / len(judged)) if judged else None for a in AXES},
         "judge_axis_mean": {

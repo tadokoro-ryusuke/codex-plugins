@@ -16,7 +16,7 @@
   },
   "judge": {
     "votes": 3,
-    "max_tokens": 1024,
+    "max_tokens": 16000,
     "pass_score": 4
   }
 }

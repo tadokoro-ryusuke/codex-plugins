@@ -28,7 +28,7 @@ Facts may change over time, but the principles themselves remain stable.
 **Practice**: Reject any new-gate rollout plan that does not include calibration (an observation period, promotion criteria, an owner, and a way to disable it). Treat the duration as a guide only; promote on representative run results, not elapsed days. Never use this procedure to weaken gates that are already enforced.
 
 ## 7. Prompt changes are change-management items with the same weight as code changes
-**Rationale**: The deployable unit for an agent is the bundle of "model + prompt + tool definitions" (agent version). Promotion is judged by eval results, not by test pass/fail.
+**Rationale**: The deployable unit for an agent is the bundle of "model + effort + prompt + tool definitions" (agent version). When the agent runs through a harness such as Claude Code, include the harness version in the bundle: the same model ID behaves and costs differently with another effort or harness version. Promotion is judged by eval results, not by test pass/fail.
 **Practice**: Close off any path that lets a prompt reach production directly. Treat prompt improvements without an eval-gate the same as "refactoring without tests."
 
 ## 8. Thresholds should be dual: relative (vs. baseline) and absolute (floor)
@@ -44,7 +44,7 @@ Facts may change over time, but the principles themselves remain stable.
 **Practice**: For J-SOX matters, see references/jsox-audit.md.
 
 ## 11. Failure is an asset. Recycle it under the 24-hour rule
-**Practice**: Turn production retrieval misses and wrong answers into golden-set entries within 24 hours. After an agent repeats the same kind of mistake twice, add one line to AGENTS.md / the skill. Datasets and normative files are "growing assets," not documents you write once and forget.
+**Practice**: Turn production retrieval misses and wrong answers into golden-set entries within 24 hours. After an agent repeats the same kind of mistake twice, add one line to AGENTS.md / the skill. Datasets and normative files are "growing assets," not documents you write once and forget. Give each added line its reason and scope, review the lines when you change models and periodically, and delete lines whose reason is gone (models follow accumulated warnings closely and can ask for approvals nobody needs).
 
 ## 12. Before buying, try the existing platform plus in-house read-only
 **Rationale**: The market for tools like AI SRE is in a period of proliferation, and much of it is overkill for small teams. Most of the value lies in "automating context assembly," which can often be built in-house on the existing agent platform.

@@ -8,7 +8,8 @@
 #
 # Philosophy:
 #   - "A prompt change is a change-management subject exactly as heavy as a code change"
-#   - The deployment unit is the agent version (a bundle of model + prompt + tool definitions)
+#   - The deployment unit is the agent version (a bundle of model + effort + prompt + tool definitions;
+#     for an agent that runs through Claude Code, include the harness version too)
 #   - The gate requires (a) 100% pass on must-pass cases (permission boundaries, injection)
 #             (b) average score >= baseline minus tolerance
 #   - The report goes to a PR comment + artifact (90 days) + S3 archive (J-SOX audit trail)
@@ -69,7 +70,8 @@ jobs:
       TARGET_API_KEY: ${{ secrets.TARGET_STAGING_API_KEY }}
       # Model used as judge (Bedrock Tokyo). Ideally kept separate from the generation model.
       # Set it with the repository variable HOTL_JUDGE_MODEL (if unset, run_evals.py fails before
-      # evaluating). See ADJUST.md for how to choose it
+      # evaluating). Set the judge's max_tokens and effort in thresholds.json under judge, and record
+      # them with the model. See ADJUST.md for how to choose it
       JUDGE_MODEL: ${{ vars.HOTL_JUDGE_MODEL }}
     steps:
       - name: Prepare fresh evaluation artifacts

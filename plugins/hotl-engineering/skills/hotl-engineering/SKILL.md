@@ -148,3 +148,6 @@ sections. Include the relevant reasoning:
   reports quarterly
 - Flow real-project improvements back into the templates (never leave a state
   where a fix made in a project repo is missing from the template)
+- On each model release, re-audit SKILL.md, references, the templates, and the
+  workflow prompts for wording aimed at older models (accumulated warnings,
+  instructions about how much to think or when to delegate)
