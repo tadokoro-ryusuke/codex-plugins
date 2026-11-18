@@ -93,12 +93,12 @@ Use the bundled profile as follows after choosing whether delegation helps:
 
 | Work | Model / effort | Selection |
 | --- | --- | --- |
-| Parent design, integration and acceptance | GPT-6 Astra / high | Host recommendation |
-| General delegated implementation | GPT-6 Sol / medium | Implementer default |
+| Parent design, integration and acceptance | GPT-6.2 Astra / high | Host recommendation |
+| General delegated implementation | GPT-6.2 Sol / medium | Implementer default |
 | Short mechanical edits with exact checks | GPT-6 Luna / high | `routine` preset |
 | Settled behavior, named files, local dependencies, independent checks | GPT-6 Luna / max | `bounded` preset |
-| Complex delegated implementation or bounded technical investigation | GPT-6 Sol / high | `complex` preset |
-| Required independent review | GPT-6 Astra / high | Reviewer default |
+| Complex delegated implementation or bounded technical investigation | GPT-6.2 Sol / high | `complex` preset |
+| Required independent review | GPT-6.2 Astra / high | Reviewer default |
 | Bounded read-only source lookup or log classification | GPT-6 Luna / high | Researcher default |
 
 Keep ambiguous requirements, root-cause judgment and consequential design decisions
@@ -114,6 +114,13 @@ including useful debug/TDD handoffs. Preserve explicit task selections and custo
 profiles: omit presets for explicit model/effort overrides, and select a custom
 profile's preset only when the user or project requests it. Legacy profiles remain
 valid without presets; missing roles or presets are never merged from the bundle.
+
+When another tool or agent starts a Codex session to carry out one bounded
+assignment (for example Claude Code launching Codex in a terminal with a handoff
+file), the session works as the assigned child under the
+[external handoff contract](plugins/dev-core/skills/codex-collab/references/external-handoff.md):
+one outcome, the handoff's write scope, no recursive delegation, and a return
+that lists checks not run and every problem encountered.
 Record the selection reason before dispatch. Check the actual parent
 setting separately: a profile recommendation cannot change the running task.
 Native tools accepting model/effort arguments do not require installing custom
@@ -166,6 +173,21 @@ or one native smoke does not establish a quality, cost, or latency advantage.
 
 ### Source update migration
 
+- `dev-core` 5.8.0 (2026-11-18): move the bundled execution profile to the GPT-6.2
+  model IDs (`gpt-6.2-astra` for the parent recommendation and reviewer,
+  `gpt-6.2-sol` for the implementer default and the `complex` preset). Roles,
+  presets, and effort levels are unchanged, and GPT-6 Luna stays in the
+  researcher role and the `routine` and `bounded` presets because GPT-6.2 has no
+  Luna. The assignment is unmeasured: no comparative run backs it. A custom
+  profile or an explicit model/effort selection is untouched. Add
+  `codex-collab/references/external-handoff.md`, the contract for a Codex session
+  started by an external parent (for example Claude Code launching Codex in a
+  terminal with a handoff file): one bounded outcome, no recursive delegation,
+  and a return that lists checks not run and every problem encountered. Handoffs
+  now also ask children to limit concurrent builds on a shared machine and clean
+  up their background jobs. See the
+  [implementation record](docs/plans/task-gpt62-external-handoff.md). Reinstall
+  and start a new task to load the change.
 - `dev-core` 5.7.0 (2026-11-12): adapt the cc-plugins rule-writing update (cc commit
   b8f65a6). In conventions-as-guardrails, give each kept prohibition its reason and
   scope, and write a possible exception into the rule as "before X, do Y" instead of

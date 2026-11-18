@@ -19,6 +19,9 @@ Use this skill to implement an existing plan as an end-to-end Codex workflow.
 If a parent has already assigned you the implementation or review role, perform
 that bounded assignment and return evidence. Do not restart this orchestration
 workflow, spawn another implementation/review chain, or take over the parent plan.
+When the parent is external to this Codex task (another tool or agent that
+started this session with a handoff), follow
+`../codex-collab/references/external-handoff.md`.
 
 ## Execution Contract
 

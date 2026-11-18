@@ -26,8 +26,8 @@ class ExecutionRoleTests(unittest.TestCase):
                 "can_select_effort": True,
                 "models": {
                     "gpt-5.6-sol": ["low", "medium", "high"],
-                    "gpt-6-astra": ["medium", "high", "xhigh"],
-                    "gpt-6-sol": ["medium", "high"],
+                    "gpt-6.2-astra": ["medium", "high", "xhigh"],
+                    "gpt-6.2-sol": ["medium", "high"],
                     "gpt-6-luna": ["high", "max"],
                 },
             },
@@ -37,7 +37,7 @@ class ExecutionRoleTests(unittest.TestCase):
             {
                 "schema_version": 1,
                 "parent_recommendation": {
-                    "model": "gpt-6-astra",
+                    "model": "gpt-6.2-astra",
                     "reasoning_effort": "high",
                 },
                 "roles": {
@@ -47,7 +47,7 @@ class ExecutionRoleTests(unittest.TestCase):
                         "write_policy": "scoped-write",
                     },
                     "reviewer": {
-                        "model": "gpt-6-astra",
+                        "model": "gpt-6.2-astra",
                         "reasoning_effort": "high",
                         "write_policy": "read-only",
                     },
@@ -77,7 +77,7 @@ class ExecutionRoleTests(unittest.TestCase):
     def test_bundled_parent_recommends_astra_high(self):
         profile = json.loads((RESOLVER.parent.parent / "assets/execution-profile.json").read_text())
         self.assertEqual(profile["parent_recommendation"],
-                         {"model": "gpt-6-astra", "reasoning_effort": "high"})
+                         {"model": "gpt-6.2-astra", "reasoning_effort": "high"})
 
     def test_bundled_researcher_resolves_to_luna_high_read_only(self):
         result = self.run_resolver("--role", "researcher", "--capabilities", str(self.capabilities))
@@ -88,7 +88,7 @@ class ExecutionRoleTests(unittest.TestCase):
         })
 
     def test_legacy_custom_profile_does_not_inherit_bundled_researcher(self):
-        for override in ([], ["--model", "gpt-6-astra", "--effort", "high"]):
+        for override in ([], ["--model", "gpt-6.2-astra", "--effort", "high"]):
             with self.subTest(override=override):
                 result = self.run_resolver("--role", "researcher", "--capabilities", str(self.capabilities),
                                            "--profile", str(self.profile), *override)
@@ -97,10 +97,10 @@ class ExecutionRoleTests(unittest.TestCase):
 
     def test_custom_researcher_and_explicit_override_preserve_read_only(self):
         profile = json.loads(self.profile.read_text())
-        profile["roles"]["researcher"] = {"model": "gpt-6-astra", "reasoning_effort": "high",
+        profile["roles"]["researcher"] = {"model": "gpt-6.2-astra", "reasoning_effort": "high",
                                          "write_policy": "read-only"}
         self.profile.write_text(json.dumps(profile))
-        for override, expected in (([], ("gpt-6-astra", "high")),
+        for override, expected in (([], ("gpt-6.2-astra", "high")),
                                    (["--model", "gpt-5.6-sol", "--effort", "low"],
                                     ("gpt-5.6-sol", "low"))):
             with self.subTest(override=override):
@@ -112,8 +112,8 @@ class ExecutionRoleTests(unittest.TestCase):
                 self.assertEqual(output["write_policy"], "read-only")
 
     def test_researcher_unavailable_model_or_effort_never_falls_back(self):
-        for models, message in (({"gpt-6-astra": ["high"]}, "model is unavailable: gpt-6-luna"),
-                                ({"gpt-6-luna": ["max"], "gpt-6-astra": ["medium"]},
+        for models, message in (({"gpt-6.2-astra": ["high"]}, "model is unavailable: gpt-6-luna"),
+                                ({"gpt-6-luna": ["max"], "gpt-6.2-astra": ["medium"]},
                                  "effort is unavailable for gpt-6-luna: high")):
             with self.subTest(models=models):
                 capabilities = self.write_json("research-capabilities.json", {
@@ -147,7 +147,7 @@ class ExecutionRoleTests(unittest.TestCase):
             json.loads(result.stdout),
             {
                 "role": "implementer",
-                "model": "gpt-6-sol",
+                "model": "gpt-6.2-sol",
                 "reasoning_effort": "medium",
                 "write_policy": "scoped-write",
                 "fork_turns": "none",
@@ -161,7 +161,7 @@ class ExecutionRoleTests(unittest.TestCase):
             "--capabilities",
             str(self.capabilities),
             "--model",
-            "gpt-6-astra",
+            "gpt-6.2-astra",
             "--effort",
             "medium",
         )
@@ -171,7 +171,7 @@ class ExecutionRoleTests(unittest.TestCase):
             json.loads(result.stdout),
             {
                 "role": "implementer",
-                "model": "gpt-6-astra",
+                "model": "gpt-6.2-astra",
                 "reasoning_effort": "medium",
                 "write_policy": "scoped-write",
                 "fork_turns": "none",
@@ -184,12 +184,12 @@ class ExecutionRoleTests(unittest.TestCase):
         self.assertEqual(profile["implementation_presets"], {
             "routine": {"model": "gpt-6-luna", "reasoning_effort": "high"},
             "bounded": {"model": "gpt-6-luna", "reasoning_effort": "max"},
-            "complex": {"model": "gpt-6-sol", "reasoning_effort": "high"},
+            "complex": {"model": "gpt-6.2-sol", "reasoning_effort": "high"},
         })
         for preset, model, effort in (
             ("routine", "gpt-6-luna", "high"),
             ("bounded", "gpt-6-luna", "max"),
-            ("complex", "gpt-6-sol", "high"),
+            ("complex", "gpt-6.2-sol", "high"),
         ):
             with self.subTest(preset=preset):
                 result = self.run_resolver("--role", "implementer", "--preset", preset,
@@ -207,13 +207,13 @@ class ExecutionRoleTests(unittest.TestCase):
         self.assertIn("profile does not define implementation preset: routine", missing.stderr)
         profile = json.loads(self.profile.read_text())
         profile["implementation_presets"] = {
-            "local": {"model": "gpt-6-astra", "reasoning_effort": "xhigh"}}
+            "local": {"model": "gpt-6.2-astra", "reasoning_effort": "xhigh"}}
         self.profile.write_text(json.dumps(profile))
         result = self.run_resolver("--role", "implementer", "--profile", str(self.profile),
                                    "--preset", "local", "--capabilities", str(self.capabilities))
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout), {
-            "role": "implementer", "model": "gpt-6-astra", "reasoning_effort": "xhigh",
+            "role": "implementer", "model": "gpt-6.2-astra", "reasoning_effort": "xhigh",
             "write_policy": "scoped-write", "fork_turns": "none",
         })
         for preset in ("routine", "bounded"):
@@ -230,8 +230,8 @@ class ExecutionRoleTests(unittest.TestCase):
                                            "--capabilities", str(self.capabilities))
                 self.assert_rejected(result)
                 self.assertIn("--preset requires implementer role", result.stderr)
-        for override in (("--model", "gpt-6-sol"), ("--effort", "high"),
-                         ("--model", "gpt-6-sol", "--effort", "high")):
+        for override in (("--model", "gpt-6.2-sol"), ("--effort", "high"),
+                         ("--model", "gpt-6.2-sol", "--effort", "high")):
             with self.subTest(override=override):
                 result = self.run_resolver("--role", "implementer", "--preset", "routine",
                                            "--capabilities", str(self.capabilities), *override)
@@ -249,7 +249,7 @@ class ExecutionRoleTests(unittest.TestCase):
         self.assertEqual(json.loads(result.stdout)["reasoning_effort"], "max")
         no_luna = self.write_json("no-luna.json", {
             "can_select_model": True, "can_select_effort": True,
-            "models": {"gpt-6-sol": ["medium", "high"]},
+            "models": {"gpt-6.2-sol": ["medium", "high"]},
         })
         result = self.run_resolver("--role", "implementer", "--preset", "bounded",
                                    "--capabilities", str(no_luna))
@@ -300,7 +300,7 @@ class ExecutionRoleTests(unittest.TestCase):
             {
                 "can_select_model": True,
                 "can_select_effort": True,
-                "models": {"gpt-6-astra": ["medium", "high"]},
+                "models": {"gpt-6.2-astra": ["medium", "high"]},
             },
         )
         result = self.run_resolver(
@@ -311,7 +311,7 @@ class ExecutionRoleTests(unittest.TestCase):
         )
 
         self.assert_rejected(result)
-        self.assertIn("model is unavailable: gpt-6-sol", result.stderr)
+        self.assertIn("model is unavailable: gpt-6.2-sol", result.stderr)
 
     def test_bundled_reviewer_does_not_require_worker_model_availability(self):
         astra_only = self.write_json(
@@ -319,7 +319,7 @@ class ExecutionRoleTests(unittest.TestCase):
             {
                 "can_select_model": True,
                 "can_select_effort": True,
-                "models": {"gpt-6-astra": ["high"]},
+                "models": {"gpt-6.2-astra": ["high"]},
             },
         )
         result = self.run_resolver(
@@ -328,7 +328,7 @@ class ExecutionRoleTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         output = json.loads(result.stdout)
         self.assertEqual((output["model"], output["reasoning_effort"]),
-                         ("gpt-6-astra", "high"))
+                         ("gpt-6.2-astra", "high"))
 
     def test_bundled_implementer_rejects_missing_medium_effort_without_downgrade(self):
         high_only = self.write_json(
@@ -337,8 +337,8 @@ class ExecutionRoleTests(unittest.TestCase):
                 "can_select_model": True,
                 "can_select_effort": True,
                 "models": {
-                    "gpt-6-astra": ["medium"],
-                    "gpt-6-sol": ["high"],
+                    "gpt-6.2-astra": ["medium"],
+                    "gpt-6.2-sol": ["high"],
                 },
             },
         )
@@ -347,7 +347,7 @@ class ExecutionRoleTests(unittest.TestCase):
         )
 
         self.assert_rejected(result)
-        self.assertIn("effort is unavailable for gpt-6-sol: medium", result.stderr)
+        self.assertIn("effort is unavailable for gpt-6.2-sol: medium", result.stderr)
 
     def test_custom_profile_implementer_overrides_bundled_sol_medium_default(self):
         result = self.run_resolver(
@@ -383,7 +383,7 @@ class ExecutionRoleTests(unittest.TestCase):
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(json.loads(result.stdout)["model"], "gpt-6-astra")
+        self.assertEqual(json.loads(result.stdout)["model"], "gpt-6.2-astra")
         self.assertEqual(json.loads(result.stdout)["reasoning_effort"], "high")
         self.assertEqual(json.loads(result.stdout)["write_policy"], "read-only")
 
@@ -396,7 +396,7 @@ class ExecutionRoleTests(unittest.TestCase):
             "--profile",
             str(self.profile),
             "--model",
-            "gpt-6-astra",
+            "gpt-6.2-astra",
             "--effort",
             "xhigh",
         )
@@ -404,7 +404,7 @@ class ExecutionRoleTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         output = json.loads(result.stdout)
         self.assertEqual((output["model"], output["reasoning_effort"]),
-                         ("gpt-6-astra", "xhigh"))
+                         ("gpt-6.2-astra", "xhigh"))
         self.assertEqual(output["write_policy"], "scoped-write")
 
     def test_model_override_preserves_reviewer_read_only_policy(self):
@@ -430,7 +430,7 @@ class ExecutionRoleTests(unittest.TestCase):
     def test_partial_override_and_unknown_role_are_rejected(self):
         common = ["--capabilities", str(self.capabilities), "--profile", str(self.profile)]
         for arguments in (
-            ["--role", "implementer", *common, "--model", "gpt-6-astra"],
+            ["--role", "implementer", *common, "--model", "gpt-6.2-astra"],
             ["--role", "implementer", *common, "--effort", "high"],
             ["--role", "operator", *common],
         ):
@@ -450,7 +450,7 @@ class ExecutionRoleTests(unittest.TestCase):
             ["--role", "reviewer", "--capabilities", str(unsupported),
              "--profile", str(self.profile)],
             ["--role", "implementer", "--capabilities", str(self.capabilities),
-             "--profile", str(self.profile), "--model", "gpt-6-astra",
+             "--profile", str(self.profile), "--model", "gpt-6.2-astra",
              "--effort", "ultra"],
         ):
             with self.subTest(arguments=arguments):
@@ -498,7 +498,7 @@ class ExecutionRoleTests(unittest.TestCase):
             {"schema_version": 2, "parent_recommendation": {}, "roles": {}},
             {"schema_version": 1, "parent_recommendation": {}, "roles": []},
             {"schema_version": 1,
-             "parent_recommendation": {"model": "gpt-6-astra", "reasoning_effort": "high"},
+             "parent_recommendation": {"model": "gpt-6.2-astra", "reasoning_effort": "high"},
              "roles": {"implementer": {"model": "gpt-5.6-sol",
                                          "reasoning_effort": "medium"}}},
             {"schema_version": 1,
@@ -546,7 +546,7 @@ class ExecutionRoleTests(unittest.TestCase):
                 "models": {
                     "   ": ["medium"],
                     "gpt-5.6-sol": ["medium"],
-                    "gpt-6-astra": ["high"],
+                    "gpt-6.2-astra": ["high"],
                 },
             },
         )
@@ -557,7 +557,7 @@ class ExecutionRoleTests(unittest.TestCase):
                 "can_select_effort": True,
                 "models": {
                     "gpt-5.6-sol": ["medium", "   "],
-                    "gpt-6-astra": ["high"],
+                    "gpt-6.2-astra": ["high"],
                 },
             },
         )

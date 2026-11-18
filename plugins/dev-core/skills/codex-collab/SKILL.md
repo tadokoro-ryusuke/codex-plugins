@@ -1,6 +1,6 @@
 ---
 name: codex-collab
-description: "Delegate bounded implementation, review, or investigation when collaboration is requested or authorized by applicable instructions."
+description: "Delegate bounded implementation, review, or investigation when collaboration is requested or authorized by applicable instructions, or carry out a bounded handoff assigned by an external parent agent."
 ---
 
 # Codex Collab
@@ -17,6 +17,12 @@ role is authorized under the "Optional bounded research" section of
 `references/planned-execution.md`; do not load the full execution workflow for it.
 For a native-agent evaluation of that workflow, read
 `references/execution-evaluation.md` and use `scripts/execution_smoke.py`.
+
+When this session was started by another agent or tool to carry out one bounded
+assignment (for example a parent in a different coding tool that launched Codex
+in a terminal and pointed it at a handoff file), read
+`references/external-handoff.md` and work as the assigned child. Do not load the
+delegation workflow above for that case.
 
 ## Principles
 
