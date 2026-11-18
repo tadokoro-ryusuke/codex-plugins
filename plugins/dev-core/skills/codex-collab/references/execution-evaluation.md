@@ -61,8 +61,13 @@ a regression; it cannot establish a general quality or cost advantage.
 After testing topology, hold parent/reviewer settings, review requirements, tools,
 fixtures, concurrency and speed mode fixed. Compare eligible implementation
 selections from the bundled profile: `routine`, `bounded`, role default, and
-`complex`. Include the prior implementation baseline through an explicit
-`--model gpt-6-astra --effort high` override; do not create a second default profile.
+`complex`. Include the prior implementation baseline (the reviewer-tier model
+at high effort as implementer) through an explicit
+`--model gpt-6.2-astra --effort high` override; do not create a second default profile.
+Freeze one profile revision for all arms and record the actual model each arm
+resolved to, so the arms differ only by the routing choice. The bundled profile
+mixes generations by design (the Luna presets have no newer counterpart); do not
+treat a model-generation difference between arms as a routing effect.
 Do not combine that override with a preset. Resolve every selection against the
 current host before starting; unavailable arms remain unexecuted.
 

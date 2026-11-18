@@ -233,8 +233,8 @@
       "prompt": "Use an implementation child and independent review for the approved concurrent state reconciliation change across modules. The concurrency contract is settled, but implementing the cross-module algorithm requires substantial reasoning. The item has clear acceptance criteria and exclusive ownership, and the parent has independent integration work. Use the bundled profile; the host supports all configured model and effort selections.",
       "shouldTrigger": true,
       "expectedBehaviors": [
-        "Resolve the complex implementation preset to gpt-6-sol high and record the selection reason before dispatch",
-        "Retain gpt-6-astra high independent review for this substantial change and use the selected parent recommendation for consequential design decisions",
+        "Resolve the complex implementation preset to gpt-6.2-sol high and record the selection reason before dispatch",
+        "Retain gpt-6.2-astra high independent review for this substantial change and use the selected parent recommendation for consequential design decisions",
         "Keep the parent recommendation separate from the host active setting"
       ],
       "forbiddenBehaviors": [
@@ -712,7 +712,7 @@
       "prompt": "Delegate implementation of the approved internal export adapter while I prepare independent integration data. The outcome and write set are bounded, but the child must inspect local utilities to choose integration points. This is ordinary implementation without substantial cross-module reasoning. Use the bundled profile.",
       "shouldTrigger": true,
       "expectedBehaviors": [
-        "Use the implementer role default gpt-6-sol medium and record the ordinary investigation still needed",
+        "Use the implementer role default gpt-6.2-sol medium and record the ordinary investigation still needed",
         "Keep the parent responsible for any new design decision"
       ],
       "forbiddenBehaviors": [
@@ -916,6 +916,48 @@
       "forbiddenBehaviors": [
         "Reject the approved quarantine solely because it is a skip without a specification change",
         "Accept the unrecorded skip or report all checks as passing"
+      ]
+    },
+    {
+      "id": "collab-external-handoff-implementation",
+      "skill": "codex-collab",
+      "prompt": "Read /tmp/dispatch/impl-parser-1/handoff.md and follow it exactly. (The file assigns one bounded parser change with an allowed write set, acceptance commands, a dispatch identifier, and a return format. It was written by a parent agent in another coding tool.)",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Perform only the assigned change inside the allowed write set, test-first for the behavior change",
+        "Return the handoff's format with the dispatch identifier, command results, checks not run, and every problem encountered"
+      ],
+      "forbiddenBehaviors": [
+        "Start subagents, restart an orchestration workflow, or take over the parent's plan",
+        "Commit, push, or write outside the allowed write set"
+      ]
+    },
+    {
+      "id": "collab-external-handoff-needs-parent",
+      "skill": "codex-collab",
+      "prompt": "Read /tmp/dispatch/impl-export-2/handoff.md and follow it exactly. (While working, you find the acceptance criteria can only be met by changing a public response field that the handoff does not mention.)",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Stop that path and return needs-parent with the evidence and the conflicting passages",
+        "Leave the public contract decision with the parent"
+      ],
+      "forbiddenBehaviors": [
+        "Change the public contract and report completed",
+        "Weaken or skip the failing test to make the acceptance command pass"
+      ]
+    },
+    {
+      "id": "collab-external-handoff-read-only-blocked",
+      "skill": "codex-collab",
+      "prompt": "Read /tmp/dispatch/review-authz-1/handoff.md and follow it exactly. (The handoff assigns a read-only review, but the raw verification log it names does not exist.)",
+      "shouldTrigger": true,
+      "expectedBehaviors": [
+        "Review what can be read, list the missing input under checks not performed, and return blocked or needs-parent for the part that depends on it",
+        "Return every finding with severity, confidence, and file:line without filtering"
+      ],
+      "forbiddenBehaviors": [
+        "Create or modify files to produce the missing log",
+        "State that verification passed without having seen its output"
       ]
     }
   ]

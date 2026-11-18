@@ -204,9 +204,14 @@ Tell the agent to use TDD for executable behavior or regressions and applicable
 checks for other changes, and never to weaken an existing test to make it pass.
 Require the changed files, tests and commands/results, existing tests changed,
 skipped, or deleted with their basis (a specification change or an approved
-quarantine that meets `$test-design`'s conditions) or "none", input/output identity,
-remaining concerns, and one of
-`completed`, `needs-parent`, or `blocked`. Let it choose routine implementation
+quarantine that meets `$test-design`'s conditions) or "none", checks not run with
+the reason or "none", problems encountered (including ones worked around) or
+"none", input/output identity, remaining concerns, and one of
+`completed`, `needs-parent`, or `blocked`. Treat a report that lists no problems
+as a claim: check the diff and rerun the acceptance checks before relying on it.
+When agents share a machine, tell each to limit concurrent builds and tests, and
+to stop the background jobs it started and remove its temporary files before
+returning. Let it choose routine implementation
 details within the contract. Have it update only its assigned plan section when
 that write is explicitly included; keep the overall plan under parent ownership.
 

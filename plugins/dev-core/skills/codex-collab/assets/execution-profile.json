@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "parent_recommendation": {
-    "model": "gpt-6-astra",
+    "model": "gpt-6.2-astra",
     "reasoning_effort": "high"
   },
   "roles": {
     "implementer": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.2-sol",
       "reasoning_effort": "medium",
       "write_policy": "scoped-write"
     },
     "reviewer": {
-      "model": "gpt-6-astra",
+      "model": "gpt-6.2-astra",
       "reasoning_effort": "high",
       "write_policy": "read-only"
     },
@@ -31,7 +31,7 @@
       "reasoning_effort": "max"
     },
     "complex": {
-      "model": "gpt-6-sol",
+      "model": "gpt-6.2-sol",
       "reasoning_effort": "high"
     }
   }
