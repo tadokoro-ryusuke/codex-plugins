@@ -18,7 +18,7 @@ Record the prompt set, how each snapshot was run, and what the numbers showed. K
 |---|---|---|---|---|---|---|
 | P-01 |  | no |  |  |  |  |
 
-Give prompt variants of one buyer question the same question ID, so the question counts once. Remove names, company identifiers, and confidential details from prompts taken from customer conversations. Report branded and unbranded prompts separately. State the number of unbranded questions beside every rate; fewer than 50 is exploratory.
+Give prompt variants of one buyer question the same question ID, so the question counts once. A prompt ID stands for one fixed wording; give a reworded prompt a new ID. Remove names, company identifiers, and confidential details from prompts taken from customer conversations. Report branded and unbranded prompts separately. State the number of unbranded questions beside every rate; fewer than 50 is exploratory.
 
 ## Run protocol
 
@@ -29,15 +29,17 @@ Give prompt variants of one buyer question the same question ID, so the question
 - Locale and device:
 - Who runs the prompts and how (by hand, official API), and the authorized API spend:
 - What counts as an answer on each surface:
-- Same-day repeat run completed on, and the difference observed:
+- Same-day repeat snapshots (labels, dates, and the differences the script reported):
 
 Record one line per run, including runs that failed or showed no AI answer:
 
 ```json
-{"snapshot": "", "engine": "", "surface": "", "prompt_id": "", "question_id": "", "run_id": "", "branded": false, "status": "answered", "mentioned": false, "cited": false}
+{"snapshot": "2026-11-baseline", "engine": "chatgpt", "surface": "product", "prompt_id": "P-01", "run_id": "2026-11-baseline/chatgpt/P-01/01", "branded": false, "mentioned": false, "cited": false}
+{"snapshot": "2026-11-baseline", "engine": "chatgpt", "surface": "product", "prompt_id": "P-02a", "question_id": "Q-02", "run_id": "2026-11-baseline/chatgpt/P-02a/01", "branded": false, "mentioned": true, "cited": false}
+{"snapshot": "2026-11-baseline", "engine": "chatgpt", "surface": "product", "prompt_id": "P-02b", "question_id": "Q-02", "run_id": "2026-11-baseline/chatgpt/P-02b/01", "branded": false, "status": "no_answer"}
 ```
 
-`status` is `answered`, `no_answer`, or `error`. Keep the detail for each answered run beside its run ID:
+A prompt with no `question_id` is its own question. When a question has several prompt variants, put the same `question_id` on every one of them, including the original. `status` is `answered` when omitted, or `no_answer` or `error`; leave `mentioned` and `cited` out for those. Keep the detail for each answered run beside its run ID:
 
 | Run ID | URLs cited | Competitors named | Product named without its page cited, or page cited without the product named | Inaccurate statement about the product |
 |---|---|---|---|---|
@@ -56,7 +58,8 @@ List engine or model releases, site changes, and off-site work under "changes", 
 Write this before the next snapshot is run.
 
 - Observation window:
-- Primary metric and engine:
+- The one comparison the decision rests on (engine, surface, prompt type, metric):
+- Largest difference seen between same-day repeats:
 - Continue if:
 - Revise if:
 - Stop if:
@@ -72,9 +75,10 @@ Paste the script output for each snapshot and comparison.
 
 ### Reading
 
-- Changes judged real (interval excludes zero, larger than same-day variability, and confirmed by another snapshot):
+- Changes judged real (clearly larger than the same-day differences, and persisting in a further snapshot):
 - Inconclusive changes:
 - Counts and first appearances where the baseline is zero or near zero:
+- Questions left out of the comparison, and why:
 - Runs with no AI answer, and failed runs:
 - Runs that cited the product's page without naming the product:
 - Inaccurate descriptions of the product found:

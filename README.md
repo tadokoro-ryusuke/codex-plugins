@@ -178,18 +178,20 @@ or one native smoke does not establish a quality, cost, or latency advantage.
 
 - `indie-product-marketing` 0.4.0 (2026-11-23): add `$ai-search-visibility` for
   work on AI answer engines (often called AEO, GEO, or LLMO). It checks crawler
-  eligibility against the operators' own documentation, measures mention and
-  citation rates with a fixed prompt set and intervals (bundled
-  `visibility-stats.mjs`, Node standard library only), assigns each gap to
-  content, technical, or third-party-source work, and audits vendor claims. Its
+  eligibility against the operators' own documentation, measures mentions and
+  citations with a fixed prompt set (bundled `visibility-stats.mjs`, Node
+  standard library only, which validates run records and reports observed
+  counts and rates without a confidence interval or a verdict), assigns each gap
+  to content, technical, or third-party-source work, and audits vendor claims. Its
   references record what the operators state, an audit of common claims, a
   measurement protocol, and rulings on off-site tactics, each with a retrieval
   date of 2026-11-23. Undisclosed community posts, bought or exchanged links,
   and assistant-memory instructions are excluded regardless of reported effect.
   `$indie-product-marketing` and its channel reference now route AI-answer work
-  to the new skill. An independent read-only review ran on the candidate and its
-  findings were checked against the sources before use. No behavior cases were
-  executed. See the
+  to the new skill. Independent read-only reviews ran on the candidate and their
+  findings were checked against the sources before use; the script in its final
+  form has not been reviewed independently. No behavior cases were executed.
+  See the
   [creation and verification record](docs/plans/task-ai-search-visibility-skill.md).
   Reinstall and start a new task to load the change.
 - `dev-core` 5.8.0 (2026-11-18): move the bundled execution profile to the GPT-6.2

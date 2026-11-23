@@ -30,7 +30,7 @@ State the ones that apply early, because they change what the user should expect
 - **Presence is not demand.** A product can be cited and gain no users. Judge the channel by activated and retained users.
 - **Page edits alone rarely change the picture for an unknown product.** In observational data the domain and the brand explain more of the variation than any page feature. That is a correlation and does not rank the levers, so choose the first action from the gap actually observed.
 - **Format advice is weak evidence.** FAQ blocks, summary boxes, schema, fixed word counts, and `llms.txt` are not shown to cause citations. Use structure because it helps readers.
-- **One answer is not a measurement.** Answers vary from run to run, so a rate needs repeated runs and an interval.
+- **One answer is not a measurement.** Answers vary from run to run, so a rate needs repeated runs, the counts behind it, and a same-day repeat that shows how much it moves with nothing changed.
 - **Another company's ratio is not a forecast.** A reported gain from an established brand does not transfer to a different product, and a ratio from a near-zero baseline says little.
 
 Classify each important statement as an observed fact, a reported fact, an inference, a hypothesis, or a recommendation, and record the source URL and retrieval date for anything taken from the web. Read [references/evidence-base.md](references/evidence-base.md) before repeating a claim about what drives AI citations.
@@ -62,13 +62,14 @@ Measure before changing anything, so later work can be judged.
 
 1. Build the prompt set from the question map. Use one prompt per buyer question or group the variants, and tag each prompt branded or unbranded; a prompt that names the product pulls it into the answer.
 2. Run every prompt several times on each engine buyers use, in a clean session, on one surface, within the API spend the user has authorized. Record every run with its own ID, including runs that failed or showed no AI answer.
-3. Summarize with `scripts/visibility-stats.mjs`. It reports mean per-question mention and citation rates with approximate 95% intervals and the underlying counts, and keeps engines, surfaces, and branded prompts apart.
-4. Record which domains the answers cite and any inaccurate statement about the product.
-5. Write the decision rule and the observation window before the next snapshot.
+3. Summarize with `scripts/visibility-stats.mjs`. It validates the records, keeps engines, surfaces, and branded prompts apart, and reports observed counts and rates for mentions and citations. It gives no confidence interval and no verdict; do not add either by hand.
+4. Repeat the whole set on the same day and compare the two snapshots. That difference is the first reading of how much the rate moves with nothing changed.
+5. Record which domains the answers cite and any inaccurate statement about the product.
+6. Write the decision rule, the one comparison it rests on, and the observation window before the next snapshot.
 
 When the baseline is zero or close to it, which is normal for a new product, report counts and first appearances. Never report a percentage change from that baseline.
 
-The interval describes the prompt set. It describes buyers in general only if the questions are an independent, representative sample of what buyers ask; say "on this prompt set" otherwise.
+The numbers describe this prompt set on these dates. They say nothing about questions outside the set, so quote them as "on this prompt set".
 
 Read [references/measurement.md](references/measurement.md) for metric definitions, the number of prompts and runs, the run protocol, analytics behavior, and blind spots. Use the `assets/prompt-set.md` template for the set and the snapshot log.
 
@@ -99,9 +100,9 @@ A request to evaluate a proposal is not a request to replicate it. Do not adopt 
 
 ## Re-measure and decide
 
-Compare snapshots only on shared prompts, on the same surface, with `scripts/visibility-stats.mjs compare`.
+Compare snapshots only on questions whose prompts are unchanged, on the same surface, with `scripts/visibility-stats.mjs compare`. It lists the questions it leaves out and reports observed differences, not whether they are real.
 
-- Treat a change as real only when the paired interval excludes zero, the difference exceeds the same-day variability measured earlier, and another snapshot agrees. Otherwise report it as inconclusive, which is not evidence that nothing changed.
+- Treat a change as real only when it is clearly larger than the differences seen between same-day repeats of the set and it persists in a further snapshot. Judge the one comparison named in advance; movement found by scanning the table is exploratory. Otherwise report the result as inconclusive, which is not evidence that nothing changed.
 - When competitors move together on one engine, consider an engine-side change and look for corroboration before crediting the work. Start a new baseline after a model release, a prompt-set change, or a surface change, and report the series separately.
 - Report being cited and being named separately. A run that cites the product's page without naming the product is a finding.
 - Check the business outcome alongside: visits and activated users by source, plus a self-reported "how did you hear about us" answer, because click attribution undercounts AI influence.
@@ -120,7 +121,7 @@ Deliver the minimum useful set for the selected mode:
 1. **Diagnosis** — the stage, the first constraint, and what the product can realistically expect.
 2. **Eligibility findings** — page, directive, affected engine, and fix.
 3. **Question map** — decisions, keywords, prompts, and gap types.
-4. **Baseline or comparison** — rates with intervals, counts, prompt and run numbers, surface, and dates.
+4. **Baseline or comparison** — counts and rates, prompt and run numbers, surface, dates, and the same-day repeat they were read against.
 5. **Action tables** — one decision per page and per source, with verification.
 6. **Claim audit** — verdicts with sources and retrieval dates.
 7. **Risks and limits** — rule checks, measurement blind spots, and what remains unknown.
