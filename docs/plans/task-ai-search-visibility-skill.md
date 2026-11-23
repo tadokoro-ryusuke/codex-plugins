@@ -132,7 +132,8 @@ and rates. The documents tell the reader to judge a difference against same-day
 repeats of the same set, on a comparison named in advance, and to confirm it in
 a further snapshot. The findings about validation, pairing, missing answers,
 variant weights, labels, and command-line handling from all three rounds are
-applied in that version; the findings about calibration no longer apply.
+applied in that version, except the two listed under Remaining; the findings
+about calibration no longer apply.
 
 The script in this final form has not been through an independent review.
 
@@ -157,6 +158,10 @@ execute the skill with a model or test automatic skill selection.
 - Merge PR #7 before this branch, then push this branch and open a pull request.
 - Reinstall the plugin and start a new task to load the skill.
 - Review the final version of `scripts/visibility-stats.mjs` independently.
+- Two round-3 findings are not applied. The script does not detect a JSON
+  object that repeats a key; the parser keeps the last value. A group that
+  exists in only one snapshot spreads its question IDs into an argument list,
+  which fails above roughly a hundred thousand questions.
 - Decide whether to add a calibrated interval later. It would need a design the
   data can meet, such as a balanced set with one prompt per question, and its
   own validation.
