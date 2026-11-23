@@ -27,6 +27,9 @@ jobs:
       - name: Validate skill behavior eval cases
         run: node scripts/validate-skill-evals.mjs
 
+      - name: Test the AI-visibility statistics script
+        run: node --test plugins/indie-product-marketing/skills/ai-search-visibility/scripts/visibility-stats.test.mjs
+
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"

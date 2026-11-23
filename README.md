@@ -14,7 +14,7 @@ A Codex-native plugin marketplace: reusable agent skills, hooks, and custom agen
 | `github-tools` | Pull request preparation and documentation sync using the GitHub CLI. |
 | `hotl-engineering` | Human-on-the-Loop delivery workflow design/application and CTO decision support (staged quality gates, AI review, eval gates, audit readiness). |
 | `ui-ux-pro-max` | Searchable UI/UX design intelligence (styles, palettes, typography, charts, stacks). |
-| `indie-product-marketing` | Opportunity discovery, demand validation, international landing-page design, launch, acquisition, retention, and unit economics. |
+| `indie-product-marketing` | Opportunity discovery, demand validation, international landing-page design, AI-answer visibility, launch, acquisition, retention, and unit economics. |
 
 ## Install
 
@@ -41,12 +41,14 @@ Note: `dev-core` bundles hooks (destructive-command blocking, session-start proj
 - `$indie-idea-discovery`: find and rank evidence-backed product opportunities.
 - `$indie-product-marketing`: validate demand, choose distribution, launch, and diagnose growth.
 - [`$global-landing-design`](plugins/indie-product-marketing/skills/global-landing-design/SKILL.md): research references, design or build an international product LP, and localize or review an existing page.
+- [`$ai-search-visibility`](plugins/indie-product-marketing/skills/ai-search-visibility/SKILL.md): check crawler eligibility for AI answer engines, measure mention and citation rates with a fixed prompt set, decide page and third-party-source actions, and audit vendor claims.
 
 The landing-page skill bundles dated observations of SPREAD, Circleback,
-Inkdrop, Granola, Things, Mobbin, UI Pocket, and the Stride prototype. It
-connects audience and buying motion to product proof, visual direction,
-working CTAs, mobile layout, localization, and verification. It does not
-prescribe one palette or treat a polished page as validated demand.
+Inkdrop, Granola, Things, Mobbin, UI Pocket, and a prelaunch desktop
+productivity prototype. It connects audience and buying motion to product
+proof, visual direction, working CTAs, mobile layout, localization, and
+verification. It does not prescribe one palette or treat a polished page as
+validated demand.
 
 Example after loading the updated plugin:
 
@@ -151,6 +153,7 @@ For assessment only, ask it to stop after the plan: "Use $hotl-engineering to as
 
 ```bash
 node scripts/validate-codex-plugins.mjs
+node --test plugins/indie-product-marketing/skills/ai-search-visibility/scripts/visibility-stats.test.mjs
 node scripts/validate-skill-evals.mjs
 python3 -m unittest discover -s scripts/tests -v
 ```
@@ -173,6 +176,24 @@ or one native smoke does not establish a quality, cost, or latency advantage.
 
 ### Source update migration
 
+- `indie-product-marketing` 0.4.0 (2026-11-23): add `$ai-search-visibility` for
+  work on AI answer engines (often called AEO, GEO, or LLMO). It checks crawler
+  eligibility against the operators' own documentation, measures mentions and
+  citations with a fixed prompt set (bundled `visibility-stats.mjs`, Node
+  standard library only, which validates run records and reports observed
+  counts and rates without a confidence interval or a verdict), assigns each gap
+  to content, technical, or third-party-source work, and audits vendor claims. Its
+  references record what the operators state, an audit of common claims, a
+  measurement protocol, and rulings on off-site tactics, each with a retrieval
+  date of 2026-11-23. Undisclosed community posts, bought or exchanged links,
+  and assistant-memory instructions are excluded regardless of reported effect.
+  `$indie-product-marketing` and its channel reference now route AI-answer work
+  to the new skill. Four independent read-only reviews ran on the candidate and
+  their findings were checked against the sources before use. Two findings
+  about the written rule for judging a difference are open. No behavior cases
+  were executed. See the
+  [creation and verification record](docs/plans/task-ai-search-visibility-skill.md).
+  Reinstall and start a new task to load the change.
 - `dev-core` 5.8.0 (2026-11-18): move the bundled execution profile to the GPT-6.2
   model IDs (`gpt-6.2-astra` for the parent recommendation and reviewer,
   `gpt-6.2-sol` for the implementer default and the `complex` preset). Roles,
@@ -310,6 +331,12 @@ or one native smoke does not establish a quality, cost, or latency advantage.
   on representative results rather than elapsed days. Adapted from cc-plugins.
 - `ui-ux-pro-max` 1.3.1 (2026-10-25): ship the upstream MIT `LICENSE` and a `NOTICE.md`
   recording the upstream commit and local modifications.
+- `indie-product-marketing` 0.3.1 (2026-09-23): replace a private product name,
+  its provisional price, and a private repository path with generic
+  descriptions. Bundled references and assets refer to skills by name, so the
+  text reads the same on any host; SKILL.md entrypoints keep native `$skill`
+  invocation. Guidance and behavior cases are otherwise unchanged. See the [update record](docs/plans/task-indie-generalize.md).
+
 - `dev-core` 5.5.0 (2026-09-23): adopt Sol medium for general implementation,
   Luna high for bounded research and routine edits, Luna max for settled bounded
   implementation, and Sol high for complex implementation. Keep Astra high parent

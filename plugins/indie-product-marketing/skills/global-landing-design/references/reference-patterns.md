@@ -28,7 +28,7 @@ Source: [Circleback](https://circleback.ai/), observed 2026-09-08 through public
 
 ## Inkdrop: show use and make the maker discoverable
 
-Source: [Inkdrop](https://www.inkdrop.app/), observed 2026-09-07 through public browser inspection recorded during the Stride LP study.
+Source: [Inkdrop](https://www.inkdrop.app/), observed 2026-09-07 through public browser inspection recorded during the prelaunch prototype LP study described below.
 
 **Observed:** Concise value copy, a large editor demo in a desk setting, concrete feature examples, pricing and FAQ, and paths to the maker, blog, and community.
 
@@ -38,7 +38,7 @@ Process reference: Takuya Matsuyama's [Inkdrop design account](https://www.devas
 
 ## Granola: organize around a recognizable work situation
 
-Source: [Granola](https://www.granola.ai/), observed 2026-09-07 through public browser inspection recorded during the Stride LP study.
+Source: [Granola](https://www.granola.ai/), observed 2026-09-07 through public browser inspection recorded during the prelaunch prototype LP study described below.
 
 **Observed:** Large typography addresses a busy meeting context; note visuals and a before/during/after story carry the explanation.
 
@@ -46,7 +46,7 @@ Source: [Granola](https://www.granola.ai/), observed 2026-09-07 through public b
 
 ## Things: establish the category and let the product breathe
 
-Source: [Things](https://culturedcode.com/things/), observed 2026-09-07 through public browser inspection recorded during the Stride LP study.
+Source: [Things](https://culturedcode.com/things/), observed 2026-09-07 through public browser inspection recorded during the prelaunch prototype LP study described below.
 
 **Observed:** A product icon, clear personal task-manager category, introduction-video path, ample whitespace, and product screens.
 
@@ -61,9 +61,9 @@ Sources, observed 2026-09-07:
 
 **Transfer hypothesis:** Compare how a section introduces a promise, illustrates a workflow, or resolves an objection. Record the actual sample and viewing limits. Gallery inclusion is a discovery aid, not evidence of conversion success or a country's uniform aesthetic. Do not imply that an entire catalog or gated detail page was inspected.
 
-## Stride: preserve the mechanism while changing the language
+## Prelaunch desktop productivity prototype: preserve the mechanism while changing the language
 
-Case source: the local Stride study and English/Japanese landing-page prototype, recorded 2026-09-07. The study lived at `stride/docs/research/2026-09-07-global-lp-design.md`; the lessons below are self-contained and do not require that repository to be installed.
+Case source: a private study and English/Japanese landing-page prototype, recorded 2026-09-07. The lessons below are self-contained and do not require access to that study or its repository.
 
 **Context:** A prelaunch desktop productivity product connected a meeting to project context and the next task. The available LP interaction was an illustrative demo, not the complete recording or AI pipeline.
 

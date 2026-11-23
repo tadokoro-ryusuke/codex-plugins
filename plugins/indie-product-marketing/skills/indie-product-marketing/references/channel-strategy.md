@@ -271,6 +271,8 @@ Paid traffic can bring the first participants at a predictable time, but spend s
 
 ## AI discovery
 
+The points below are the minimum for channel selection. For an eligibility check, a measured baseline, page and third-party-source decisions, or an audit of AEO/GEO claims, use the ai-search-visibility skill.
+
 ### Establish technical eligibility
 
 - Allow the relevant search crawler when inclusion is desired.

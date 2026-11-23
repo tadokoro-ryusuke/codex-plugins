@@ -1,6 +1,6 @@
 # Opportunity-to-Marketing Handoff
 
-Complete this document before invoking `$indie-product-marketing`.
+Complete this document before invoking the indie-product-marketing skill.
 
 ## Decision and scope
 
@@ -83,4 +83,4 @@ Complete this document before invoking `$indie-product-marketing`.
 
 ## Marketing skill request
 
-> Use `$indie-product-marketing` with this handoff to design the smallest ethical demand-validation plan, choose the first channel, define instrumentation, and specify pass, revise, and stop rules without treating discovery hypotheses as facts.
+> Use the indie-product-marketing skill with this handoff to design the smallest ethical demand-validation plan, choose the first channel, define instrumentation, and specify pass, revise, and stop rules without treating discovery hypotheses as facts.
