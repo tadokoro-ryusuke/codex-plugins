@@ -34,7 +34,7 @@ Define a message spine: **visitor situation → promised outcome → visible mec
 
 Prioritize user-supplied URLs. Inspect the current rendered page when visual claims matter; use page text for copy and section structure. Aim for a few relevant references, not an exhaustive inspiration collection. Compare a close product-category reference with a reference that solves a different communication problem.
 
-Read [reference patterns](references/reference-patterns.md) for dated observations of SPREAD, Circleback, Inkdrop, Granola, Things, Mobbin, UI Pocket, and the Stride prototype. Use these as starting points, not current facts about a redesigned site.
+Read [reference patterns](references/reference-patterns.md) for dated observations of SPREAD, Circleback, Inkdrop, Granola, Things, Mobbin, UI Pocket, and a prelaunch desktop productivity prototype. Use these as starting points, not current facts about a redesigned site.
 
 For each relevant reference, record:
 
