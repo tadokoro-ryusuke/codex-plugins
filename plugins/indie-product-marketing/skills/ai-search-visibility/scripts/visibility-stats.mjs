@@ -5,9 +5,10 @@
 //   { "snapshot": "2026-11-baseline", "engine": "chatgpt", "surface": "product",
 //     "prompt_id": "P-07", "run_id": "2026-11-baseline/chatgpt/P-07/03",
 //     "branded": false, "mentioned": true, "cited": false }
-// Optional fields: "question_id" (defaults to prompt_id; give prompt variants of
-// one buyer question the same value) and "status" ("answered" by default,
-// "no_answer" when the engine showed no AI answer, "error" for a failed run).
+// Optional fields: "question_id" (defaults to prompt_id; put the same value on
+// every prompt variant of one buyer question), "status" ("answered" by default,
+// "no_answer" when the engine showed no AI answer, "error" for a failed run),
+// and "notes" (any other detail; ignored). Other fields are rejected.
 //
 // The script validates the records, keeps engines, surfaces, and branded prompts
 // apart, and reports what was observed: hits and answered runs, the pooled rate,
@@ -15,14 +16,16 @@
 // difference on the questions whose prompts are the same in both.
 //
 // It reports no confidence interval and no verdict on whether a difference is
-// real. Small, unevenly sampled prompt sets do not meet the assumptions such
-// figures need. Judge a difference against same-day repeats of the same set.
+// real; it has no validated model of the uncertainty in these runs. It knows
+// only the prompts that appear in the file, and it groups by snapshot, engine,
+// and surface, so keep one locale and one model or mode per series.
 //
 // Usage:
 //   node visibility-stats.mjs summarize <file> [--json]
 //   node visibility-stats.mjs compare <file> --from <snapshot> --to <snapshot> [--json]
 //   (a label that starts with "--" can be given as --from=<label>)
 //
+// In JSON output, rates are fractions between 0 and 1.
 // <file> holds a JSON array or JSON Lines. Exit codes: 0 ok, 1 bad data, 2 bad usage.
 
 import { readFileSync, realpathSync } from "node:fs";
@@ -30,9 +33,35 @@ import { fileURLToPath } from "node:url";
 
 const STATUSES = ["answered", "no_answer", "error"];
 const TEXT_FIELDS = ["snapshot", "engine", "surface", "prompt_id", "run_id"];
-const KNOWN_FIELDS = [...TEXT_FIELDS, "question_id", "branded", "status", "mentioned", "cited"];
+const KNOWN_FIELDS = [...TEXT_FIELDS, "question_id", "branded", "status", "mentioned", "cited", "notes"];
 const squash = (name) => name.toLowerCase().replace(/[^a-z0-9]/g, "");
-const KNOWN_BY_SQUASHED = new Map(KNOWN_FIELDS.map((name) => [squash(name), name]));
+
+function editDistance(a, b) {
+  let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i += 1) {
+    const current = [i];
+    for (let j = 1; j <= b.length; j += 1) {
+      current[j] = Math.min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    previous = current;
+  }
+  return previous[b.length];
+}
+
+/** The known field a misspelled key most likely stands for, if any. */
+function closestField(key) {
+  const squashed = squash(key);
+  let best = null;
+  let bestDistance = 3;
+  for (const field of KNOWN_FIELDS) {
+    const distance = editDistance(squashed, squash(field));
+    if (distance < bestDistance) {
+      best = field;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
 
 export function parseObservations(text) {
   let rows;
@@ -53,7 +82,9 @@ export function normalizeObservations(rows) {
   const runIds = new Set();
   const promptStratum = new Map();
   const promptQuestion = new Map();
-  return rows.map((raw, index) => {
+  const questionPrompts = new Map();
+  const implicitQuestions = new Set();
+  const normalized = rows.map((raw, index) => {
     const number = index + 1;
     const row = normalizeRow(raw, number);
     if (runIds.has(row.run_id)) throw new Error(`row ${number}: duplicate run_id "${row.run_id}"`);
@@ -66,8 +97,18 @@ export function normalizeObservations(rows) {
       throw new Error(`row ${number}: prompt "${row.prompt_id}" belongs to more than one question_id`);
     }
     promptQuestion.set(row.prompt_id, row.question_id);
+    if (!questionPrompts.has(row.question_id)) questionPrompts.set(row.question_id, new Set());
+    questionPrompts.get(row.question_id).add(row.prompt_id);
+    if (raw.question_id === undefined) implicitQuestions.add(row.question_id);
     return row;
   });
+  for (const question of implicitQuestions) {
+    const prompts = questionPrompts.get(question);
+    if (prompts.size > 1) {
+      throw new Error(`question "${question}" groups several prompts (${[...prompts].sort().join(", ")}), so each of their rows needs an explicit question_id`);
+    }
+  }
+  return normalized;
 }
 
 function checkText(row, field, number) {
@@ -80,8 +121,9 @@ function checkText(row, field, number) {
 function normalizeRow(row, number) {
   if (row === null || typeof row !== "object" || Array.isArray(row)) throw new Error(`row ${number}: must be an object`);
   for (const key of Object.keys(row)) {
-    const known = KNOWN_BY_SQUASHED.get(squash(key));
-    if (known && known !== key) throw new Error(`row ${number}: unknown field "${key}"; did you mean "${known}"?`);
+    if (KNOWN_FIELDS.includes(key)) continue;
+    const suggestion = closestField(key);
+    throw new Error(`row ${number}: unknown field "${key}"${suggestion ? `; did you mean "${suggestion}"?` : "."} Put other details under "notes".`);
   }
   for (const field of TEXT_FIELDS) checkText(row, field, number);
   if (row.question_id !== undefined) checkText(row, "question_id", number);
@@ -155,6 +197,11 @@ function runTotals(group) {
   return { answered, noAnswer: group.noAnswer, error: group.error };
 }
 
+/** Variants in a fixed order, so the same records always add up the same way. */
+function orderedVariants(prompts) {
+  return [...prompts.keys()].sort().map((id) => prompts.get(id));
+}
+
 /** Rate with equal weight per question and equal weight per variant within it, over `questionIds`. */
 function questionRate(group, questionIds, field) {
   if (questionIds.length === 0) return { rate: null, hits: 0, runs: 0 };
@@ -162,14 +209,14 @@ function questionRate(group, questionIds, field) {
   let hits = 0;
   let runs = 0;
   for (const id of questionIds) {
-    const prompts = group.questions.get(id);
+    const variants = orderedVariants(group.questions.get(id));
     let variantSum = 0;
-    for (const counts of prompts.values()) {
+    for (const counts of variants) {
       variantSum += counts[field] / counts.runs;
       hits += counts[field];
       runs += counts.runs;
     }
-    sum += variantSum / prompts.size;
+    sum += variantSum / variants.length;
   }
   const rate = hits === 0 ? 0 : hits === runs ? 1 : sum / questionIds.length;
   return { rate, hits, runs };
@@ -191,52 +238,44 @@ function metric(group, completeIds, field) {
   return { hits, runs, pooledRate: runs === 0 ? null : hits / runs, questionRate: questionRate(group, completeIds, field).rate, questionsWithHit };
 }
 
-/** Range of answered runs per prompt and whether every answered run carries the same weight in the by-question rate. */
-function design(group, questionIds) {
-  let min = Infinity;
-  let max = 0;
-  let weightUnit = null;
-  let equal = true;
-  for (const id of questionIds) {
-    const prompts = group.questions.get(id);
-    for (const counts of prompts.values()) {
-      if (counts.runs < min) min = counts.runs;
-      if (counts.runs > max) max = counts.runs;
-      const unit = prompts.size * counts.runs;
-      if (weightUnit === null) weightUnit = unit;
-      else if (unit !== weightUnit) equal = false;
-    }
-  }
-  return { range: max === 0 ? { min: 0, max: 0 } : { min, max }, equalWeightPerRun: questionIds.length === 0 ? null : equal };
-}
-
 export function summarize(rows) {
   return tally(normalizeObservations(rows)).map((group) => {
     const recorded = [...group.questions.keys()];
-    const completeIds = recorded.filter((id) => isComplete(group.questions.get(id)));
-    const incomplete = recorded.filter((id) => !isComplete(group.questions.get(id)));
-    const answeredIds = recorded.filter((id) => [...group.questions.get(id).values()].some((counts) => counts.runs > 0));
+    const completeIds = [];
+    const incomplete = [];
     let recordedPrompts = 0;
     let answeredPrompts = 0;
     let min = Infinity;
     let max = 0;
-    for (const prompts of group.questions.values()) {
+    let weightUnit = null;
+    let equalWeightPerRun = true;
+    for (const id of recorded) {
+      const prompts = group.questions.get(id);
+      const complete = isComplete(prompts);
+      (complete ? completeIds : incomplete).push(id);
       for (const counts of prompts.values()) {
         recordedPrompts += 1;
-        if (counts.runs > 0) {
-          answeredPrompts += 1;
-          if (counts.runs < min) min = counts.runs;
-          if (counts.runs > max) max = counts.runs;
+        if (counts.runs > 0) answeredPrompts += 1;
+        if (counts.runs < min) min = counts.runs;
+        if (counts.runs > max) max = counts.runs;
+        if (complete) {
+          // Each answered run of this prompt weighs 1 / (variants * runs) of its question.
+          const unit = prompts.size * counts.runs;
+          if (weightUnit === null) weightUnit = unit;
+          else if (unit !== weightUnit) equalWeightPerRun = false;
+        } else if (counts.runs > 0) {
+          // The pooled rate counts these runs; the by-question rate does not.
+          equalWeightPerRun = false;
         }
       }
     }
-    const { equalWeightPerRun } = design(group, completeIds);
+    if (completeIds.length === 0) equalWeightPerRun = null;
     const notes = [];
     if (incomplete.length > 0) {
-      notes.push(`${plural(incomplete.length, "question")} left out of the by-question rate because a prompt got no answer: ${listIds(incomplete)}. The pooled counts still include every answered run.`);
+      notes.push(`${plural(incomplete.length, "question")} left out of the by-question rate because a prompt got no answer: ${incomplete.join(", ")}. The pooled counts still include every answered run.`);
     }
     if (equalWeightPerRun === false) {
-      notes.push("Answered runs do not all carry the same weight (prompts differ in answered runs, or questions differ in number of variants), so the by-question rate and the pooled rate can differ. Say which one is quoted.");
+      notes.push("Answered runs do not all carry the same weight in the by-question rate, so it can differ from the pooled rate. Say which one is quoted.");
     }
     return {
       snapshot: group.snapshot,
@@ -244,10 +283,9 @@ export function summarize(rows) {
       surface: group.surface,
       branded: group.branded,
       questions: { recorded: recorded.length, complete: completeIds.length, incomplete },
-      questionsAnswered: answeredIds.length,
       prompts: { recorded: recordedPrompts, answered: answeredPrompts },
       runs: runTotals(group),
-      answeredRunsPerPrompt: max === 0 ? { min: 0, max: 0 } : { min, max },
+      answeredRunsPerRecordedPrompt: { min, max },
       equalWeightPerRun,
       mention: metric(group, completeIds, "mentioned"),
       citation: metric(group, completeIds, "cited"),
@@ -271,28 +309,32 @@ function change(before, after, paired, field) {
     for (const counts of group.questions.get(id).values()) hits += counts[field];
     return hits;
   };
-  let questionsHitOnlyAfter = 0;
-  let questionsHitOnlyBefore = 0;
+  const hitOnlyAfterIds = [];
+  const hitOnlyBeforeIds = [];
   for (const id of paired) {
     const was = hitsOf(before, id) > 0;
     const is = hitsOf(after, id) > 0;
-    if (!was && is) questionsHitOnlyAfter += 1;
-    if (was && !is) questionsHitOnlyBefore += 1;
+    if (!was && is) hitOnlyAfterIds.push(id);
+    if (was && !is) hitOnlyBeforeIds.push(id);
   }
   const result = {
-    from: from.rate,
-    to: to.rate,
-    difference: to.rate - from.rate,
-    hitsFrom: from.hits,
-    runsFrom: from.runs,
-    hitsTo: to.hits,
-    runsTo: to.runs,
-    questionsHitOnlyAfter,
-    questionsHitOnlyBefore,
+    questionRateFrom: from.rate,
+    questionRateTo: to.rate,
+    questionRateDifference: to.rate - from.rate,
+    pairedHitsFrom: from.hits,
+    pairedRunsFrom: from.runs,
+    pairedHitsTo: to.hits,
+    pairedRunsTo: to.runs,
+    questionsHitOnlyAfter: hitOnlyAfterIds.length,
+    questionsHitOnlyBefore: hitOnlyBeforeIds.length,
+    hitOnlyAfterIds,
+    hitOnlyBeforeIds,
     baselineZero: from.hits === 0,
   };
-  if (result.baselineZero) {
-    result.note = "No baseline hits among the paired questions, so a percentage change is undefined. Report counts and the questions that gained a hit.";
+  if (from.hits === 0 && to.hits === 0) {
+    result.note = "No hits among the paired questions in either snapshot.";
+  } else if (from.hits === 0) {
+    result.note = "No baseline hits among the paired questions, so a percentage change is undefined. Report counts and the number of questions with a first observed hit between these two snapshots.";
   }
   return result;
 }
@@ -324,12 +366,13 @@ export function compare(rows, { from, to }) {
       comparable: false,
       pairedQuestions: 0,
       excluded,
-      runsFrom: before ? runTotals(before) : null,
-      runsTo: after ? runTotals(after) : null,
+      groupRunsFrom: before ? runTotals(before) : null,
+      groupRunsTo: after ? runTotals(after) : null,
       notes: [],
     };
     if (!before || !after) {
-      excluded[before ? "onlyInFrom" : "onlyInTo"].push(...present.questions.keys());
+      const target = excluded[before ? "onlyInFrom" : "onlyInTo"];
+      for (const id of present.questions.keys()) target.push(id);
       entry.reason = `This engine, surface, and prompt type appears only in "${before ? from : to}".`;
       results.push(entry);
       continue;
@@ -371,27 +414,37 @@ function cell(value) {
   return String(value).replaceAll("|", "\\|");
 }
 
+/** One decimal, without rounding an observed hit or miss away. */
 function percent(value) {
-  return `${(value * 100).toFixed(1)}%`;
+  const text = (value * 100).toFixed(1);
+  if (value > 0 && text === "0.0") return "<0.1%";
+  if (value < 1 && text === "100.0") return ">99.9%";
+  return `${text}%`;
+}
+
+function points(value) {
+  if (value === 0) return "0.0 pt";
+  const sign = value > 0 ? "+" : "-";
+  const text = (Math.abs(value) * 100).toFixed(1);
+  return text === "0.0" ? `${sign}<0.1 pt` : `${sign}${text} pt`;
 }
 
 function plural(count, noun) {
   return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }
 
-function listIds(ids) {
-  return ids.map(cell).join(", ");
-}
-
 function formatMetric(value, group) {
   if (value.runs === 0) return "no answered runs";
-  const byQuestion = value.questionRate === null ? "no by-question rate" : `${percent(value.questionRate)} by question`;
-  return `${byQuestion}, ${value.hits}/${value.runs} runs (${percent(value.pooledRate)}), ${value.questionsWithHit} of ${group.questions.recorded} questions with a hit`;
+  const byQuestion = value.questionRate === null ? "no by-question rate (no complete question)" : `${percent(value.questionRate)} by question (${plural(group.questions.complete, "complete question")})`;
+  return `${byQuestion}, ${value.hits}/${value.runs} answered runs (${percent(value.pooledRate)}), ${value.questionsWithHit} of ${group.questions.recorded} recorded questions with a hit`;
 }
 
 function formatChange(changed) {
-  const points = `${changed.difference >= 0 ? "+" : ""}${(changed.difference * 100).toFixed(1)} pt`;
-  return `${percent(changed.from)} → ${percent(changed.to)} by question (${points}), hits ${changed.hitsFrom}/${changed.runsFrom} → ${changed.hitsTo}/${changed.runsTo}, questions with a hit only before: ${changed.questionsHitOnlyBefore}, only after: ${changed.questionsHitOnlyAfter}`;
+  return `${percent(changed.questionRateFrom)} → ${percent(changed.questionRateTo)} by question (${points(changed.questionRateDifference)}), hits ${changed.pairedHitsFrom}/${changed.pairedRunsFrom} → ${changed.pairedHitsTo}/${changed.pairedRunsTo} answered runs, questions with a hit only before: ${changed.questionsHitOnlyBefore}, only after: ${changed.questionsHitOnlyAfter}`;
+}
+
+function formatRuns(name, runs) {
+  return `"${name}" had ${plural(runs.answered, "answered run")}, ${plural(runs.noAnswer, "run")} with no AI answer, and ${plural(runs.error, "failed run")}`;
 }
 
 function endSentence(text) {
@@ -400,24 +453,24 @@ function endSentence(text) {
 
 function summaryTable(groups) {
   const lines = [
-    "These are observed counts and rates, not estimates with a margin of error. \"By question\" weights every question equally; the runs figure pools every answered run.",
+    "These are observed counts and rates, not estimates with a margin of error. \"By question\" weights every complete question equally; the answered-runs figure pools every answered run.",
     "",
-    "| Snapshot | Engine | Surface | Branded prompts | Questions | Answered runs | Mention | Citation |",
+    "| Snapshot | Engine | Surface | Branded prompts | Questions (complete / recorded) | Answered runs | Mention | Citation |",
     "|---|---|---|---|---:|---:|---|---|",
   ];
   for (const group of groups) {
     lines.push(
-      `| ${cell(group.snapshot)} | ${cell(group.engine)} | ${cell(group.surface)} | ${group.branded ? "yes" : "no"} | ${group.questions.recorded} | ${group.runs.answered} | ${formatMetric(group.mention, group)} | ${formatMetric(group.citation, group)} |`,
+      `| ${cell(group.snapshot)} | ${cell(group.engine)} | ${cell(group.surface)} | ${group.branded ? "yes" : "no"} | ${group.questions.complete} / ${group.questions.recorded} | ${group.runs.answered} | ${cell(formatMetric(group.mention, group))} | ${cell(formatMetric(group.citation, group))} |`,
     );
   }
   for (const group of groups) {
-    const label = `${cell(group.snapshot)} / ${cell(group.engine)} / ${cell(group.surface)} / ${group.branded ? "branded" : "unbranded"}`;
+    const label = `${group.snapshot} / ${group.engine} / ${group.surface} / ${group.branded ? "branded" : "unbranded"}`;
     const notes = [...group.notes];
     const outside = [];
     if (group.runs.noAnswer > 0) outside.push(`${plural(group.runs.noAnswer, "run")} with no AI answer`);
     if (group.runs.error > 0) outside.push(plural(group.runs.error, "failed run"));
     if (outside.length > 0) notes.push(`Outside the rates: ${outside.join("; ")}`);
-    if (group.citedWithoutMention > 0) notes.push(`${plural(group.citedWithoutMention, "answered run")} cited the product's page without naming the product`);
+    if (group.citedWithoutMention > 0) notes.push(`${plural(group.citedWithoutMention, "answered run")} recorded as citing the product's page without naming the product`);
     for (const note of notes) lines.push("", `Note (${label}): ${endSentence(note)}`);
   }
   return lines.join("\n");
@@ -425,7 +478,7 @@ function summaryTable(groups) {
 
 function comparisonTable(results, { from, to }) {
   const lines = [
-    `Comparing "${cell(from)}" (before) with "${cell(to)}" (after) on the questions whose prompts are the same and answered in both. Each cell shows before → after and the difference in percentage points, then the observed counts.`,
+    `Comparing "${from}" (before) with "${to}" (after) on the questions whose prompts are the same and answered in both. Each cell shows the by-question rate before → after and the difference in percentage points, then the observed counts on those questions.`,
     "",
     "| Engine | Surface | Branded prompts | Paired questions | Mention | Citation |",
     "|---|---|---|---:|---|---|",
@@ -433,22 +486,21 @@ function comparisonTable(results, { from, to }) {
   for (const result of results) {
     const start = `| ${cell(result.engine)} | ${cell(result.surface)} | ${result.branded ? "yes" : "no"} | ${result.pairedQuestions} |`;
     if (!result.comparable) lines.push(`${start} not comparable | not comparable |`);
-    else lines.push(`${start} ${formatChange(result.mention)} | ${formatChange(result.citation)} |`);
+    else lines.push(`${start} ${cell(formatChange(result.mention))} | ${cell(formatChange(result.citation))} |`);
   }
   for (const result of results) {
-    const label = `${cell(result.engine)} / ${cell(result.surface)} / ${result.branded ? "branded" : "unbranded"}`;
+    const label = `${result.engine} / ${result.surface} / ${result.branded ? "branded" : "unbranded"}`;
     const notes = [];
     if (result.reason) notes.push(result.reason);
     const { onlyInFrom, onlyInTo, variantsChanged, missingAnswers } = result.excluded;
-    if (onlyInFrom.length > 0) notes.push(`left out ${plural(onlyInFrom.length, "question")} recorded only in "${cell(from)}": ${listIds(onlyInFrom)}`);
-    if (onlyInTo.length > 0) notes.push(`left out ${plural(onlyInTo.length, "question")} recorded only in "${cell(to)}": ${listIds(onlyInTo)}`);
-    if (variantsChanged.length > 0) notes.push(`left out ${plural(variantsChanged.length, "question")} whose recorded prompts differ between the snapshots: ${listIds(variantsChanged)}`);
-    if (missingAnswers.length > 0) notes.push(`left out ${plural(missingAnswers.length, "question")} with a prompt that got no answer in one snapshot: ${listIds(missingAnswers)}`);
-    for (const [name, runs] of [[from, result.runsFrom], [to, result.runsTo]]) {
-      if (runs && runs.noAnswer + runs.error > 0) {
-        notes.push(`"${cell(name)}" had ${plural(runs.noAnswer, "run")} with no AI answer and ${plural(runs.error, "failed run")} beside ${plural(runs.answered, "answered run")}`);
-      }
-    }
+    if (onlyInFrom.length > 0) notes.push(`left out ${plural(onlyInFrom.length, "question")} recorded only in "${from}": ${onlyInFrom.join(", ")}`);
+    if (onlyInTo.length > 0) notes.push(`left out ${plural(onlyInTo.length, "question")} recorded only in "${to}": ${onlyInTo.join(", ")}`);
+    if (variantsChanged.length > 0) notes.push(`left out ${plural(variantsChanged.length, "question")} whose recorded prompts differ between the snapshots: ${variantsChanged.join(", ")}`);
+    if (missingAnswers.length > 0) notes.push(`left out ${plural(missingAnswers.length, "question")} with a prompt that had zero answered runs in at least one snapshot: ${missingAnswers.join(", ")}`);
+    const totals = [];
+    if (result.groupRunsFrom) totals.push(formatRuns(from, result.groupRunsFrom));
+    if (result.groupRunsTo) totals.push(formatRuns(to, result.groupRunsTo));
+    notes.push(`whole-group counts: ${totals.join("; ")}`);
     notes.push(...result.notes);
     if (result.mention?.note) notes.push(`Mention: ${result.mention.note}`);
     if (result.citation?.note) notes.push(`Citation: ${result.citation.note}`);

@@ -42,7 +42,7 @@ This skill uses these working definitions:
 - **Unbranded prompt** — a prompt that contains neither the product name, the company name, nor the domain. No standard defines this term, so state it.
 - **Answered run** — a run in which the engine produced an AI answer. A search that showed no AI answer, and a failed request, are recorded with their own status and stay out of the rates.
 
-The bundled script reports two rates. The by-question rate gives every buyer question the same weight, and every variant of a question the same weight within it. The pooled rate is hits over answered runs, which corresponds to the IAB definition. They are necessarily equal only when every answered run carries the same weight, that is, when every question has the same number of variants and every prompt the same number of answered runs. Label whichever one is quoted.
+The bundled script reports two rates. The by-question rate gives every buyer question the same weight, and every variant of a question the same weight within it. The pooled rate is hits over answered runs, which corresponds to the IAB definition. They are equal whenever every answered run carries the same weight in both, which holds, for example, when every question has the same number of variants, every prompt has the same number of answered runs, and no question is left out as incomplete. Otherwise they can differ. Label whichever one is quoted.
 
 ## Build the prompt set
 
@@ -75,6 +75,7 @@ A snapshot is one pass over the whole prompt set on each engine within a short w
 - **Choose the engines buyers use**, and keep each engine's results separate. Engines cite different sources and move independently.
 - **Repeat every prompt.** One response is a sample of one. In Graphite's test, the mean absolute error across the brands in a prompt's answers was 5.6 points at 10 responses per prompt, and 9.1 points for brands with at least 10% visibility; at 40 responses, 94.9% of prompts had a mean absolute error within 5 points. Those figures describe its panel, not the precision of one product's rate or of a before-and-after difference. Start with about 10 runs per prompt, use the same number for every prompt and on every date that will be compared, and raise it if same-day repeats disagree by more than the change the decision is about.
 - **Start each run clean.** Use a new conversation with memory, custom instructions, and prior context off, and note whether the session was signed in.
+- **Fix the locale and the model or mode.** The script groups by snapshot, engine, and surface only. Keep one locale and one model or mode per series; when either changes, put it in the engine or surface label, or use a separate file.
 - **Fix the surface.** Answers from an API and from the consumer product differ. For brands with at least 20% visibility, Graphite measured a mean pairwise cosine similarity of 0.48 between the brand sets from the API and from logged-out product sessions, against 0.70 and 0.76 within each. Prefer the surface buyers use, record it on every run, and never mix surfaces in one series.
 - **Respect the engine's terms and the user's budget.** Run prompts by hand or through an official API. Check the terms before automating a consumer interface, and spend API credit only as the user has authorized.
 - **Record every run, including the ones without an answer.** Give each run a unique ID and note the snapshot label, date, engine, surface, model or mode if shown, locale, prompt ID, branded flag, and status: answered, no AI answer shown, or failed. For an answered run, record whether the product was mentioned, whether its own page was cited, the URLs cited, the competitors named, and whether the description of the product was accurate. Decide before the snapshot what counts as an answer on each surface.
@@ -90,24 +91,25 @@ Input is a JSON array or JSON Lines, one object per run:
 {"snapshot": "2026-11-baseline", "engine": "chatgpt", "surface": "product", "prompt_id": "P-07", "run_id": "2026-11-baseline/chatgpt/P-07/03", "branded": false, "mentioned": true, "cited": false}
 ```
 
-Optional fields: `question_id` groups prompt variants of one buyer question and defaults to `prompt_id`; `status` is `answered` by default, `no_answer` when the engine showed no AI answer, and `error` for a failed run. `mentioned` and `cited` are required only for answered runs. Other fields are ignored.
+Optional fields: `question_id` groups prompt variants of one buyer question and defaults to `prompt_id`; `status` is `answered` by default, `no_answer` when the engine showed no AI answer, and `error` for a failed run; `notes` holds any other detail, such as cited URLs or the locale, and is ignored. `mentioned` and `cited` are required only for answered runs. Any other field is rejected, so a misspelled field name cannot silently fall back to a default.
 
 ```bash
 node scripts/visibility-stats.mjs summarize runs.jsonl
 node scripts/visibility-stats.mjs compare runs.jsonl --from 2026-11-baseline --to 2027-01-check
 ```
 
-Add `--json` for machine-readable output.
+Add `--json` for machine-readable output. In JSON, rates are fractions between 0 and 1, and the field names say which rate and which set of questions a number belongs to.
 
-**The script reports what was observed. It gives no confidence interval and no verdict on whether a difference is real.** Intervals and significance tests assume independent runs, equal weights, and enough data, and small, unevenly sampled prompt sets do not meet those assumptions. Do not add a margin of error by hand, and do not describe the output as statistically significant.
+**The script reports what was observed. It gives no confidence interval and no verdict on whether a difference is real.** It implements descriptive aggregation and has no validated model of the uncertainty in these runs. Do not add a margin of error by hand, and do not describe the output as statistically significant.
 
 What it does:
 
-- **Rejects ambiguous input.** A missing `branded` flag, a repeated `run_id`, an identifier with surrounding whitespace or a line break, a misspelled field name, a prompt that is branded in one row and unbranded in another, a prompt assigned to two questions, or a mention recorded on a run that was not answered stops the run with the row number.
+- **Rejects ambiguous input.** A missing `branded` flag, a repeated `run_id`, an identifier with surrounding whitespace or a line break, an unknown or misspelled field name, a prompt that is branded in one row and unbranded in another, a prompt assigned to two questions, a question that groups several prompts without an explicit `question_id` on each, or a mention recorded on a run that was not answered stops the run and names the row or the question.
+- **Knows only what is in the file.** A planned prompt that was never run does not appear, so nothing flags it. Before reading a snapshot as a result for the whole set, check its prompt IDs and run counts against the frozen set.
 - **Keeps series apart.** Each snapshot, engine, surface, and prompt type is its own row. Runs with no AI answer and failed runs are counted and reported, and stay out of the rates.
-- **Reports two rates and the counts behind them:** the by-question rate, the pooled hits and answered runs, and the number of questions with at least one hit. A question with a prompt that got no answer is left out of the by-question rate and listed.
+- **Reports two rates and the counts behind them:** the by-question rate over complete questions, the pooled hits and answered runs, and the number of recorded questions with at least one hit. A question with a prompt that got no answer is incomplete; it is left out of the by-question rate and listed, and the table shows complete and recorded questions side by side.
 - **Compares two snapshots on the questions that are the same in both.** A question is left out, and listed with the reason, when it was recorded in only one snapshot, when its recorded prompts differ, or when one of its prompts got no answer in either snapshot.
-- **Counts questions with a hit on one date only,** and answered runs that cite the product's page without naming the product. When the number of runs per prompt differs between the two dates, it says so, because more runs make a hit more likely to be seen.
+- **Counts questions with a hit on one date only,** and answered runs recorded as citing the product's page without naming the product. When the number of runs per prompt differs between the two dates, it says so, because more runs make a hit more likely to be seen. A value that would round to 0.0% or 100.0% without being exactly that is shown as `<0.1%` or `>99.9%`.
 
 ## Read the result
 
@@ -116,7 +118,7 @@ What it does:
 - **Name the comparison before looking.** Before the snapshot, write down the one engine, surface, prompt type, and metric the decision rests on. A table with many rows will show some movement somewhere by chance; a comparison picked after reading the table is exploratory.
 - **Treat a change as real only when it is clearly larger than the same-day differences and it persists.** Compare the difference with the differences recorded between same-day repeats of the same set. Then confirm it with a further snapshot. A second comparison against the same baseline shows that the change persisted relative to that baseline; it is not an independent confirmation. Anything less is inconclusive, which is not evidence that nothing changed.
 - **Consider the engine before crediting the work.** When competitors move together on one engine, an engine-side change is a likely cause. Look for corroboration, such as a release note or the same shift on unrelated prompts, before starting a new baseline. Start one after a known model or product release, a prompt-set change, or a surface change, and report the two series separately.
-- **Separate being cited from being named.** A page can be cited as a source while the answer recommends someone else. The script counts those runs; read them.
+- **Separate being cited from being named.** The script counts answered runs recorded as citing the product's page without naming the product. Whether such an answer recommends someone else is a judgment that needs the answer itself; read those runs.
 - **Record inaccuracies beside the hit.** An answer that names the product with a wrong price, feature, or status still counts as a mention. Log the error in the source ledger as well, and do not present that answer as a success.
 
 ## Traffic and business outcomes

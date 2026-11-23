@@ -188,10 +188,10 @@ or one native smoke does not establish a quality, cost, or latency advantage.
   date of 2026-11-23. Undisclosed community posts, bought or exchanged links,
   and assistant-memory instructions are excluded regardless of reported effect.
   `$indie-product-marketing` and its channel reference now route AI-answer work
-  to the new skill. Independent read-only reviews ran on the candidate and their
-  findings were checked against the sources before use; the script in its final
-  form has not been reviewed independently. No behavior cases were executed.
-  See the
+  to the new skill. Four independent read-only reviews ran on the candidate and
+  their findings were checked against the sources before use. Two findings
+  about the written rule for judging a difference are open. No behavior cases
+  were executed. See the
   [creation and verification record](docs/plans/task-ai-search-visibility-skill.md).
   Reinstall and start a new task to load the change.
 - `dev-core` 5.8.0 (2026-11-18): move the bundled execution profile to the GPT-6.2

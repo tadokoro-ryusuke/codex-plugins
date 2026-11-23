@@ -26,8 +26,8 @@ added entries.
 | The skill ships SKILL.md, four references, four templates, a tested script, and `agents/openai.yaml` | satisfied | Files under `plugins/indie-product-marketing/skills/ai-search-visibility/` |
 | Statements in the references are supported by the cited source | satisfied for the statements checked; exceptions listed under Remaining | Source check below |
 | The skill excludes undisclosed posts, bought or exchanged links, assistant-manipulation instructions, and unrequested external actions | satisfied | SKILL.md "Sort gaps" and "Respect action boundaries"; `references/off-site-rules.md` |
-| The measurement script is covered by tests written before the implementation | satisfied | 20 tests; the first run failed on the missing module |
-| The script in its final form has been reviewed independently | pending | Three review rounds covered earlier versions; see Independent review |
+| The measurement script is covered by tests written before the implementation | satisfied | 26 tests; the first run failed on the missing module |
+| The count-only script has been reviewed independently | satisfied, with open findings | Round 4 reviewed it; its small findings are applied and two findings about the decision rule are open. The fixes made after round 4 were checked by tests only |
 | An independent review ran on the candidate and its findings were verified before use | satisfied | Independent review below |
 | Version, README, sibling routing, and CI are updated | satisfied | `plugin.json` 0.4.0; README list, validation command, and migration entry; routing sentences in the sibling skill and its channel reference; `validate.yml` step |
 | Repository validators and offline tests pass | satisfied | Verification below |
@@ -88,6 +88,7 @@ was checked against the code or the source before it was used.
 | 1 | The whole candidate at `ed28ccd` plus the uncommitted skill, the repository rules, and the saved source copies | 44 findings (7 P1, 29 P2, 8 P3) |
 | 2 | The script, its tests, and the measurement text at `17e4e34` | 26 findings (5 P1, 13 P2, 8 P3) |
 | 3 | The same files after the script was redesigned | 29 findings (3 P1, 14 P2, 12 P3) |
+| 4 | The count-only script, its tests, the measurement text, and the prompt-set template at `424967d` | 26 findings (2 P1, 9 P2, 15 P3) |
 
 **Round 1, applied.**
 
@@ -135,7 +136,30 @@ variant weights, labels, and command-line handling from all three rounds are
 applied in that version, except the two listed under Remaining; the findings
 about calibration no longer apply.
 
-The script in this final form has not been through an independent review.
+**Round 4, on the count-only script.** The user asked for one more review and
+asked that findings about the design be reported before they are changed.
+
+- Applied: unknown and misspelled field names are rejected, with free-form
+  detail under `notes`; a question that groups several prompts needs an explicit
+  `question_id` on each; the summary shows complete and recorded questions side
+  by side and labels each count with its population; the equal-weight flag
+  accounts for answered runs outside complete questions; a one-sided group with
+  a very large number of questions no longer fails; a value that would round to
+  0.0% or 100.0% is shown as `<0.1%` or `>99.9%`; JSON field names carry the
+  rate, the population, and the direction; variants are added in a fixed order,
+  so identical records give an exact zero difference; notes carry raw
+  identifiers; whole-group run counts are always printed; the documents state
+  that the script knows only the prompts in the file and groups by snapshot,
+  engine, and surface.
+- Open, reported to the user and not changed: two P1 findings about the written
+  rule for judging a difference. With sparse hits, two same-day snapshots with
+  no hits followed by two later snapshots with one hit each satisfy "larger than
+  the same-day difference, and persisting" at an unchanged underlying rate. And
+  each comparison selects its own paired questions, so a baseline-to-follow-up
+  and a baseline-to-confirmation comparison can rest on different questions.
+- Not applied: duplicate JSON keys are still not detected.
+
+The fixes made after round 4 were checked by tests only.
 
 ## Verification
 
@@ -145,7 +169,7 @@ Executed on 2026-11-23 on the final version:
 - `node scripts/validate-skill-evals.mjs`: passed (68 cases, none for this
   plugin).
 - `node --test plugins/indie-product-marketing/skills/ai-search-visibility/scripts/visibility-stats.test.mjs`:
-  20 tests passed.
+  26 tests passed.
 - `uv run --python 3.12 --with PyYAML==6.0.2 --with "anthropic[bedrock]>=1.17,<2" python -m unittest discover -s scripts/tests -q`:
   127 tests passed.
 - `git diff --check`: clean.
@@ -157,11 +181,13 @@ execute the skill with a model or test automatic skill selection.
 
 - Merge PR #7 before this branch, then push this branch and open a pull request.
 - Reinstall the plugin and start a new task to load the skill.
-- Review the final version of `scripts/visibility-stats.mjs` independently.
-- Two round-3 findings are not applied. The script does not detect a JSON
-  object that repeats a key; the parser keeps the last value. A group that
-  exists in only one snapshot spreads its question IDs into an argument list,
-  which fails above roughly a hundred thousand questions.
+- Decide how to resolve the two open round-4 findings about the decision rule.
+  The reviewer's suggestion: stop calling a change real; report first observed
+  hits and whether they recur, apply a business threshold written in advance,
+  and judge persistence only on one common set of questions across all the
+  snapshots involved.
+- The script does not detect a JSON object that repeats a key; the parser keeps
+  the last value.
 - Decide whether to add a calibrated interval later. It would need a design the
   data can meet, such as a balanced set with one prompt per question, and its
   own validation.

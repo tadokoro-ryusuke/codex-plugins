@@ -61,7 +61,7 @@ Record the map with the `assets/question-map.md` template.
 Measure before changing anything, so later work can be judged.
 
 1. Build the prompt set from the question map. Use one prompt per buyer question or group the variants, and tag each prompt branded or unbranded; a prompt that names the product pulls it into the answer.
-2. Run every prompt several times on each engine buyers use, in a clean session, on one surface, within the API spend the user has authorized. Record every run with its own ID, including runs that failed or showed no AI answer.
+2. Run every prompt several times on each engine buyers use, in a clean session, on one surface, in one locale and one model or mode, within the API spend the user has authorized. Record every run with its own ID, including runs that failed or showed no AI answer.
 3. Summarize with `scripts/visibility-stats.mjs`. It validates the records, keeps engines, surfaces, and branded prompts apart, and reports observed counts and rates for mentions and citations. It gives no confidence interval and no verdict; do not add either by hand.
 4. Repeat the whole set on the same day and compare the two snapshots. That difference is the first reading of how much the rate moves with nothing changed.
 5. Record which domains the answers cite and any inaccurate statement about the product.
