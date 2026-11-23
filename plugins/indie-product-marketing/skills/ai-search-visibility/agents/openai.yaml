@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Search Visibility"
+  short_description: "Audit and measure visibility in AI answers."
+  default_prompt: "Use $ai-search-visibility to check whether AI answer engines can find my product and to measure how often they mention it."

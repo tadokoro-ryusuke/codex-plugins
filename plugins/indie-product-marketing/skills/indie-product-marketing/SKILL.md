@@ -114,6 +114,8 @@ Score candidate channels by audience concentration, intent, message-medium fit, 
 
 Read [references/channel-strategy.md](references/channel-strategy.md) before producing channel-specific tactics, an organic-content plan, a paid campaign, an ASO/SEO plan, or a cold-start strategy.
 
+For visibility in AI answer engines (crawler eligibility, mention and citation measurement, page and third-party-source actions, or a vendor's AEO/GEO claims), use `$ai-search-visibility` if available. Decide here whether the channel is worth pursuing and how it will be judged.
+
 ## Design bounded experiments
 
 Write every experiment with:
